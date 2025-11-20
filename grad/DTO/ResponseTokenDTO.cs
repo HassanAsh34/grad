@@ -1,0 +1,8 @@
+﻿namespace grad.DTO
+{
+	public class ResponseTokenDTO
+	{
+		public string AccessToken { get; set; }
+		public string RefreshToken { get; set; }
+	}
+}
