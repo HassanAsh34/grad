@@ -89,16 +89,25 @@ namespace grad.Controllers
 
 		[HttpPost("List-Subjects")]
 		[Authorize(Roles = "Admin")]
-		public async Task<IActionResult> ListSubject(SubjectDTO subject,CancellationToken cancellationToken)
+		public async Task<IActionResult> ListSubject(CancellationToken cancellationToken)
 		{
-			return BadRequest();
+			ResultDTO res = await _adminServices.ViewSubjects(cancellationToken);
+			return StatusCode(res.StatusCode, new { Message = res.Message, Data = res.result });
 		}
 
 		[HttpPost("Add-Subject")]
 		[Authorize(Roles = "Admin")]
 		public async Task<IActionResult> AddSubject(SubjectDTO subject, CancellationToken cancellationToken)
 		{
-			return BadRequest();
+			if(!ModelState.IsValid) 
+			{
+				return StatusCode(400, new { Message = ModelState });
+			}
+			else
+			{
+				ResultDTO res = await _adminServices.AddSubject(subject, cancellationToken);
+				return StatusCode(res.StatusCode,new {Message = res.Message,Data = res.result});
+			}
 		}
 
 		[HttpPost("Edit-Subject")]

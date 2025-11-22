@@ -22,6 +22,28 @@ namespace grad.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("grad.Model.EnrolledStudent", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("STUFK")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("SUBFK")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasAlternateKey("STUFK", "SUBFK");
+
+                    b.HasIndex("SUBFK");
+
+                    b.ToTable("EnrolledSubjects");
+                });
+
             modelBuilder.Entity("grad.Model.RefreshToken", b =>
                 {
                     b.Property<int>("Id")
@@ -60,15 +82,22 @@ namespace grad.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<DateOnly>("CreatedAt")
+                        .HasColumnType("date");
+
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateOnly>("UpdatedAt")
+                        .HasColumnType("date");
+
+                    b.Property<bool>("deaf_mute")
+                        .HasColumnType("bit");
 
                     b.HasKey("Id");
 
-                    b.HasAlternateKey("Name");
-
-                    b.ToTable("Subject");
+                    b.ToTable("subjects");
                 });
 
             modelBuilder.Entity("grad.Model.User", b =>
@@ -166,15 +195,10 @@ namespace grad.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("SubjectId")
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<int>("age")
                         .HasColumnType("int");
 
                     b.HasIndex("PID");
-
-                    b.HasIndex("SubjectId");
 
                     b.ToTable("Students");
                 });
@@ -199,7 +223,6 @@ namespace grad.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("SubjectName")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("phoneNumber")
@@ -209,6 +232,25 @@ namespace grad.Migrations
                     b.HasIndex("SubjectFK");
 
                     b.ToTable("Teachers", (string)null);
+                });
+
+            modelBuilder.Entity("grad.Model.EnrolledStudent", b =>
+                {
+                    b.HasOne("grad.Model.Student", "Student")
+                        .WithMany("EnrolledSubjects")
+                        .HasForeignKey("STUFK")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("grad.Model.Subject", "subject")
+                        .WithMany("Students")
+                        .HasForeignKey("SUBFK")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Student");
+
+                    b.Navigation("subject");
                 });
 
             modelBuilder.Entity("grad.Model.RefreshToken", b =>
@@ -254,10 +296,6 @@ namespace grad.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("grad.Model.Subject", null)
-                        .WithMany("Students")
-                        .HasForeignKey("SubjectId");
-
                     b.Navigation("parent");
                 });
 
@@ -293,6 +331,11 @@ namespace grad.Migrations
             modelBuilder.Entity("grad.Model.Parent", b =>
                 {
                     b.Navigation("students");
+                });
+
+            modelBuilder.Entity("grad.Model.Student", b =>
+                {
+                    b.Navigation("EnrolledSubjects");
                 });
 #pragma warning restore 612, 618
         }

@@ -31,20 +31,24 @@ namespace grad
 			builder.Services.AddScoped<ITokenServices, TokenServices>();
 			builder.Services.AddScoped<IParentServices, ParentServices>();
 			builder.Services.AddScoped<IAdminServices, AdminServices>();
+			builder.Services.AddScoped<ISubjectServices, SubjectServices>();
+			builder.Services.AddSingleton<FireStoreContext>();
+			builder.Services.AddScoped<FireStoreRepository>();
 			//builder.Services.AddScoped<ITeacherServices, TeacherServices>();
 			builder.Services.AddHttpClient<IEmailServices, EmailServices>();
 			builder.Services.Configure<MailerSendOptions>(builder.Configuration.GetSection("MailerSend"));
 			builder.Services.AddCors(options =>
 			{
-				options.AddPolicy("DefaultCors", policy =>
+				options.AddPolicy("DefaultCors", policy => //dont forget to change the allowed ports in app.UseCors
 				{
 					policy
-						.WithOrigins(
-							"http://localhost:3000",
-							"https://localhost:3000")//TODO: change this to the actual frontend url
+						//.WithOrigins(
+						//	"http://localhost:3000",
+						//	"https://localhost:3000")//TODO: change this to the actual frontend url
+						.AllowAnyOrigin()
 						.AllowAnyHeader()
-						.AllowAnyMethod()
-						.AllowCredentials();
+						.AllowAnyMethod();
+						//.AllowCredentials();
 				});
 			});
 

@@ -1,6 +1,7 @@
 ﻿using grad.DTO;
 using grad.Interfaces;
 using grad.Model;
+using Grpc.Core;
 using Microsoft.EntityFrameworkCore;
 
 namespace grad.Services
@@ -9,11 +10,13 @@ namespace grad.Services
 	{
 		private readonly IRepository _repository;
 		private readonly IUserServices _userServices;
+		private readonly ISubjectServices _subjectServices;
 
-		public AdminServices(IRepository repository,IUserServices userServices)
+		public AdminServices(IRepository repository,IUserServices userServices, ISubjectServices subjectServices)
 		{
 			_repository = repository ?? throw new ArgumentNullException(nameof(repository));
 			_userServices = userServices ?? throw new ArgumentNullException(nameof(userServices));
+			_subjectServices = subjectServices ?? throw new ArgumentNullException(nameof(subjectServices));
 		}
 
 		public async Task<ResultDTO> ActivateTeacher(ProfileDTO profileDTO, CancellationToken cancellationToken)
@@ -134,8 +137,24 @@ namespace grad.Services
 
 		public async Task<ResultDTO> ViewSubjects(CancellationToken cancellationToken)
 		{
-			throw new NotImplementedException();
-			//IEnumerable<Subject> subjects = await _repository.GetEntitiesAsync<Subject>(,q=>q.Include(s=> s.Students).ThenInclude(s=>s.);	
+			ResultDTO res = await _subjectServices.ViewSubjectsAsync(cancellationToken);
+			return res;
+		}
+
+		public async Task<ResultDTO> AddSubject(SubjectDTO subject, CancellationToken cancellationToken)
+		{
+			if (subject != null)
+			{
+				return await _subjectServices.AddSubject(subject, cancellationToken);
+			}
+			else
+			{
+				return new ResultDTO
+				{
+					Message = "invalid",
+					StatusCode = StatusCodes.Status400BadRequest
+				};
+			}
 		}
 
 		public async Task<ResultDTO> ViewUser(ProfileDTO profileDTO, CancellationToken cancellationToken)

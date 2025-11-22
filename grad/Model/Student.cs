@@ -26,6 +26,8 @@
 
 		//public string classroomId { get; set; } //cfk
 
+		public IEnumerable<EnrolledStudent> EnrolledSubjects { get; set; }
+
 		public Parent parent { get; set; }
 	}
 }

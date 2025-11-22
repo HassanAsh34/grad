@@ -1,10 +1,10 @@
 ﻿namespace grad.Model
 {
-	public class Qusetion
+	public class Question
 	{
 		public string question { get; set; }
 
-		//public  image 
+		public string IMG { get; set; }
 
 		public Answer CorrectAnswer { get; set; }
 
