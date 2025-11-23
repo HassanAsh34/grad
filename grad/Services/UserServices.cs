@@ -286,7 +286,7 @@ namespace grad.Services
 			if (otp == null)
 				return new ResultDTO
 				{
-					StatusCode = 400,
+					StatusCode = StatusCodes.Status400BadRequest,
 					Message = "Invalid OTP data"
 				};
 			else
@@ -295,8 +295,8 @@ namespace grad.Services
 				if (res == null)
 					return new ResultDTO
 					{
-						StatusCode = 500,
-						Message = "OTP wasnt found"
+						StatusCode = StatusCodes.Status400BadRequest,
+						Message = "Invalid OTP"
 					};
 				else
 				{
@@ -309,19 +309,29 @@ namespace grad.Services
 							return new ResultDTO
 							{
 								StatusCode = StatusCodes.Status500InternalServerError,
-								Message = "User not found"
+								Message = "Something went wrong"
 							};
 						}
-						else if(BCrypt.Net.BCrypt.Verify(otp.NewPassword,user.Password))
-						{
-							return new ResultDTO
-							{
-								StatusCode = StatusCodes.Status400BadRequest,
-								Message = "New password cannot be the same as the old password"
-							};
-						}
+						//else if(BCrypt.Net.BCrypt.Verify(otp.NewPassword,user.Password))
+						//{
+						//	return new ResultDTO
+						//	{
+						//		StatusCode = StatusCodes.Status400BadRequest,
+						//		Message = "New password cannot be the same as the old password"
+						//	};
+						//}
 						await deleteOTP(otp.EmailorUserName);
-						return await savePassword(user,otp.NewPassword,cancellationToken: cancellationToken);
+						//return await savePassword(user,otp.NewPassword,cancellationToken: cancellationToken);
+						return new ResultDTO
+						{
+							Message = "Verified",
+							StatusCode = StatusCodes.Status200OK,
+							result = new
+							{
+								AccessToken =  _TokenServices.generateAccessToken(user,true)
+							}
+						}
+					;
 					}
 					else
 					{
@@ -470,17 +480,31 @@ namespace grad.Services
 
 		public async Task<ResultDTO> LogOut(string token,string uid ,CancellationToken cancellationToken = default) // need some improvements
 		{
-			throw new NotImplementedException();
-			//User user = await _repository.GetEntityAsync<User>((u=>u.Id.ToLower().Equals(uid.ToLower())),q=>q.Include(u=>u.RefreshToken),cancellationToken: cancellationToken);
-			//RefreshToken refreshToken = user.RefreshToken;
-			//refreshToken.Revoked = true;
-			//ResultDTO rDTO = await _repository.UpdateEntityAsync<RefreshToken>(refreshToken, cancellationToken);
-			//if(rDTO.SuccessCode == 0)
-			//{
-			//	return rDTO;
-			//}
-			//var res = await _TokenServices.blacklistToken(token);
-			//return res;
+			User user = await _repository.GetEntityAsync<User>((u=>u.Id.ToLower().Equals(uid.ToLower())),q=>q.Include(u=>u.RefreshToken),cancellationToken: cancellationToken);
+			if (user == null)
+				return new ResultDTO
+				{
+					StatusCode= StatusCodes.Status500InternalServerError,
+					Message = "User not Found"
+				};
+			else
+			{
+				if (await revokeToken(user, cancellationToken))
+				{
+					await _TokenServices.blacklistToken(token);
+					return new ResultDTO
+					{
+						Message = "Logged Out",
+						StatusCode = StatusCodes.Status204NoContent
+					};
+				}
+				else
+					return new ResultDTO
+					{
+						StatusCode = StatusCodes.Status500InternalServerError,
+						Message = "Something went wrong"
+					};
+			}
 		}
 
 
@@ -491,7 +515,7 @@ namespace grad.Services
 		}
 
 
-		private async Task<ResultDTO> savePassword(User user,string NewPassword,CancellationToken cancellationToken = default)// needs to be tested
+		private async Task<ResultDTO> savePassword(User user,string NewPassword,CancellationToken cancellationToken = default)// we need to add the token to black list 
 		{
 			//revoke user token
 			bool res = await revokeToken(user, cancellationToken);

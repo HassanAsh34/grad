@@ -3,28 +3,92 @@
   "WorkspaceRootPath": "C:\\Users\\Hassan\\source\\repos\\grad\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|c:\\users\\hassan\\source\\repos\\grad\\grad\\services\\subjectservices.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|solutionrelative:grad\\services\\subjectservices.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|c:\\users\\hassan\\source\\repos\\grad\\grad\\services\\userservices.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|solutionrelative:grad\\services\\userservices.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|c:\\users\\hassan\\source\\repos\\grad\\grad\\services\\tokenservices.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|solutionrelative:grad\\services\\tokenservices.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|c:\\users\\hassan\\source\\repos\\grad\\grad\\controllers\\useractions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|solutionrelative:grad\\controllers\\useractions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|c:\\users\\hassan\\source\\repos\\grad\\grad\\controllers\\auth.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|solutionrelative:grad\\controllers\\auth.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|c:\\users\\hassan\\source\\repos\\grad\\grad\\dto\\signupdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|solutionrelative:grad\\dto\\signupdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|c:\\users\\hassan\\source\\repos\\grad\\grad\\dto\\registerstudentdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|solutionrelative:grad\\dto\\registerstudentdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|c:\\users\\hassan\\source\\repos\\grad\\grad\\dto\\logindto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|solutionrelative:grad\\dto\\logindto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|c:\\users\\hassan\\source\\repos\\grad\\grad\\dto\\changepassworddto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|solutionrelative:grad\\dto\\changepassworddto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|c:\\users\\hassan\\source\\repos\\grad\\grad\\services\\redisservices.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|solutionrelative:grad\\services\\redisservices.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|c:\\users\\hassan\\source\\repos\\grad\\grad\\dto\\otp_dto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|solutionrelative:grad\\dto\\otp_dto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|c:\\users\\hassan\\source\\repos\\grad\\grad\\dto\\profiledto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|solutionrelative:grad\\dto\\profiledto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|c:\\users\\hassan\\source\\repos\\grad\\grad\\dto\\subjectdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|solutionrelative:grad\\dto\\subjectdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|c:\\users\\hassan\\source\\repos\\grad\\grad\\dto\\responsetokendto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|solutionrelative:grad\\dto\\responsetokendto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|c:\\users\\hassan\\source\\repos\\grad\\grad\\controllers\\teacheractions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|solutionrelative:grad\\controllers\\teacheractions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|c:\\users\\hassan\\source\\repos\\grad\\grad\\controllers\\parentactions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|solutionrelative:grad\\controllers\\parentactions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|c:\\users\\hassan\\source\\repos\\grad\\grad\\controllers\\adminactions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|solutionrelative:grad\\controllers\\adminactions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|c:\\users\\hassan\\source\\repos\\grad\\grad\\services\\adminservices.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|solutionrelative:grad\\services\\adminservices.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|c:\\users\\hassan\\source\\repos\\grad\\grad\\interfaces\\itokenservices.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|solutionrelative:grad\\interfaces\\itokenservices.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|c:\\users\\hassan\\source\\repos\\grad\\grad\\interfaces\\iadminservices.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|solutionrelative:grad\\interfaces\\iadminservices.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|c:\\users\\hassan\\source\\repos\\grad\\grad\\services\\userservices.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|solutionrelative:grad\\services\\userservices.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|c:\\users\\hassan\\source\\repos\\grad\\grad\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
       "RelativeMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|solutionrelative:grad\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|c:\\users\\hassan\\source\\repos\\grad\\grad\\data\\firestorecontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|solutionrelative:grad\\data\\firestorecontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|c:\\users\\hassan\\source\\repos\\grad\\grad\\services\\subjectservices.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|solutionrelative:grad\\services\\subjectservices.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|c:\\users\\hassan\\source\\repos\\grad\\grad\\controllers\\adminactions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|solutionrelative:grad\\controllers\\adminactions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|c:\\users\\hassan\\source\\repos\\grad\\grad\\data\\firestorecontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|solutionrelative:grad\\data\\firestorecontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|c:\\users\\hassan\\source\\repos\\grad\\grad\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -33,14 +97,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|c:\\users\\hassan\\source\\repos\\grad\\grad\\interfaces\\isubjectservices.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|solutionrelative:grad\\interfaces\\isubjectservices.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|c:\\users\\hassan\\source\\repos\\grad\\grad\\services\\adminservices.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|solutionrelative:grad\\services\\adminservices.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|c:\\users\\hassan\\source\\repos\\grad\\grad\\dto\\subjectdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|solutionrelative:grad\\dto\\subjectdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|c:\\users\\hassan\\source\\repos\\grad\\grad\\migrations\\20251122130109_v5_subjectenrollment.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -82,10 +138,6 @@
       "RelativeMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|solutionrelative:grad\\services\\emailservices.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|c:\\users\\hassan\\source\\repos\\grad\\grad\\services\\tokenservices.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|solutionrelative:grad\\services\\tokenservices.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|c:\\users\\hassan\\source\\repos\\grad\\grad\\repositories\\repository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|solutionrelative:grad\\repositories\\repository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
@@ -114,28 +166,12 @@
       "RelativeMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|solutionrelative:grad\\model\\parent.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|c:\\users\\hassan\\source\\repos\\grad\\grad\\interfaces\\itokenservices.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|solutionrelative:grad\\interfaces\\itokenservices.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|c:\\users\\hassan\\source\\repos\\grad\\grad\\services\\redisservices.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|solutionrelative:grad\\services\\redisservices.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|c:\\users\\hassan\\source\\repos\\grad\\grad\\model\\teacher.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|solutionrelative:grad\\model\\teacher.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|c:\\users\\hassan\\source\\repos\\grad\\grad\\dto\\signupdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|solutionrelative:grad\\dto\\signupdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|c:\\users\\hassan\\source\\repos\\grad\\grad\\services\\parentservices.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|solutionrelative:grad\\services\\parentservices.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|c:\\users\\hassan\\source\\repos\\grad\\grad\\controllers\\teacheractions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|solutionrelative:grad\\controllers\\teacheractions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{CD092F88-DC44-4285-AD72-F95D1E585F8A}|grad\\grad.csproj|c:\\users\\hassan\\source\\repos\\grad\\grad\\dto\\resultdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -149,24 +185,25 @@
       "DocumentGroups": [
         {
           "DockedWidth": 32,
-          "SelectedChildIndex": 3,
+          "SelectedChildIndex": 7,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 15,
               "Title": "AdminActions.cs",
               "DocumentMoniker": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\Controllers\\AdminActions.cs",
               "RelativeDocumentMoniker": "grad\\Controllers\\AdminActions.cs",
               "ToolTip": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\Controllers\\AdminActions.cs",
               "RelativeToolTip": "grad\\Controllers\\AdminActions.cs",
-              "ViewState": "AgIAAE0AAAAAAAAAAAA9wF0AAABIAAAAAAAAAA==",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAuwF0AAABIAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-11-22T13:03:01.094Z",
-              "IsPinned": true
+              "IsPinned": true,
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 23,
               "Title": "ISubjectServices.cs",
               "DocumentMoniker": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\Interfaces\\ISubjectServices.cs",
               "RelativeDocumentMoniker": "grad\\Interfaces\\ISubjectServices.cs",
@@ -179,7 +216,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 22,
               "Title": "Program.cs",
               "DocumentMoniker": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\Program.cs",
               "RelativeDocumentMoniker": "grad\\Program.cs",
@@ -192,13 +229,13 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 20,
               "Title": "SubjectServices.cs",
               "DocumentMoniker": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\Services\\SubjectServices.cs",
               "RelativeDocumentMoniker": "grad\\Services\\SubjectServices.cs",
               "ToolTip": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\Services\\SubjectServices.cs",
               "RelativeToolTip": "grad\\Services\\SubjectServices.cs",
-              "ViewState": "AgIAABIAAAAAAAAAAAAAACUAAAAiAAAAAAAAAA==",
+              "ViewState": "AgIAACEAAAAAAAAAAAAEwCUAAAAiAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-11-21T08:25:10.975Z",
               "IsPinned": true,
@@ -206,20 +243,21 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 16,
               "Title": "AdminServices.cs",
               "DocumentMoniker": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\Services\\AdminServices.cs",
               "RelativeDocumentMoniker": "grad\\Services\\AdminServices.cs",
               "ToolTip": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\Services\\AdminServices.cs",
               "RelativeToolTip": "grad\\Services\\AdminServices.cs",
-              "ViewState": "AgIAAHoAAAAAAAAAAAAIwIcAAAADAAAAAAAAAA==",
+              "ViewState": "AgIAADIAAAAAAAAAAAAYwIcAAAADAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-11-21T16:53:54.863Z",
-              "IsPinned": true
+              "IsPinned": true,
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 18,
               "Title": "IAdminServices.cs",
               "DocumentMoniker": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\Interfaces\\IAdminServices.cs",
               "RelativeDocumentMoniker": "grad\\Interfaces\\IAdminServices.cs",
@@ -228,35 +266,239 @@
               "ViewState": "AgIAAAUAAAAAAAAAAAAcwBYAAABgAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-11-22T13:12:17.715Z",
-              "IsPinned": true
+              "IsPinned": true,
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "TokenServices.cs",
+              "DocumentMoniker": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\Services\\TokenServices.cs",
+              "RelativeDocumentMoniker": "grad\\Services\\TokenServices.cs",
+              "ToolTip": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\Services\\TokenServices.cs",
+              "RelativeToolTip": "grad\\Services\\TokenServices.cs",
+              "ViewState": "AgIAAFYAAAAAAAAAAAAewGIAAAADAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-18T11:13:00.305Z",
+              "IsPinned": true,
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "UserServices.cs",
+              "DocumentMoniker": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\Services\\UserServices.cs",
+              "RelativeDocumentMoniker": "grad\\Services\\UserServices.cs",
+              "ToolTip": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\Services\\UserServices.cs",
+              "RelativeToolTip": "grad\\Services\\UserServices.cs",
+              "ViewState": "AgIAAHoBAAAAAAAAAAAmwJEBAAADAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-21T16:24:42.958Z",
+              "IsPinned": true,
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "OTP_DTO.cs",
+              "DocumentMoniker": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\DTO\\OTP_DTO.cs",
+              "RelativeDocumentMoniker": "grad\\DTO\\OTP_DTO.cs",
+              "ToolTip": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\DTO\\OTP_DTO.cs",
+              "RelativeToolTip": "grad\\DTO\\OTP_DTO.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAABuAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-23T22:05:20.1Z",
+              "IsPinned": true,
+              "EditorCaption": ""
             },
             {
               "$type": "Bookmark",
-              "Name": "ST:0:0:{269a02dc-6af8-11d3-bdc4-00c04f688e50}"
+              "Name": "ST:0:0:{d78612c7-9962-4b83-95d9-268046dad23a}"
             },
             {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "SignupDTO.cs",
+              "DocumentMoniker": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\DTO\\SignupDTO.cs",
+              "RelativeDocumentMoniker": "grad\\DTO\\SignupDTO.cs",
+              "ToolTip": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\DTO\\SignupDTO.cs",
+              "RelativeToolTip": "grad\\DTO\\SignupDTO.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAB4AAAARAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-20T21:18:55.995Z",
+              "EditorCaption": ""
             },
             {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "ProfileDTO.cs",
+              "DocumentMoniker": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\DTO\\ProfileDTO.cs",
+              "RelativeDocumentMoniker": "grad\\DTO\\ProfileDTO.cs",
+              "ToolTip": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\DTO\\ProfileDTO.cs",
+              "RelativeToolTip": "grad\\DTO\\ProfileDTO.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-23T22:15:12.524Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 3,
+              "Title": "Auth.cs",
+              "DocumentMoniker": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\Controllers\\Auth.cs",
+              "RelativeDocumentMoniker": "grad\\Controllers\\Auth.cs",
+              "ToolTip": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\Controllers\\Auth.cs",
+              "RelativeToolTip": "grad\\Controllers\\Auth.cs",
+              "ViewState": "AgIAAJoAAAAAAAAAAAASwKUAAAAEAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-22T14:51:45.507Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "SubjectDTO.cs",
+              "DocumentMoniker": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\DTO\\SubjectDTO.cs",
+              "RelativeDocumentMoniker": "grad\\DTO\\SubjectDTO.cs",
+              "ToolTip": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\DTO\\SubjectDTO.cs",
+              "RelativeToolTip": "grad\\DTO\\SubjectDTO.cs",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAAAAkAAAAyAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-18T13:51:20.897Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "ResponseTokenDTO.cs",
+              "DocumentMoniker": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\DTO\\ResponseTokenDTO.cs",
+              "RelativeDocumentMoniker": "grad\\DTO\\ResponseTokenDTO.cs",
+              "ToolTip": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\DTO\\ResponseTokenDTO.cs",
+              "RelativeToolTip": "grad\\DTO\\ResponseTokenDTO.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-23T22:15:14.728Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "RegisterStudentDTO.cs",
+              "DocumentMoniker": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\DTO\\RegisterStudentDTO.cs",
+              "RelativeDocumentMoniker": "grad\\DTO\\RegisterStudentDTO.cs",
+              "ToolTip": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\DTO\\RegisterStudentDTO.cs",
+              "RelativeToolTip": "grad\\DTO\\RegisterStudentDTO.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-23T22:15:13.544Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "LoginDTO.cs",
+              "DocumentMoniker": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\DTO\\LoginDTO.cs",
+              "RelativeDocumentMoniker": "grad\\DTO\\LoginDTO.cs",
+              "ToolTip": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\DTO\\LoginDTO.cs",
+              "RelativeToolTip": "grad\\DTO\\LoginDTO.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-23T22:15:10.902Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "ChangePasswordDTO.cs",
+              "DocumentMoniker": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\DTO\\ChangePasswordDTO.cs",
+              "RelativeDocumentMoniker": "grad\\DTO\\ChangePasswordDTO.cs",
+              "ToolTip": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\DTO\\ChangePasswordDTO.cs",
+              "RelativeToolTip": "grad\\DTO\\ChangePasswordDTO.cs",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAAAAgAAAAhAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-23T22:15:02.872Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "UserActions.cs",
+              "DocumentMoniker": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\Controllers\\UserActions.cs",
+              "RelativeDocumentMoniker": "grad\\Controllers\\UserActions.cs",
+              "ToolTip": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\Controllers\\UserActions.cs",
+              "RelativeToolTip": "grad\\Controllers\\UserActions.cs",
+              "ViewState": "AgIAABAAAAAAAAAAAAAWwBwAAAADAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-23T22:06:20.463Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "RedisServices.cs",
+              "DocumentMoniker": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\Services\\RedisServices.cs",
+              "RelativeDocumentMoniker": "grad\\Services\\RedisServices.cs",
+              "ToolTip": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\Services\\RedisServices.cs",
+              "RelativeToolTip": "grad\\Services\\RedisServices.cs",
+              "ViewState": "AgIAACEAAAAAAAAAAAAiwC4AAAADAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-20T21:10:38.634Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "TeacherActions.cs",
+              "DocumentMoniker": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\Controllers\\TeacherActions.cs",
+              "RelativeDocumentMoniker": "grad\\Controllers\\TeacherActions.cs",
+              "ToolTip": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\Controllers\\TeacherActions.cs",
+              "RelativeToolTip": "grad\\Controllers\\TeacherActions.cs",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAAAA8AAAAjAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-18T11:09:45.206Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "ParentActions.cs",
+              "DocumentMoniker": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\Controllers\\ParentActions.cs",
+              "RelativeDocumentMoniker": "grad\\Controllers\\ParentActions.cs",
+              "ToolTip": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\Controllers\\ParentActions.cs",
+              "RelativeToolTip": "grad\\Controllers\\ParentActions.cs",
+              "ViewState": "AgIAABYAAAAAAAAAAAAQwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-23T22:07:24.373Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 17,
+              "Title": "ITokenServices.cs",
+              "DocumentMoniker": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\Interfaces\\ITokenServices.cs",
+              "RelativeDocumentMoniker": "grad\\Interfaces\\ITokenServices.cs",
+              "ToolTip": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\Interfaces\\ITokenServices.cs",
+              "RelativeToolTip": "grad\\Interfaces\\ITokenServices.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAQAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-18T11:57:54.717Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 19,
               "Title": "appsettings.json",
               "DocumentMoniker": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\appsettings.json",
               "RelativeDocumentMoniker": "grad\\appsettings.json",
               "ToolTip": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\appsettings.json",
               "RelativeToolTip": "grad\\appsettings.json",
-              "ViewState": "AgIAAAkAAAAAAAAAAAAAABsAAAAPAAAAAAAAAA==",
+              "ViewState": "AgIAAAkAAAAAAAAAAAAAABcAAAAXAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
               "WhenOpened": "2025-10-15T21:20:06.938Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 21,
               "Title": "FireStoreContext.cs",
               "DocumentMoniker": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\Data\\FireStoreContext.cs",
               "RelativeDocumentMoniker": "grad\\Data\\FireStoreContext.cs",
@@ -268,19 +510,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "UserServices.cs",
-              "DocumentMoniker": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\Services\\UserServices.cs",
-              "RelativeDocumentMoniker": "grad\\Services\\UserServices.cs",
-              "ToolTip": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\Services\\UserServices.cs",
-              "RelativeToolTip": "grad\\Services\\UserServices.cs",
-              "ViewState": "AgIAAHkBAAAAAAAAAAAkwIcBAAADAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-21T16:24:42.958Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 11,
+              "DocumentIndex": 25,
               "Title": "FireStoreRepository.cs",
               "DocumentMoniker": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\Repositories\\FireStoreRepository.cs",
               "RelativeDocumentMoniker": "grad\\Repositories\\FireStoreRepository.cs",
@@ -292,19 +522,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
-              "Title": "SubjectDTO.cs",
-              "DocumentMoniker": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\DTO\\SubjectDTO.cs",
-              "RelativeDocumentMoniker": "grad\\DTO\\SubjectDTO.cs",
-              "ToolTip": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\DTO\\SubjectDTO.cs",
-              "RelativeToolTip": "grad\\DTO\\SubjectDTO.cs",
-              "ViewState": "AgIAAAMAAAAAAAAAAAAAAAkAAAAyAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-18T13:51:20.897Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 10,
+              "DocumentIndex": 24,
               "Title": "20251122130109_v5_subjectEnrollment.cs",
               "DocumentMoniker": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\Migrations\\20251122130109_v5_subjectEnrollment.cs",
               "RelativeDocumentMoniker": "grad\\Migrations\\20251122130109_v5_subjectEnrollment.cs",
@@ -316,7 +534,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 15,
+              "DocumentIndex": 29,
               "Title": "DbContext.cs",
               "DocumentMoniker": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\Data\\DbContext.cs",
               "RelativeDocumentMoniker": "grad\\Data\\DbContext.cs",
@@ -328,7 +546,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 14,
+              "DocumentIndex": 28,
               "Title": "grad.http",
               "DocumentMoniker": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\grad.http",
               "RelativeDocumentMoniker": "grad\\grad.http",
@@ -340,7 +558,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 12,
+              "DocumentIndex": 26,
               "Title": "grad.csproj",
               "DocumentMoniker": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\grad.csproj",
               "RelativeDocumentMoniker": "grad\\grad.csproj",
@@ -352,7 +570,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 13,
+              "DocumentIndex": 27,
               "Title": "Microsoft.NET.TargetFrameworkInference.targets",
               "DocumentMoniker": "C:\\Program Files\\dotnet\\sdk\\8.0.416\\Sdks\\Microsoft.NET.Sdk\\targets\\Microsoft.NET.TargetFrameworkInference.targets",
               "RelativeDocumentMoniker": "..\\..\\..\\..\\..\\Program Files\\dotnet\\sdk\\8.0.416\\Sdks\\Microsoft.NET.Sdk\\targets\\Microsoft.NET.TargetFrameworkInference.targets",
@@ -364,7 +582,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 16,
+              "DocumentIndex": 30,
               "Title": "AddLessonDTO.cs",
               "DocumentMoniker": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\DTO\\AddLessonDTO.cs",
               "RelativeDocumentMoniker": "grad\\DTO\\AddLessonDTO.cs",
@@ -376,7 +594,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 17,
+              "DocumentIndex": 31,
               "Title": "EnrolledStudent.cs",
               "DocumentMoniker": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\Model\\EnrolledStudent.cs",
               "RelativeDocumentMoniker": "grad\\Model\\EnrolledStudent.cs",
@@ -388,7 +606,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 18,
+              "DocumentIndex": 32,
               "Title": "Student.cs",
               "DocumentMoniker": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\Model\\Student.cs",
               "RelativeDocumentMoniker": "grad\\Model\\Student.cs",
@@ -400,7 +618,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 19,
+              "DocumentIndex": 33,
               "Title": "EmailServices.cs",
               "DocumentMoniker": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\Services\\EmailServices.cs",
               "RelativeDocumentMoniker": "grad\\Services\\EmailServices.cs",
@@ -412,19 +630,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 20,
-              "Title": "TokenServices.cs",
-              "DocumentMoniker": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\Services\\TokenServices.cs",
-              "RelativeDocumentMoniker": "grad\\Services\\TokenServices.cs",
-              "ToolTip": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\Services\\TokenServices.cs",
-              "RelativeToolTip": "grad\\Services\\TokenServices.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAGIAAAADAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-18T11:13:00.305Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 21,
+              "DocumentIndex": 34,
               "Title": "Repository.cs",
               "DocumentMoniker": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\Repositories\\Repository.cs",
               "RelativeDocumentMoniker": "grad\\Repositories\\Repository.cs",
@@ -436,7 +642,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 22,
+              "DocumentIndex": 35,
               "Title": "Answer.cs",
               "DocumentMoniker": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\Model\\Answer.cs",
               "RelativeDocumentMoniker": "grad\\Model\\Answer.cs",
@@ -448,7 +654,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 23,
+              "DocumentIndex": 36,
               "Title": "Exercise.cs",
               "DocumentMoniker": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\Model\\Exercise.cs",
               "RelativeDocumentMoniker": "grad\\Model\\Exercise.cs",
@@ -460,7 +666,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 24,
+              "DocumentIndex": 37,
               "Title": "Level.cs",
               "DocumentMoniker": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\Model\\Level.cs",
               "RelativeDocumentMoniker": "grad\\Model\\Level.cs",
@@ -472,7 +678,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 26,
+              "DocumentIndex": 39,
               "Title": "User.cs",
               "DocumentMoniker": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\Model\\User.cs",
               "RelativeDocumentMoniker": "grad\\Model\\User.cs",
@@ -484,7 +690,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 27,
+              "DocumentIndex": 40,
               "Title": "Parent.cs",
               "DocumentMoniker": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\Model\\Parent.cs",
               "RelativeDocumentMoniker": "grad\\Model\\Parent.cs",
@@ -496,19 +702,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 28,
-              "Title": "ITokenServices.cs",
-              "DocumentMoniker": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\Interfaces\\ITokenServices.cs",
-              "RelativeDocumentMoniker": "grad\\Interfaces\\ITokenServices.cs",
-              "ToolTip": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\Interfaces\\ITokenServices.cs",
-              "RelativeToolTip": "grad\\Interfaces\\ITokenServices.cs",
-              "ViewState": "AgIAAAUAAAAAAAAAAAAcwA4AAAAlAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-18T11:57:54.717Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 25,
+              "DocumentIndex": 38,
               "Title": ".gitignore",
               "DocumentMoniker": "C:\\Users\\Hassan\\source\\repos\\grad\\.gitignore",
               "RelativeDocumentMoniker": ".gitignore",
@@ -520,19 +714,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 29,
-              "Title": "RedisServices.cs",
-              "DocumentMoniker": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\Services\\RedisServices.cs",
-              "RelativeDocumentMoniker": "grad\\Services\\RedisServices.cs",
-              "ToolTip": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\Services\\RedisServices.cs",
-              "RelativeToolTip": "grad\\Services\\RedisServices.cs",
-              "ViewState": "AgIAACQAAAAAAAAAAAAWwC4AAAADAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-20T21:10:38.634Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 30,
+              "DocumentIndex": 41,
               "Title": "Teacher.cs",
               "DocumentMoniker": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\Model\\Teacher.cs",
               "RelativeDocumentMoniker": "grad\\Model\\Teacher.cs",
@@ -544,19 +726,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 31,
-              "Title": "SignupDTO.cs",
-              "DocumentMoniker": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\DTO\\SignupDTO.cs",
-              "RelativeDocumentMoniker": "grad\\DTO\\SignupDTO.cs",
-              "ToolTip": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\DTO\\SignupDTO.cs",
-              "RelativeToolTip": "grad\\DTO\\SignupDTO.cs",
-              "ViewState": "AgIAABUAAAAAAAAAAAAYwB4AAAARAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-20T21:18:55.995Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 32,
+              "DocumentIndex": 42,
               "Title": "ParentServices.cs",
               "DocumentMoniker": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\Services\\ParentServices.cs",
               "RelativeDocumentMoniker": "grad\\Services\\ParentServices.cs",
@@ -568,19 +738,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 33,
-              "Title": "TeacherActions.cs",
-              "DocumentMoniker": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\Controllers\\TeacherActions.cs",
-              "RelativeDocumentMoniker": "grad\\Controllers\\TeacherActions.cs",
-              "ToolTip": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\Controllers\\TeacherActions.cs",
-              "RelativeToolTip": "grad\\Controllers\\TeacherActions.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAIBJwA8AAAAjAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-18T11:09:45.206Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 34,
+              "DocumentIndex": 43,
               "Title": "ResultDTO.cs",
               "DocumentMoniker": "C:\\Users\\Hassan\\source\\repos\\grad\\grad\\DTO\\ResultDTO.cs",
               "RelativeDocumentMoniker": "grad\\DTO\\ResultDTO.cs",

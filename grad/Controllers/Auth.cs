@@ -83,8 +83,12 @@ namespace grad.Controllers
 			});
 		}
 
-		[HttpPost("Change-Password-OTP")]
-		public async Task<IActionResult> ResetPasswordOTP([FromBody] OTP_DTO otp, CancellationToken cancellationToken)
+
+
+		//[HttpPost]
+		
+		[HttpPost("Verify-OTP")]
+		public async Task<IActionResult> CheckOTP([FromBody] OTP_DTO otp, CancellationToken cancellationToken)
 		{
 			if (!ModelState.IsValid)
 			{
@@ -93,16 +97,17 @@ namespace grad.Controllers
 			ResultDTO result = await _userService.ResetPasswordOTP(otp, cancellationToken);
 			return StatusCode(result.StatusCode, new
 			{
-				Message = result.Message
+				Message = result.Message,
+				Data = result.result
 			});
 		}
 
 		[Authorize(Roles = "ResetPassword")]
 		[HttpPost("reset-password")]
-		public async Task<IActionResult> resetPassword(string newpass) //isnt completed yet when its done we need to configure the email right also dont forget to enable redis
+		public async Task<IActionResult> resetPassword([FromBody] string newpass) //isnt completed yet when its done we need to configure the email right also dont forget to enable redis
 		{
 			var passwordRegex = new System.Text.RegularExpressions.Regex(
-				@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
+				@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^()_+\-])[A-Za-z\d@$!%*?&#^()_+\-]{8,}$"
 			);
 			if (newpass.IsNullOrEmpty())
 			{
