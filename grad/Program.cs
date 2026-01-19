@@ -32,6 +32,7 @@ namespace grad
 			builder.Services.AddScoped<IParentServices, ParentServices>();
 			builder.Services.AddScoped<IAdminServices, AdminServices>();
 			builder.Services.AddScoped<ISubjectServices, SubjectServices>();
+			builder.Services.AddScoped<IUowServices, UowServices>();
 			builder.Services.AddSingleton<FireStoreContext>();
 			builder.Services.AddScoped<FireStoreRepository>();
 			//builder.Services.AddScoped<ITeacherServices, TeacherServices>();
@@ -73,7 +74,19 @@ namespace grad
 					RoleClaimType = ClaimTypes.Role,
 					NameClaimType = ClaimTypes.NameIdentifier
 				};
+				options.Events = new JwtBearerEvents
+				{
+					OnMessageReceived = context =>
+					{
+						if (!context.Request.Cookies["Reset_Token"].IsNullOrEmpty())
+							context.Token = context.Request.Cookies["Reset_Token"];
+						else
+							context.Token = context.Request.Cookies["access_token"];
+						return Task.CompletedTask;
+					}
+				};
 			});
+			
 			bool enabled = builder.Configuration.GetValue<bool>("Redis:Enabled");
 			if (enabled)
 			{
@@ -128,7 +141,7 @@ namespace grad
 
 
 			var app = builder.Build();
-
+			//uncomment that line for development
 			// Configure the HTTP request pipeline.
 			if (app.Environment.IsDevelopment())
 			{
@@ -153,6 +166,12 @@ namespace grad
 				});
 			}
 
+
+			////for deployment only
+			////{
+			//app.UseSwagger();
+			//app.UseSwaggerUI();
+			////}
 			app.UseHttpsRedirection();
 
 			app.UseCors("DefaultCors");

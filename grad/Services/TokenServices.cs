@@ -1,12 +1,10 @@
-﻿using grad.DTO;
-using grad.Interfaces;
-using grad.Model;
-using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Tokens;
-using System;
-using System.IdentityModel.Tokens.Jwt;
+﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
+using grad.DTO;
+using grad.Interfaces;
+using grad.Model;
+using Microsoft.IdentityModel.Tokens;
 
 namespace grad.Services
 {
@@ -63,12 +61,13 @@ namespace grad.Services
 			var tokenDescriptor = new SecurityTokenDescriptor
 			{
 				Subject = new ClaimsIdentity(Claims),
-				Expires = DateTime.UtcNow.AddMinutes(15),//short living token
+				Expires = System.DateTime.UtcNow.AddMinutes(15),//short living token
 				SigningCredentials = creds,
 			};
 			var TokenHandler = new JwtSecurityTokenHandler();
-			var token = TokenHandler.CreateToken(tokenDescriptor);
-			return String.Concat("Bearer ", TokenHandler.WriteToken(token));
+			return TokenHandler.WriteToken(TokenHandler.CreateToken(tokenDescriptor));
+			//var token = TokenHandler.CreateToken(tokenDescriptor);
+			//return String.Concat("Bearer ", TokenHandler.WriteToken(token));
 		}
 
 		public string generateRefreshToken()
@@ -79,53 +78,133 @@ namespace grad.Services
 			return Convert.ToBase64String(randomBytes);
 		}
 
-		public string getUID(string token)
+		public async Task<AccessTokenDto> getTokenInfo(string token)
 		{
-			if(token == null)
-				return null;
+			var validToken = await validateToken(token);
+			if (validToken is AccessTokenDto tokenDto && tokenDto != null)
+			{
+				return tokenDto;
+			}
+			return null;
+		}
+
+
+		private async Task<object> validateToken(string token)
+		{
+			if (string.IsNullOrWhiteSpace(token))
+				return false;
+
 			if (token.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
 				token = token.Substring("Bearer ".Length).Trim();
+
 			var handler = new JwtSecurityTokenHandler();
-			var jwt = handler.ReadJwtToken(token);
-			var idClaim = jwt.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.NameId);
-			return idClaim?.Value;
+			var validationParameters = new TokenValidationParameters
+			{
+				ValidateIssuerSigningKey = true,
+				IssuerSigningKey = _secretKey,
+				ValidateIssuer = false,
+				ValidateAudience = false,
+				ValidateLifetime = false, // 🔑 allow expired tokens
+										  //ValidIssuer = _config["Jwt:Issuer"],
+										  //ValidAudience = _config["Jwt:Audience"],
+										  //IssuerSigningKey = new SymmetricSecurityKey(
+										  //Encoding.UTF8.GetBytes(_config["Jwt:Key"]))
+			};
+
+			try
+			{
+				var principal = handler.ValidateToken(
+					token,
+					validationParameters,
+					out _
+				);
+
+				bool exp = false;
+				TimeSpan time = TimeSpan.Zero;
+				var jwt = handler.ReadJwtToken(token);
+				if (jwt.ValidTo < System.DateTime.UtcNow)
+					exp = true;
+				else
+					time = jwt.ValidTo - System.DateTime.UtcNow;
+
+				//List<Claim> claims = jwt.Claims.ToList();
+
+				//claims.ForEach(c =>
+				//{
+				//	Console.WriteLine($"{c.Type}||{c.Value.ToString()}");
+				//});
+
+
+				
+
+				if (!await IsTokenBlacklisted(token))
+				{
+					return new AccessTokenDto
+					{
+						ID = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value,
+						EmailorUserName = principal.FindFirst(ClaimTypes.Email)?.Value,
+						Role = principal.FindFirst(ClaimTypes.Role)?.Value,
+						expired = exp,
+						remainingtime = time,
+						Token = token
+					};
+				}
+				else
+					return false;
+			}
+			catch
+			{
+				return false; // invalid or tampered token
+			}
 		}
+
+
 
 		public async Task<bool> IsTokenBlacklisted(string token)
 		{
-			if (token.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
-				token = token.Substring("Bearer ".Length).Trim();
-			var res = await _redisServices.get(token);
-			return res != null;
+			if (!token.IsNullOrEmpty())
+			{
+				var res = await _redisServices.get(token);
+				return res != null;
+			}
+			else
+			{ return false; }
 		}
 
 		public async Task<bool> blacklistToken(string token)
 		{
-			if (token.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
-				token = token.Substring("Bearer ".Length).Trim();
-			TimeSpan expire = GetTokenExpiry(token);
-			Console.WriteLine(expire);
-			return await _redisServices.store(token, "blacklisted", expire);
+			var validtoken = await validateToken(token);
+			if (validtoken is AccessTokenDto tokenDto && tokenDto != null)
+			{
+				if (!tokenDto.expired)
+					return await _redisServices.store(tokenDto.Token, "blacklisted", tokenDto.remainingtime);
+				else
+					return true;
+			}
+			else
+			{
+				return false;
+			}
 		}
 
-		private TimeSpan GetTokenExpiry(string token)
-		{
-			if (token.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
-				token = token.Substring("Bearer ".Length).Trim();
-			var handler = new JwtSecurityTokenHandler();
-			var jwt = handler.ReadJwtToken(token);
-			var expClaim = jwt.Claims.FirstOrDefault(c => c.Type == "exp");
-			if (expClaim == null)
-				return TimeSpan.Zero;
+		//private TimeSpan GetTokenExpiry(string token)
+		//{
+		//	if (token.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+		//		token = token.Substring("Bearer ".Length).Trim();
+		//	var handler = new JwtSecurityTokenHandler();
+		//	var jwt = handler.ReadJwtToken(token);
+		//	var expClaim = jwt.Claims.FirstOrDefault(c => c.Type == "exp");
+		//	if (expClaim == null)
+		//		return TimeSpan.Zero;
 
-			var expUnix = long.Parse(expClaim.Value);
-			var expDate = DateTimeOffset.FromUnixTimeSeconds(expUnix).UtcDateTime;
-			var remaining = expDate - DateTime.UtcNow;
+		//	var expUnix = long.Parse(expClaim.Value);
+		//	var expDate = DateTimeOffset.FromUnixTimeSeconds(expUnix).UtcDateTime;
+		//	var remaining = expDate - DateTime.UtcNow;
 
-			return remaining;
-		}
+		//	return remaining;
+		//}
 
-		
+
 
 
 	}

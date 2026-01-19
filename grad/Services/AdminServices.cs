@@ -11,12 +11,14 @@ namespace grad.Services
 		private readonly IRepository _repository;
 		private readonly IUserServices _userServices;
 		private readonly ISubjectServices _subjectServices;
+		private readonly IUowServices _uowServices;
 
-		public AdminServices(IRepository repository,IUserServices userServices, ISubjectServices subjectServices)
+		public AdminServices(IRepository repository,IUserServices userServices, ISubjectServices subjectServices, IUowServices uowServices)
 		{
 			_repository = repository ?? throw new ArgumentNullException(nameof(repository));
 			_userServices = userServices ?? throw new ArgumentNullException(nameof(userServices));
 			_subjectServices = subjectServices ?? throw new ArgumentNullException(nameof(subjectServices));
+			_uowServices = uowServices ?? throw new ArgumentNullException(nameof(uowServices));	
 		}
 
 		public async Task<ResultDTO> ActivateTeacher(ProfileDTO profileDTO, CancellationToken cancellationToken)
@@ -38,11 +40,12 @@ namespace grad.Services
 					};
 				teacher.IsVerified = true;
 				teacher.IsActive = true;
-				bool res = await _repository.UpdateEntityAsync<Teacher>(teacher, cancellationToken: cancellationToken);
+				_repository.UpdateEntityAsync<Teacher>(teacher, cancellationToken: cancellationToken);
+				int res = await _uowServices.SaveChangesAsync();
 				return new ResultDTO
 				{
-					Message = res == true ? "Teacher activated successfully" : "Failed to activate teacher",
-					StatusCode = res == true ? StatusCodes.Status200OK : StatusCodes.Status500InternalServerError
+					Message = res != 0 ? "Teacher activated successfully" : "Failed to activate teacher",
+					StatusCode = res != 0 ? StatusCodes.Status200OK : StatusCodes.Status500InternalServerError
 				};
 			}
 		}
@@ -66,16 +69,17 @@ namespace grad.Services
 				if (user.RefreshToken != null)
 					user.RefreshToken.Revoked = true;
 				user.IsVerified = false;
-				bool res = await _repository.UpdateEntityAsync<User>(user, cancellationToken: cancellationToken);
+				_repository.UpdateEntityAsync<User>(user, cancellationToken: cancellationToken);
+				int res = await _uowServices.SaveChangesAsync();
 				return new ResultDTO
 				{
-					StatusCode = res == true ? StatusCodes.Status200OK : StatusCodes.Status500InternalServerError,
-					Message = res == true ? "User was blocked successfully" : "Failed to block user"
+					StatusCode = res != 0 ? StatusCodes.Status200OK : StatusCodes.Status500InternalServerError,
+					Message = res != 0 ? "User was blocked successfully" : "Failed to block user"
 				};
 			}
 		}
 
-		public Task<ResultDTO> DeactivateTeacher(ProfileDTO profileDTO, CancellationToken cancellationToken)
+		public Task<ResultDTO> DeactivateTeacher(ProfileDTO profileDTO, CancellationToken cancellationToken) //not implemented yet
 		{
 			throw new NotImplementedException();
 		}
@@ -95,11 +99,12 @@ namespace grad.Services
 			{
 				if(user.RefreshToken != null)
 					user.RefreshToken.Revoked = true;
-				bool res = await _repository.UpdateEntityAsync<User>(user, cancellationToken: cancellationToken);
+				_repository.UpdateEntityAsync<User>(user, cancellationToken: cancellationToken);
+				int res = await _uowServices.SaveChangesAsync();
 				return new ResultDTO
 				{
-					StatusCode = res == true ? StatusCodes.Status200OK : StatusCodes.Status500InternalServerError,
-					Message = res == true ? "User session ended successfully" : "Failed to end user session"
+					StatusCode = res != 0 ? StatusCodes.Status200OK : StatusCodes.Status500InternalServerError,
+					Message = res != 0 ? "User session ended successfully" : "Failed to end user session"
 				};
 			}
 		}

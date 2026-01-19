@@ -1,4 +1,5 @@
-﻿using grad.Model;
+﻿using grad.DTO;
+using grad.Model;
 
 namespace grad.Interfaces
 {
@@ -8,10 +9,13 @@ namespace grad.Interfaces
 
 		public string generateRefreshToken();
 
+		//private Task<object> validateToken(string token);
+
 		public Task<bool> blacklistToken(string token);
 
 		public Task<bool> IsTokenBlacklisted(string token);
 
-		public string getUID(string token);
+		public Task<AccessTokenDto> getTokenInfo(string token);
+		//public string getUID(string token);
 	}
 }

@@ -9,11 +9,13 @@ namespace grad.Services
 	{
 		private readonly IUserServices _userServices;
 		private readonly IRepository _repository;
+		private readonly IUowServices  _uowServices;
 
-		public ParentServices(IUserServices userServices,IRepository repository)
+		public ParentServices(IUserServices userServices,IRepository repository,IUowServices uowServices)
 		{
 			_userServices = userServices ?? throw new ArgumentNullException(nameof(userServices));
 			_repository = repository ?? throw new ArgumentNullException(nameof(repository));
+			_uowServices = uowServices ?? throw new ArgumentNullException(nameof(uowServices));
 		}
 		public async Task<ResultDTO> registerStudent(RegisterStudentDTO studentDTO, CancellationToken cancellationToken)
 		{
@@ -66,8 +68,9 @@ namespace grad.Services
 			else
 			{
 				user.Password = BCrypt.Net.BCrypt.HashPassword(login.password);
-				bool res = await _repository.UpdateEntityAsync<User>(user, cancellationToken: cancellationToken);
-				if (res)
+				_repository.UpdateEntityAsync<User>(user, cancellationToken: cancellationToken);
+				int res = await _uowServices.SaveChangesAsync();
+				if (res!=0)
 				{
 					return new ResultDTO
 					{

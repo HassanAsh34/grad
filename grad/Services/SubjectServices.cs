@@ -14,11 +14,13 @@ namespace grad.Services
 	{
 		private readonly IRepository _repository;
 		private readonly FireStoreContext _firestoreDb;
+		private readonly IUowServices _uowServices;
 
-		public SubjectServices(IRepository repository,FireStoreContext fireStoreDb)
+		public SubjectServices(IRepository repository,FireStoreContext fireStoreDb ,IUowServices uowServices)
 		{
 			_repository = repository ?? throw new ArgumentNullException();
 			_firestoreDb = fireStoreDb ?? throw new ArgumentNullException();
+			_uowServices = uowServices ?? throw new ArgumentNullException();
 		}
 		public async Task<ResultDTO> AddSubject(SubjectDTO subject, CancellationToken cancellationToken)
 		{
@@ -32,26 +34,28 @@ namespace grad.Services
 			}
 			else
 			{
-				Subject res = await _repository.CreateEntityAsync<Subject>(new Subject
+				Subject sub = new Subject
 				{
 					Name = subject.SubjectName,
 					deaf_mute = subject.deaf_mute
-				}, cancellationToken) as Subject;
-				if(res != null)
+				};
+				await _repository.CreateEntityAsync<Subject>(sub, cancellationToken);
+				int res = await _uowServices.SaveChangesAsync();
+				if(res != 0)
 				{
 					var Collection = _firestoreDb._Db.Collection("Subjects");
-					DocumentReference reference = Collection.Document(res.Id);
+					DocumentReference reference = Collection.Document(sub.Id);
 					await reference.SetAsync(new
 					{
-						subjectId = res.Id,
-						subjectName = res.Name,
-						deaf_mute = res.deaf_mute
+						subjectId = sub.Id,
+						subjectName = sub.Name,
+						deaf_mute = sub.deaf_mute
 					});
 				}
 				return new ResultDTO
 				{
-					Message = res != null ? "Subject added successfully" : "Failed to add subject",
-					StatusCode = res != null ? StatusCodes.Status201Created : StatusCodes.Status500InternalServerError,
+					Message = res != 0 ? "Subject added successfully" : "Failed to add subject",
+					StatusCode = res != 0 ? StatusCodes.Status201Created : StatusCodes.Status500InternalServerError,
 					result = res
 				};
 			}

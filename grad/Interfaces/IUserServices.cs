@@ -17,17 +17,22 @@ namespace grad.Interfaces
 
 		public Task<ResultDTO> ResetPasswordOTP(OTP_DTO otp, CancellationToken cancellationToken = default);
 
-		public Task<ResultDTO> refreshToken(RequestRefreshToken token, CancellationToken cancellationToken = default);
+		//public Task<ResultDTO> refreshToken(string token, CancellationToken cancellationToken = default);
+
+		public Task<ResultDTO> refreshToken(ResponseTokenDTO token, CancellationToken cancellationToken = default);
 
 
 		//public Task<ResultDTO> ResetPassword(string token, string NewPassword, User user);
 
 		//public Task<ResultDTO> ResetPassword(string password, User user = null);
-		public Task<ResultDTO> ResetPassword(ChangePasswordDTO changePassword, CancellationToken cancellationToken = default);
+		//public Task<ResultDTO> ResetPassword(ChangePasswordDTO changePassword, CancellationToken cancellationToken = default);
+
+		public Task<ResultDTO> ResetPassword(ChangePasswordDTO changePassword, bool resetToken = false, CancellationToken cancellationToken = default);
 
 		public Task<ResultDTO> ViewProfile(ProfileDTO user, CancellationToken cancellationToken = default);
 
-		public Task<ResultDTO> LogOut(string token, string uid, CancellationToken cancellationToken = default);
+		//public Task<ResultDTO> LogOut(string token, string uid, CancellationToken cancellationToken = default);
+		public Task<ResultDTO> LogOut(string token, string refreshtoken, string uid, CancellationToken cancellationToken = default);
 
 
 
