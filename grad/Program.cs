@@ -71,10 +71,14 @@ namespace grad
 						//.AllowCredentials();
 				});
 			});
+			bool Hosted = builder.Configuration.GetValue<bool>("Deployed");
 
 			builder.Services.AddDbContext<Db_Context>(options =>
 			{
-				options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+				if (Hosted == true)
+					options.UseSqlServer(builder.Configuration.GetConnectionString("DeployedConnection"));
+				else
+					options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 			});
 			builder.Services.AddAuthentication(options =>
 			{
@@ -113,9 +117,10 @@ namespace grad
 			bool enabled = builder.Configuration.GetValue<bool>("Redis:Enabled");
 			if (enabled)
 			{
+				string redisHost =  Hosted == true?  "Hosted" : "Local";
 				builder.Services.AddSingleton<IConnectionMultiplexer>(Services =>
 				{
-					var connectionString = builder.Configuration["Redis:ConnectionString"];
+					var connectionString = builder.Configuration[$"Redis:{redisHost}"];
 					if (string.IsNullOrEmpty(connectionString))
 					{
 						throw new InvalidOperationException("Redis connection string is not configured. Set Redis:ConnectionString in appsettings.json or environment variables.");

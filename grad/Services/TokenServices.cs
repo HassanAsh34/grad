@@ -191,7 +191,7 @@ namespace grad.Services
 
 		private string generateRefreshTokenKey()
 		{
-			var randomBytes = new byte[64];
+			var randomBytes = new byte[32];
 			using var rng = RandomNumberGenerator.Create();
 			rng.GetBytes(randomBytes);
 			return Convert.ToBase64String(randomBytes);
@@ -213,72 +213,90 @@ namespace grad.Services
 				IssuerSigningKey = _secretKey,
 				ValidateIssuer = false,
 				ValidateAudience = false,
-				ValidateLifetime = false, // 🔑 allow expired tokens
-										  //ValidIssuer = _config["Jwt:Issuer"],
-										  //ValidAudience = _config["Jwt:Audience"],
-										  //IssuerSigningKey = new SymmetricSecurityKey(
-										  //Encoding.UTF8.GetBytes(_config["Jwt:Key"]))
+				ValidateLifetime = false, // allow expired tokens
 			};
 
 			try
 			{
-				var principal = handler.ValidateToken(
-					token,
-					validationParameters,
-					out _
-				);
+				// Validate signature/structure (this is where exceptions are thrown when token is invalid)
+				var principal = handler.ValidateToken(token, validationParameters, out _);
 
-				bool exp = false;
-				TimeSpan time = TimeSpan.Zero;
 				var jwt = handler.ReadJwtToken(token);
-				if (jwt.ValidTo < System.DateTime.UtcNow)
-					exp = true;
-				else
-					time = jwt.ValidTo - System.DateTime.UtcNow;
 
-				//List<Claim> claims = jwt.Claims.ToList();
+				// Debug: show claims
+				var nameIdClaim = jwt.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.NameId)?.Value.Trim();
+				var subClaim = jwt.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value.Trim();
+				var jtiClaim = jwt.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Jti)?.Value.Trim();
 
-				//claims.ForEach(c =>
-				//{
-				//	Console.WriteLine($"{c.Type}||{c.Value.ToString()}");
-				//});
+				Console.WriteLine($"[validateRefreshToken] claims => nameid: '{nameIdClaim}', sub: '{subClaim}', jti: '{(jtiClaim != null ? jtiClaim : "<null>")}'");
 
-				if (!await IsTokenBlacklisted(token))
+				if (subClaim == null || jtiClaim == null)
 				{
-					RefreshTokenDTO refreshTokenDTO = new RefreshTokenDTO
-					{
-						Id = jwt.Claims.FirstOrDefault(c => c.Type == "nameid")?.Value,
-						Uid = jwt.Claims.FirstOrDefault(c => c.Type == "sub")?.Value,
-						TokenKey = principal.FindFirst(JwtRegisteredClaimNames.Jti)?.Value,
-					};
-					User user = await _repository.GetEntityAsync<User>(u => u.Id.ToLower().Equals(refreshTokenDTO.Uid), include: q => q.Include(u => u.RefreshToken), cancellationToken: cancellationToken);
-					if (user != null)
-					{
-						refreshTokenDTO.role = (int)user.Role;
-						RefreshToken refreshToken = user?.RefreshToken;
-						bool validRefresh = false;
-						if (refreshToken != null)
-						{
-							validRefresh = BCrypt.Net.BCrypt.Verify(refreshTokenDTO.TokenKey, refreshToken.TokenKey);
-						}
-						if (!validRefresh)
-							return null;
-						else
-						{
-							if (revoke)
-								return refreshToken;
-							else
-								return refreshTokenDTO;
-						}
-					}
-					else
-						return null;
-				}
-				else
+					Console.WriteLine("[validateRefreshToken] missing required claims (sub or jti).");
 					return null;
+				}
+
+				RefreshTokenDTO refreshTokenDTO = new RefreshTokenDTO
+				{
+					Id = nameIdClaim,
+					Uid = subClaim,
+					TokenKey = jtiClaim,
+				};
+
+				// Ensure we retrieve the user with included RefreshToken
+				User user = await _repository.GetEntityAsync<User>(
+					u => u.Id.ToLower().Equals(refreshTokenDTO.Uid.ToLower()),
+					include: q => q.Include(u => u.RefreshToken),
+					cancellationToken: cancellationToken);
+
+				if (user == null)
+				{
+					Console.WriteLine($"[validateRefreshToken] user not found for uid '{refreshTokenDTO.Uid}'.");
+					return null;
+				}
+
+				var refreshToken = user.RefreshToken;
+				if (refreshToken == null)
+				{
+					Console.WriteLine($"[validateRefreshToken] user has no RefreshToken record.");
+					return null;
+				}
+
+				Console.WriteLine($"[validateRefreshToken] stored hashed TokenKey (DB): '{refreshToken.TokenKey?.Substring(0, Math.Min(60, refreshToken.TokenKey?.Length ?? 0))}...'");
+
+				bool validRefresh = false;
+				try
+				{
+					// Debug: explicitly log the raw jti value length and a safe sample (do not log full sensitive tokens in production)
+					Console.WriteLine($"[validateRefreshToken] comparing raw jti length={refreshTokenDTO.TokenKey?.Length}, sample='{(refreshTokenDTO.TokenKey?.Length > 20 ? refreshTokenDTO.TokenKey.Substring(0, 20) + "..." : refreshTokenDTO.TokenKey)}'");
+
+					if (!string.IsNullOrEmpty(refreshToken.TokenKey))
+						validRefresh = BCrypt.Net.BCrypt.Verify(refreshTokenDTO.TokenKey, refreshToken.TokenKey);
+				}
+				catch (Exception exVerify)
+				{
+					Console.WriteLine($"[validateRefreshToken] BCrypt.Verify threw: {exVerify.Message}");
+					validRefresh = false;
+				}
+
+				Console.WriteLine($"[validateRefreshToken] BCrypt.Verify result: {validRefresh}");
+
+				if (!validRefresh)
+					return null;
+
+				refreshTokenDTO.role = (int)user.Role;
+
+				if (revoke)
+					return refreshToken;
+				else
+					return refreshTokenDTO;
 			}
-			catch
+			catch (Exception ex)
 			{
+				// Log the real exception so you can see why ValidateToken failed
+				Console.WriteLine("-----------------------------------------");
+				Console.WriteLine($"[validateRefreshToken] exception validating token: {ex.GetType().Name} - {ex.Message}");
+				Console.WriteLine(ex.StackTrace);
 				return null; // invalid or tampered token
 			}
 		}
