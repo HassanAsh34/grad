@@ -46,26 +46,20 @@ namespace grad.Migrations
 
             modelBuilder.Entity("grad.Model.RefreshToken", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("Created")
+                    b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("CreatedById")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<DateTime>("Expires")
-                        .HasColumnType("datetime2");
-
                     b.Property<bool>("Revoked")
                         .HasColumnType("bit");
 
-                    b.Property<string>("Token")
+                    b.Property<string>("TokenKey")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -122,7 +116,13 @@ namespace grad.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("ProfilePicture")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("Role")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("gender")
                         .HasColumnType("int");
 
                     b.HasKey("Id");

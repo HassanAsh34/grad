@@ -40,6 +40,7 @@ namespace grad.Services
 
 		public async Task<ResultDTO> register(SignupDTO ?user,Student ?student,bool Reg,CancellationToken cancellationToken)
 		{
+			User u = null;
 			if (Reg)
 			{
 				if (student == null)
@@ -53,8 +54,9 @@ namespace grad.Services
 				else
 				{
 				
-					await _repository.CreateEntityAsync<Student>(student, cancellationToken: cancellationToken);
+					_repository.CreateEntityAsync<Student>(student, cancellationToken: cancellationToken);
 					int res = await _uow.SaveChangesAsync();
+					u = student;
 					if(res == 0)
 					{
 						return new ResultDTO
@@ -92,16 +94,19 @@ namespace grad.Services
 						{
 							EmailorUserName = user.email,
 							Password = user.password,
-							Role = User.UserRole.Admin
+							Role = User.UserRole.Admin,
+							//ProfilePicture = user.filePath
 						};
 						//result = await _repository.CreateEntityAsync<Admin>(admin, cancellationToken: cancellationToken);
-						await _repository.CreateEntityAsync<Admin>(admin, cancellationToken: cancellationToken);
+						_repository.CreateEntityAsync<Admin>(admin, cancellationToken: cancellationToken);
+						u = admin;
 						break;
 					case (int)User.UserRole.Parent:
 						Parent parent = new Parent
 						{
 							EmailorUserName = user.email,
 							Password = user.password,
+							//ProfilePicture = user.filePath,
 							FName = user.FName,
 							LName = user.LName,
 							phoneNumber = user.phoneNumber,
@@ -110,21 +115,23 @@ namespace grad.Services
 							Role = User.UserRole.Parent
 						};
 						//result = await _repository.CreateEntityAsync<Parent>(parent, cancellationToken: cancellationToken);
-						await _repository.CreateEntityAsync<Parent>(parent, cancellationToken: cancellationToken);
+						_repository.CreateEntityAsync<Parent>(parent, cancellationToken: cancellationToken);
+						u= parent;
 						break;
 					case (int)User.UserRole.Teacher:
-						Subject subject = await _repository.GetEntityAsync<Subject>((s => s.Id.ToLower().Equals(user.SubjectID.ToLower())), cancellationToken: cancellationToken);
-						if (subject == null)
-						{
-							return new ResultDTO
-							{
-								StatusCode = StatusCodes.Status400BadRequest,
-								Message = "Registration Failed"
-							};
-						}
+						//Subject subject = await _repository.GetEntityAsync<Subject>((s => s.Id.ToLower().Equals(user.SubjectID.ToLower())), cancellationToken: cancellationToken);
+						//if (subject == null)
+						//{
+						//	return new ResultDTO
+						//	{
+						//		StatusCode = StatusCodes.Status400BadRequest,
+						//		Message = "Registration Failed"
+						//	};
+						//}
 						Teacher teacher = new Teacher
 						{
 							EmailorUserName = user.email,
+							//ProfilePicture = user.filePath,
 							Password = user.password,
 							FName = user.FName,
 							LName = user.LName,
@@ -135,11 +142,12 @@ namespace grad.Services
 							IsVerified = false,
 						};
 						//result = await _repository.CreateEntityAsync<Teacher>(teacher, cancellationToken: cancellationToken);
-						await _repository.CreateEntityAsync<Teacher>(teacher, cancellationToken: cancellationToken);
+						_repository.CreateEntityAsync<Teacher>(teacher, cancellationToken: cancellationToken);
 						//if (result is Teacher t)
 						//{
 						//	//await _emailServices.SendTeacherRegistrationEmail(t.EmailorUserName, cancellationToken);
 						//}
+						u = teacher;
 						break;
 					default:
 						//throw new ArgumentOutOfRangeException("Invalid role");
@@ -151,6 +159,7 @@ namespace grad.Services
 				}
 
 				//---------------------------------------------------
+				
 				int res = await _uow.SaveChangesAsync();
 				if (res == 0)
 					return new ResultDTO
@@ -158,11 +167,29 @@ namespace grad.Services
 						StatusCode = StatusCodes.Status400BadRequest,
 						Message = "Registration Failed"
 					};
-				return new ResultDTO
+				else
 				{
-					StatusCode = StatusCodes.Status201Created,
-					Message = "Thanks for working with us"
-				};
+					if (user.file != null && user.file.Length > 0)
+					{
+						string userFolder = Path.Combine("uploads", "users");
+						if (!System.IO.File.Exists(userFolder))
+						{
+							Directory.CreateDirectory(userFolder);
+						}
+
+						u.ProfilePicture = Path.Combine(userFolder, $"{u.Id}.jpg");
+
+						using var stream = new FileStream(u.ProfilePicture, FileMode.Create);
+						await user.file.CopyToAsync(stream, cancellationToken);
+						_repository.UpdateEntityAsync<User>(u, cancellationToken: cancellationToken);
+						await _uow.SaveChangesAsync();
+					}
+					return new ResultDTO
+					{
+						StatusCode = StatusCodes.Status201Created,
+						Message = "Thanks for working with us"
+					};
+				}
 			}
 		}
 
@@ -238,7 +265,7 @@ namespace grad.Services
 					{
 						await storeAttempts(user.EmailorUserName, true);
 
-						return await getTokenAsync(user,false,cancellationToken);
+						return await getTokenAsync(user,cancellationToken: cancellationToken);
 					}
 				}
 			}
@@ -378,7 +405,7 @@ namespace grad.Services
 			}
 			else
 			{
-				RT= await _repository.GetEntityAsync<RefreshToken>(filter: t => t.Token == changePassword.refreshToken && t.CreatedById == changePassword.Id, q => q.Include(u => u.User),
+				RT= await _repository.GetEntityAsync<RefreshToken>(filter: t => t.TokenKey == changePassword.refreshToken && t.CreatedById == changePassword.Id, q => q.Include(u => u.User),
 					cancellationToken: cancellationToken
 				);
 				user = RT.User;
@@ -427,8 +454,9 @@ namespace grad.Services
 		}
 
 
-		public async Task<ResultDTO> ViewProfile(ProfileDTO user, CancellationToken cancellationToken)
+		public async Task<ResultDTO> ViewProfile(ProfileDTO user, CancellationToken cancellationToken)//need to be fixed to show user pfp and add teacher 
 		{
+			bool found = false;
 			if (user != null)
 			{
 				if (Enum.TryParse<User.UserRole>(user.Role, out var role))
@@ -437,10 +465,12 @@ namespace grad.Services
 					{
 						case User.UserRole.Admin:
 							Admin admin = await _repository.GetEntityAsync<Admin>(u => u.Id.Equals(user.Id),cancellationToken: cancellationToken);
-							if(admin != null)
+							if(admin != null) 
 							{
 								user.Email = admin.EmailorUserName;
 								user.Name = "Admin";
+								user.pfpPath = admin.ProfilePicture;
+								found = true;
 							}
 							break;
 						case User.UserRole.Parent:
@@ -453,6 +483,8 @@ namespace grad.Services
 								user.Name = $"{parent.FName} {parent.LName}";
 								user.Address = parent.Address;
 								user.phone = parent.phoneNumber;
+								user.pfpPath = parent.ProfilePicture;
+								found = true;
 							}
 							break;
 						case User.UserRole.Student:
@@ -474,9 +506,29 @@ namespace grad.Services
 										EmailorUserName = student.parent.EmailorUserName,
 										FName = student.parent.FName,
 										phoneNumber = student.parent.phoneNumber,
-										reletationShip = student.parent.reletationShip
+										reletationShip = student.parent.reletationShip,
+										ProfilePicture = student.parent.ProfilePicture,
 									});
 								}
+								found = true;
+							}
+							break;
+						case User.UserRole.Teacher:
+							Teacher teacher = await _repository.GetEntityAsync<Teacher>(t => t.Id.ToLower().Equals(user.Id.ToLower()),include: q=>q.Include(t=>t.Subject), cancellationToken: cancellationToken);
+							if(teacher != null)
+							{
+								user.Id = teacher.Id;
+								user.Email = teacher.EmailorUserName;
+								user.Role = teacher.Role.ToString();
+								user.Name = $"{teacher.FName} {teacher.LName}";
+								user.Address = teacher.Address;
+								user.pfpPath = teacher.ProfilePicture;
+								user.phone = teacher.phoneNumber;
+								if(teacher.Subject != null) 
+								{
+									user.Teaches = teacher.Subject.Name;
+								}
+								found = true;
 							}
 							break;
 						default:
@@ -487,19 +539,21 @@ namespace grad.Services
 							};
 					}
 				}
-				if (user.Name.IsNullOrEmpty())
+				if (!found)
 					return new ResultDTO
 					{
 						StatusCode = StatusCodes.Status404NotFound,
 						Message = "User isn't found"
 					};
 				else
+				{
 					return new ResultDTO
 					{
 						Message = "Found",
 						StatusCode = StatusCodes.Status200OK,
 						result = user
 					};
+				}
 			}
 			else
 				return new ResultDTO
@@ -511,36 +565,35 @@ namespace grad.Services
 
 		public async Task<ResultDTO> LogOut(string token,string refreshtoken,string uid ,CancellationToken cancellationToken = default) // need some improvements
 		{
-			RefreshToken t = await _repository.GetEntityAsync<RefreshToken>(filter: t => t.Token == refreshtoken && t.CreatedById == uid &&
-					!t.Revoked,
-				cancellationToken: cancellationToken
-			);
-			if (t == null)
-				return new ResultDTO
-				{
-					StatusCode= StatusCodes.Status500InternalServerError,
-					Message = "something went wrong"
-				};
-			else
-			{
-				revokeToken(t, cancellationToken);
-				int res = await _uow.SaveChangesAsync();
-				if (res != 0)
-				{
-					await _TokenServices.blacklistToken(token);
-					return new ResultDTO
-					{
-						Message = "Logged Out",
-						StatusCode = StatusCodes.Status204NoContent
-					};
-				}
-				else
-					return new ResultDTO
-					{
-						StatusCode = StatusCodes.Status500InternalServerError,
-						Message = "Something went wrong"
-					};
-			}
+			throw new NotImplementedException();
+			_TokenServices.blacklistToken(token);
+
+			//if (t == null)
+			//	return new ResultDTO
+			//	{
+			//		StatusCode= StatusCodes.Status500InternalServerError,
+			//		Message = "something went wrong"
+			//	};
+			//else
+			//{
+			//	revokeToken(t, cancellationToken);
+			//	int res = await _uow.SaveChangesAsync();
+			//	if (res != 0)
+			//	{
+			//		await _TokenServices.blacklistToken(token);
+			//		return new ResultDTO
+			//		{
+			//			Message = "Logged Out",
+			//			StatusCode = StatusCodes.Status204NoContent
+			//		};
+			//	}
+			//	else
+			//		return new ResultDTO
+			//		{
+			//			StatusCode = StatusCodes.Status500InternalServerError,
+			//			Message = "Something went wrong"
+			//		};
+			//}
 		}
 
 
@@ -722,41 +775,41 @@ namespace grad.Services
 		//		//return null;
 		//}
 
-		public async Task<ResultDTO> refreshToken(ResponseTokenDTO token,CancellationToken cancellationToken)
-		{
-			var tokenInfo = await _TokenServices.getTokenInfo(token.AccessToken);
+		//public async Task<ResultDTO> refreshToken(ResponseTokenDTO token, CancellationToken cancellationToken)
+		//{
+		//	var tokenInfo = await _TokenServices.getTokenInfo(token.AccessToken);
 
-			if (tokenInfo == null || string.IsNullOrEmpty(tokenInfo.ID))
-			{
-				return new ResultDTO
-				{
-					StatusCode = StatusCodes.Status401Unauthorized,
-					Message = "Invalid access token."
-				};
-			}
+		//	if (tokenInfo == null || string.IsNullOrEmpty(tokenInfo.ID))
+		//	{
+		//		return new ResultDTO
+		//		{
+		//			StatusCode = StatusCodes.Status401Unauthorized,
+		//			Message = "Invalid access token."
+		//		};
+		//	}
 
-			var validRefreshToken = await ValidateRefreshToken(
-				token.RefreshToken,
-				tokenInfo.ID,
-				cancellationToken
-			);
+		//	var validRefreshToken = await ValidateRefreshToken(
+		//		token.RefreshToken,
+		//		tokenInfo.ID,
+		//		cancellationToken
+		//	);
 
-			if (validRefreshToken == null)
-			{
-				return new ResultDTO
-				{
-					StatusCode = StatusCodes.Status401Unauthorized,
-					Message = "Refresh token is invalid or expired. Please log in again."
-				};
-			}
+		//	if (validRefreshToken == null)
+		//	{
+		//		return new ResultDTO
+		//		{
+		//			StatusCode = StatusCodes.Status401Unauthorized,
+		//			Message = "Refresh token is invalid or expired. Please log in again."
+		//		};
+		//	}
 
-			var user = validRefreshToken.User;
+		//	var user = validRefreshToken.User;
 
-			// optional: rotate refresh token here
-			user.RefreshToken = validRefreshToken;
+		//	// optional: rotate refresh token here
+		//	user.RefreshToken = validRefreshToken;
 
-			return await getTokenAsync(user, true, cancellationToken);
-		}
+		//	return await getTokenAsync(user, true, cancellationToken);
+		//}
 
 
 		//private async Task<object> ValidateRefreshToken(string refreshtoken,string id, CancellationToken cancellationToken) // need some improvements
@@ -778,69 +831,105 @@ namespace grad.Services
 		//	}
 		//}
 
-		private async Task<RefreshToken?> ValidateRefreshToken(string refreshToken,string userId,CancellationToken cancellationToken)
+		public async Task<ResultDTO> refreshToken(string refresh, CancellationToken cancellationToken)
 		{
-			if (string.IsNullOrWhiteSpace(refreshToken) || string.IsNullOrWhiteSpace(userId))
-				return null;
-
-			var token = await _repository.GetEntityAsync<RefreshToken>(
-				filter: t =>
-					t.Token == refreshToken &&
-					t.CreatedById == userId &&
-					!t.Revoked,
-				include: q => q.Include(t => t.User),
-				cancellationToken: cancellationToken
-			);
-
-			return token;
-		}
-		private async Task<ResultDTO> getTokenAsync(User user, bool refresh, CancellationToken cancellationToken)
-		{
-			if (refresh)
+			var token = await _TokenServices.getTokenInfo(refresh, cancellationToken);
+			if(token is RefreshTokenDTO refreshToken && !refreshToken.Uid.IsNullOrEmpty())
 			{
-				return new ResultDTO
+				User user = await _repository.GetEntityAsync<User>(usr => usr.Id.ToLower().Equals(refreshToken.Uid.ToLower()), cancellationToken: cancellationToken);
+				if (user != null)
 				{
-					StatusCode = StatusCodes.Status200OK,
-					Message = "Token generated successfully",
-					result = _TokenServices.generateAccessToken(user)
-				};
-			}
-			else
-			{
-				RefreshToken refreshToken = await _repository.GetEntityAsync<RefreshToken>((t => t.CreatedById == user.Id), cancellationToken: cancellationToken);
-				if (refreshToken != null)
-				{
-					////bool result = await _repository.DeleteEntityAsync<RefreshToken>(oldToken);
-					//_repository.DeleteEntityAsync<RefreshToken>(oldToken);
-					//if (!result)
-					//{
-					//	return new ResultDTO
-					//	{
-					//		StatusCode = StatusCodes.Status500InternalServerError,
-					//		Message = "Error generating new token"
-					//	};// something wrong within delete of old token
-					//}
-					refreshToken.CreatedById = user.Id;
-					refreshToken.Created = DateTime.UtcNow;
-					refreshToken.Expires = DateTime.UtcNow.AddDays(7);
-					refreshToken.Token = _TokenServices.generateRefreshToken();
-					refreshToken.Revoked = false;
-					_repository.UpdateEntityAsync(refreshToken);
+					return await getTokenAsync(user,cancellationToken:cancellationToken);
 				}
 				else
 				{
-					refreshToken = new RefreshToken
+					return new ResultDTO
 					{
-						CreatedById = user.Id,
-						Created = DateTime.UtcNow,
-						Expires = DateTime.UtcNow.AddDays(7),
-						Token = _TokenServices.generateRefreshToken(),
-						Revoked = false
+						StatusCode = StatusCodes.Status401Unauthorized,
+						Message = "You are not authorized, please log in again."
 					};
-					await _repository.CreateEntityAsync<RefreshToken>(refreshToken, cancellationToken);
 				}
-				int res = await _uow.SaveChangesAsync();
-				if (res == 0)
+			}
+			else
+				return new ResultDTO
+				{
+					StatusCode = StatusCodes.Status401Unauthorized,
+					Message = "You are not authorized, please log in again."
+				};
+		}
+
+		//private async Task<RefreshToken?> ValidateRefreshToken(string refreshToken,CancellationToken cancellationToken)
+		//{
+		//	if (string.IsNullOrWhiteSpace(refreshToken) || string.IsNullOrWhiteSpace(userId))
+		//		return null;
+
+		//	var token = await _repository.GetEntityAsync<RefreshToken>(
+		//		filter: t =>
+		//			t.Token == refreshToken &&
+		//			t.CreatedById == userId &&
+		//			!t.Revoked,
+		//		include: q => q.Include(t => t.User),
+		//		cancellationToken: cancellationToken
+		//	);
+
+		//	return token;
+		//}
+		private async Task<ResultDTO> getTokenAsync(User user = null,bool refresh = false,string refreshToken = "", CancellationToken cancellationToken = default)
+		{
+			if (refresh)
+			{
+				if(!refreshToken.IsNullOrEmpty())
+				{
+					return new ResultDTO
+					{
+						Message = "Something Went Wrong please try to login again",
+						StatusCode = StatusCodes.Status400BadRequest
+					};
+				}
+				else
+				{
+					RefreshTokenDTO refreshTokenDTO = await _TokenServices.getTokenInfo(refreshToken, cancellationToken);
+					if (refreshTokenDTO != null)
+					{
+						User u = await _repository.GetEntityAsync<User>(usr => usr.Id.ToLower().Equals(refreshTokenDTO.Uid), cancellationToken: cancellationToken);
+						if (u != null)
+						{
+							ResponseTokenDTO token = new ResponseTokenDTO
+							{
+								AccessToken = _TokenServices.generateAccessToken(u),
+								RefreshToken = refreshToken
+							};
+							return new ResultDTO
+							{
+								StatusCode = StatusCodes.Status200OK,
+								Message = "Logined Successfully",
+								result = token ////
+							};
+						}
+						else
+						{
+							return new ResultDTO
+							{
+								Message = "Something Went Wrong please try to login again",
+								StatusCode = StatusCodes.Status400BadRequest
+							};
+						}
+					}
+					else 
+						return new ResultDTO
+						{
+							Message = "Something Went Wrong please try to login again",
+							StatusCode = StatusCodes.Status400BadRequest
+						};
+				}
+			}
+			else
+			{
+
+				string refreshTokenString = await _TokenServices.generateRefreshToken(user, cancellationToken);
+				
+				//int res = await _uow.SaveChangesAsync();
+				if (refreshTokenString.IsNullOrEmpty())
 				{
 					return new ResultDTO
 					{
@@ -853,7 +942,7 @@ namespace grad.Services
 					ResponseTokenDTO token = new ResponseTokenDTO
 					{
 						AccessToken = _TokenServices.generateAccessToken(user),
-						RefreshToken = refreshToken.Token
+						RefreshToken = refreshTokenString
 					};
 					return new ResultDTO
 					{
@@ -868,6 +957,6 @@ namespace grad.Services
 
 
 
-	}
+	} 
 }
 

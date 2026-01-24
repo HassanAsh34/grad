@@ -6,9 +6,11 @@
 
 		public string Name { get; set; }
 
-		public IEnumerable<ModelExam> models { get; set; }
+		public int total_questions { get; set; } = 0;
 
-		
 
+		public List<Question> questions { get; set; } 
+
+		public int total_score => questions.Sum(q=>q.score); 
 	}
 }

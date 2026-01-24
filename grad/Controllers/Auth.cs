@@ -42,7 +42,7 @@ namespace grad.Controllers
 						HttpOnly = true,
 						Secure = true,
 						SameSite = SameSiteMode.Lax,
-						Expires = DateTimeOffset.UtcNow.AddDays(7)
+						Expires = DateTimeOffset.UtcNow.AddMinutes(15)
 					});
 					Response.Cookies.Append("refresh_token", token.RefreshToken, new CookieOptions
 					{
@@ -60,65 +60,52 @@ namespace grad.Controllers
 			}
 		}
 
-		//[AllowAnonymous]
-		//[HttpPost("Refresh-Token")]
-		//public async Task<IActionResult> RefreshToken([FromBody] RequestRefreshToken token,CancellationToken cancellationToken)//tested
-		//{
-		//	token.AccessToken = Request.Headers.Authorization.ToString();
-		//	if (!ModelState.IsValid || token.AccessToken.IsNullOrEmpty())
-		//		return BadRequest(new
-		//		{
-		//			StatusCode = 400,
-		//			Message = "Invalid Token"
-		//		});
-		//	ResultDTO res = await _userService.refreshToken(token, cancellationToken);
-		//	return StatusCode(res.StatusCode, new { Message = res.Message, Data = res.result });
-		//}
-
 
 		[AllowAnonymous]
 		[HttpPost("Refresh-Token")]
 		public async Task<IActionResult> RefreshToken(CancellationToken cancellationToken)
 		{
-			ResponseTokenDTO tokenDTO = new ResponseTokenDTO
+			//ResponseTokenDTO tokenDTO = new ResponseTokenDTO
+			//{
+			//	AccessToken = Request.Cookies["access_token"],
+			//	RefreshToken = Request.Cookies["refresh_token"]
+			//};
+			string refreshToken = Request.Cookies["refresh_token"];
+
+			Console.WriteLine(refreshToken);
+			//Console.WriteLine(tokenDTO.AccessToken);
+			//Console.WriteLine(tokenDTO.RefreshToken);
+			if (refreshToken.IsNullOrEmpty())
+				return StatusCode(StatusCodes.Status401Unauthorized,
+					new { Message = "Refresh token is invalid or expired. Please log in again." });
+			else
 			{
-				AccessToken = Request.Cookies["access_token"],
-				RefreshToken = Request.Cookies["refresh_token"]
-			};
-			Console.WriteLine(tokenDTO.AccessToken);
-			Console.WriteLine(tokenDTO.RefreshToken);
-			if(tokenDTO.AccessToken.IsNullOrEmpty()||tokenDTO.RefreshToken.IsNullOrEmpty())
-				return StatusCode( StatusCodes.Status401Unauthorized,
-					new {Message = "Refresh token is invalid or expired. Please log in again." });
-			ResultDTO res = await _userService.refreshToken(tokenDTO, cancellationToken);
-			string token = res.result as string;
-			if(!token.IsNullOrEmpty())
-			{
-				Response.Cookies.Append(
-					"access_token",
-					token,
-					new CookieOptions
+				ResultDTO res = await _userService.refreshToken(refreshToken, cancellationToken);
+				if (res.result is ResponseTokenDTO tokenDTO)
+				{
+					Response.Cookies.Append("access_token", tokenDTO.AccessToken, new CookieOptions
 					{
 						HttpOnly = true,
 						Secure = true,
 						SameSite = SameSiteMode.Lax,
 						Expires = DateTimeOffset.UtcNow.AddMinutes(15)
-					}
-				);
-				return Ok();
+					});
+					return Ok();
+				}
+				else
+				{
+					return StatusCode(res.StatusCode,
+					new { Message = res.Message });
+				}
 			}
-			else
-				return StatusCode(StatusCodes.Status401Unauthorized,
-					new { Message = "Refresh token is invalid or expired. Please log in again." });
-			//return StatusCode(res.StatusCode, new { Message = res.Message, Data = res.result });
-			//return Ok(res);
 		}
 
 
 
 		[AllowAnonymous]
 		[HttpPost("Sign-Up")]
-		public async Task<IActionResult> register([FromBody] SignupDTO user,CancellationToken cancellationToken)// implement teacher
+		[Consumes("multipart/form-data")] //add cloud storage instead of using local cloudinary
+		public async Task<IActionResult> register([FromForm] SignupDTO user,CancellationToken cancellationToken) //fix refresh token
 		{
 			if (!ModelState.IsValid)
 			{
@@ -126,7 +113,10 @@ namespace grad.Controllers
 			}
 			else
 			{
+				//we need to add a default picture for the users
 				ResultDTO result = await _userService.register(user, cancellationToken: cancellationToken);
+				if(result.StatusCode != StatusCodes.Status201Created)
+					System.IO.File.Delete(user.filePath);
 				return StatusCode(result.StatusCode, new
 				{
 					Message = result.Message
@@ -135,6 +125,7 @@ namespace grad.Controllers
 		}
 
 
+		[AllowAnonymous]
 		[HttpPost("Request-Password-change")]
 		public async Task<IActionResult> RPCHANGE(string EmailorUserName, CancellationToken cancellationToken)
 		{
@@ -152,7 +143,7 @@ namespace grad.Controllers
 
 
 		//	//[HttpPost]
-
+		[AllowAnonymous]
 		[HttpPost("Verify-OTP")]
 		public async Task<IActionResult> CheckOTP([FromBody] OTP_DTO otp, CancellationToken cancellationToken)
 		{
@@ -168,7 +159,7 @@ namespace grad.Controllers
 
 
 		[Authorize(Roles = "ResetPassword")]
-		[HttpPost("reset-password")]
+		[HttpPatch("reset-password")]
 		public async Task<IActionResult> resetPassword(ChangePasswordDTO newpass,CancellationToken cancellationToken) //isnt completed yet when its done we need to configure the email right also dont forget to enable redis
 		{
 			/*var passwordRegex = new System.Text.RegularExpressions.Regex(
@@ -223,7 +214,7 @@ namespace grad.Controllers
 		}
 
 		[Authorize(Roles = "Admin,Teacher,Student,Parent")]
-		[HttpPost("change-password")]
+		[HttpPatch("change-password")]
 		public async Task<IActionResult> changePassword(ChangePasswordDTO changePassword,CancellationToken cancellationToken)//Tested
 		{
 			//_userService.ResetPassword(changePassword);
@@ -261,7 +252,7 @@ namespace grad.Controllers
 		}
 
 		[Authorize(Roles = "Admin,Teacher,Student,Parent")]
-		[HttpPost("logout")]
+		[HttpPatch("logout")]
 		public async Task<IActionResult> logout(CancellationToken cancellationToken)// needs mofication
 		{
 			string accesstoken = Request.Cookies["access_token"];

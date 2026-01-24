@@ -17,5 +17,7 @@ namespace grad.DTO
 		public bool deaf_mute { get; set; }
 
 		public int? lessonsCount { get; set; } = 0;
+
+		public int? levelsCount { get; set; } = 0;
 	}
 }

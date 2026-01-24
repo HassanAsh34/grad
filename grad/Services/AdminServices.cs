@@ -3,6 +3,7 @@ using grad.Interfaces;
 using grad.Model;
 using Grpc.Core;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 namespace grad.Services
 {
@@ -21,40 +22,40 @@ namespace grad.Services
 			_uowServices = uowServices ?? throw new ArgumentNullException(nameof(uowServices));	
 		}
 
-		public async Task<ResultDTO> ActivateTeacher(ProfileDTO profileDTO, CancellationToken cancellationToken)
-		{
-			Teacher teacher = await _repository.GetEntityAsync<Teacher>(t => t.Id.ToLower().Equals(profileDTO.Id.ToLower()), cancellationToken: cancellationToken);
-			if (teacher == null)
-				return new ResultDTO
-				{
-					Message = "Teacher not found",
-					StatusCode = StatusCodes.Status404NotFound
-				};
-			else
-			{
-				if(teacher.IsActive)
-					return new ResultDTO
-					{
-						Message = "Teacher is already activated",
-						StatusCode = StatusCodes.Status400BadRequest
-					};
-				teacher.IsVerified = true;
-				teacher.IsActive = true;
-				_repository.UpdateEntityAsync<Teacher>(teacher, cancellationToken: cancellationToken);
-				int res = await _uowServices.SaveChangesAsync();
-				return new ResultDTO
-				{
-					Message = res != 0 ? "Teacher activated successfully" : "Failed to activate teacher",
-					StatusCode = res != 0 ? StatusCodes.Status200OK : StatusCodes.Status500InternalServerError
-				};
-			}
-		}
+		//public async Task<ResultDTO> ActivateTeacher(ProfileDTO profileDTO, CancellationToken cancellationToken)
+		//{
+		//	Teacher teacher = await _repository.GetEntityAsync<Teacher>(t => t.Id.ToLower().Equals(profileDTO.Id.ToLower()), cancellationToken: cancellationToken);
+		//	if (teacher == null)
+		//		return new ResultDTO
+		//		{
+		//			Message = "Teacher not found",
+		//			StatusCode = StatusCodes.Status404NotFound
+		//		};
+		//	else
+		//	{
+		//		if(teacher.IsActive)
+		//			return new ResultDTO
+		//			{
+		//				Message = "Teacher is already activated",
+		//				StatusCode = StatusCodes.Status400BadRequest
+		//			};
+		//		teacher.IsVerified = true;
+		//		teacher.IsActive = true;
+		//		_repository.UpdateEntityAsync<Teacher>(teacher, cancellationToken: cancellationToken);
+		//		int res = await _uowServices.SaveChangesAsync();
+		//		return new ResultDTO
+		//		{
+		//			Message = res != 0 ? "Teacher activated successfully" : "Failed to activate teacher",
+		//			StatusCode = res != 0 ? StatusCodes.Status200OK : StatusCodes.Status500InternalServerError
+		//		};
+		//	}
+		//}
 
 
 		
-		public async Task<ResultDTO> BlockUser(ProfileDTO? profileDTO, CancellationToken cancellationToken)
+		public async Task<ResultDTO> BlockUser(string UID, CancellationToken cancellationToken)
 		{
-			User user = await _repository.GetEntityAsync<User>(u=>u.Id == profileDTO.Id,q=>q.Include(u=>u.RefreshToken) ,cancellationToken: cancellationToken);
+			User user = await _repository.GetEntityAsync<User>(u=>u.Id == UID,q=>q.Include(u=>u.RefreshToken) ,cancellationToken: cancellationToken);
 			if (user == null)
 			{
 				return new ResultDTO
@@ -79,14 +80,36 @@ namespace grad.Services
 			}
 		}
 
-		public Task<ResultDTO> DeactivateTeacher(ProfileDTO profileDTO, CancellationToken cancellationToken) //not implemented yet
-		{
-			throw new NotImplementedException();
-		}
+		//public async Task<ResultDTO> DeactivateTeacher(string UID, CancellationToken cancellationToken) //not implemented yet
+		//{
+		//	Teacher user = await _repository.GetEntityAsync<Teacher>(u => u.Id == UID, q => q.Include(u => u.RefreshToken), cancellationToken: cancellationToken);
+		//	if (user == null)
+		//	{
+		//		return new ResultDTO
+		//		{
+		//			StatusCode = StatusCodes.Status404NotFound,
+		//			Message = "User not found"
+		//		};
+		//	}
+		//	else
+		//	{
+		//		user.IsActive = false;
+		//		if (user.RefreshToken != null)
+		//			user.RefreshToken.Revoked = true;
+		//		user.IsVerified = false;
+		//		_repository.UpdateEntityAsync<User>(user, cancellationToken: cancellationToken);
+		//		int res = await _uowServices.SaveChangesAsync();
+		//		return new ResultDTO
+		//		{
+		//			StatusCode = res != 0 ? StatusCodes.Status200OK : StatusCodes.Status500InternalServerError,
+		//			Message = res != 0 ? "User was blocked successfully" : "Failed to block user"
+		//		};
+		//	}
+		//}
 
-		public async Task<ResultDTO> EndSession(ProfileDTO? profileDTO, CancellationToken cancellationToken)
+		public async Task<ResultDTO> EndSession(string UID, CancellationToken cancellationToken)
 		{
-			User user = await _repository.GetEntityAsync<User>(u => u.Id == profileDTO.Id, q => q.Include(u => u.RefreshToken), cancellationToken: cancellationToken);
+			User user = await _repository.GetEntityAsync<User>(u => u.Id == UID, q => q.Include(u => u.RefreshToken), cancellationToken: cancellationToken);
 			if (user == null)
 			{
 				return new ResultDTO
@@ -130,12 +153,66 @@ namespace grad.Services
 			};
 		}
 
-		public Task<ResultDTO> RemoveSubject(SubjectDTO subject, CancellationToken cancellationToken)
+		public async Task<ResultDTO> ViewSubject(string sid, CancellationToken cancellation)
+		{
+			//if(subject != null && !subject.SubjectId.IsNullOrEmpty())
+			//{
+			//	return await _subjectServices.ViewSubjectAsync(subject, cancellation);
+			//}
+			//else
+			//{
+			//	return new ResultDTO
+			//	{
+			//		Message = "Subject not found",
+			//		StatusCode = StatusCodes.Status404NotFound
+			//	};
+			//}
+			return await _subjectServices.ViewSubjectAsync(sid, cancellation);
+		}
+
+		public async Task<ResultDTO> AssignTeacherToSubject(AssignTeacherDTO assignTeacherDTO, CancellationToken cancellationToken)
+		{
+			Teacher teacher = await _repository.GetEntityAsync<Teacher>(t => t.Id.ToLower().Equals(assignTeacherDTO.TeacherId.ToLower()), cancellationToken: cancellationToken);
+			if(!await _subjectServices.IsSubjectExist(subjectId: assignTeacherDTO.SubjectId, cancellationToken: cancellationToken))
+			{
+				return new ResultDTO
+				{
+					Message = "invalid subject",
+					StatusCode = StatusCodes.Status404NotFound
+				};
+			}
+			if(teacher == null)
+			{
+				return new ResultDTO
+				{
+					Message = "Teacher not found",
+					StatusCode = StatusCodes.Status404NotFound
+				};
+			}
+			else
+			{
+				if(!teacher.IsActive || !teacher.IsVerified)
+				{
+					teacher.IsActive = true;
+					teacher.IsVerified = true;
+				}
+				teacher.SubjectFK = assignTeacherDTO.SubjectId;
+				_repository.UpdateEntityAsync<Teacher>(teacher, cancellationToken: cancellationToken);
+				int res = await _uowServices.SaveChangesAsync();
+				return new ResultDTO
+				{
+					Message = res != 0 ? "Teacher assigned to subject successfully" : "Failed to assign teacher to subject",
+					StatusCode = res != 0 ? StatusCodes.Status200OK : StatusCodes.Status500InternalServerError
+				};
+			}
+		}
+
+		public Task<ResultDTO> RemoveSubject(string sid, CancellationToken cancellationToken)
 		{
 			throw new NotImplementedException();
 		}
 
-		public Task<ResultDTO> UpdateSubject(SubjectDTO subject, CancellationToken cancellationToken)
+		public Task<ResultDTO> UpdateSubject(string sid, CancellationToken cancellationToken)
 		{
 			throw new NotImplementedException();
 		}

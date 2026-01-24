@@ -1,14 +1,17 @@
-﻿namespace grad.Model
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace grad.Model
 {
 	public class RefreshToken
 	{
-		public int Id { get; set; }
+		[Key]
+		public string Id { get; private set; } = Guid.NewGuid().ToString();
 
-		public string Token { get; set; }
+		public string TokenKey { get; set; }
 
-		public DateTime Expires { get; set; } = DateTime.UtcNow.AddDays(7); //long lived
+		//public DateTime Expires { get; set; } = DateTime.UtcNow.AddDays(7); //long lived
 
-		public DateTime Created { get; set; } = DateTime.UtcNow;
+		public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
 		public string CreatedById { get; set; }
 
@@ -20,9 +23,9 @@
 
 		//public string ReplacedByToken { get; set; }
 
-		public bool IsActive => !Revoked && !IsExpired;
+		public bool IsActive => !Revoked;
 
-		public bool IsExpired => DateTime.UtcNow >= Expires;
+		//public bool IsExpired => DateTime.UtcNow >= Expires;
 
 	}
 }

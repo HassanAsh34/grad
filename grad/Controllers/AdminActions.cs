@@ -27,7 +27,7 @@ namespace grad.Controllers
 		//}
 
 
-		[HttpPost("Show-Users")]
+		[HttpGet("Show-Users")]
 		public async Task<IActionResult> ShowUsers(CancellationToken cancellationToken)
 		{
 			ResultDTO res = await _adminServices.GetAllUsers(cancellationToken);
@@ -35,46 +35,72 @@ namespace grad.Controllers
 		}
 
 		[HttpPost("view-user")]
-		public async Task<IActionResult> ViewUser(ProfileDTO profileDTO,CancellationToken cancellationToken)
+		public async Task<IActionResult> ViewUser(ProfileDTO profileDTO, CancellationToken cancellationToken)
 		{
-			if (profileDTO.Id.IsNullOrEmpty() && profileDTO.Role.IsNullOrEmpty() && profileDTO != null) {
+			if (profileDTO.Id.IsNullOrEmpty() && profileDTO.Role.IsNullOrEmpty() && profileDTO != null)
+			{
 				return Unauthorized(new { Message = "Invalid User" });
 			}
 			else
 			{
-				ResultDTO res = await _adminServices.ViewUser(profileDTO,cancellationToken);
+				ResultDTO res = await _adminServices.ViewUser(profileDTO, cancellationToken);
+				if (res.StatusCode == StatusCodes.Status200OK && res.result is ProfileDTO profile)
+				{
+					profile.pfpURL = $"{Request.Scheme}://{Request.Host}/{profile.pfpPath}";
+					Console.WriteLine(profile.pfpURL);
+				}
 				return StatusCode(res.StatusCode, new { Message = res.Message, Data = res.result });
 			}
 		}
 
-		[HttpPost("End-Session")]
-		public async Task<IActionResult> EndSession(ProfileDTO profileDTO, CancellationToken cancellationToken)
+		//[HttpGet("view-user/{id}")]
+		//public async Task<IActionResult> ViewUser(string id, CancellationToken cancellationToken)
+		//{
+		//	if (id.IsNullOrEmpty())
+		//	{
+		//		return Unauthorized(new { Message = "Invalid User" });
+		//	}
+		//	else
+		//	{
+		//		ResultDTO res = await _adminServices.ViewUser(id, cancellationToken);
+		//		if (res.StatusCode == StatusCodes.Status200OK && res.result is ProfileDTO profile)
+		//		{
+		//			profile.pfpURL = $"{Request.Scheme}://{Request.Host}/{profile.pfpPath}";
+		//			Console.WriteLine(profile.pfpURL);
+		//		}
+		//		return StatusCode(res.StatusCode, new { Message = res.Message, Data = res.result });
+		//	}
+		//}
+
+
+		[HttpPatch("End-Session/{id}")]
+		public async Task<IActionResult> EndSession(string id, CancellationToken cancellationToken)
 		{
-			if (profileDTO.Id.IsNullOrEmpty() && profileDTO.Role.IsNullOrEmpty() && profileDTO != null)
+			if (id.IsNullOrEmpty())
 			{
 				return Unauthorized(new { Message = "Invalid User" });
 			}
 			else
 			{
-				ResultDTO res = await _adminServices.EndSession(profileDTO, cancellationToken);
+				ResultDTO res = await _adminServices.EndSession(id, cancellationToken);
 				return StatusCode(res.StatusCode, new { Message = res.Message });
 			}
 		}
-		[HttpPost("Block-User")]
-		public async Task<IActionResult> BlockUser(ProfileDTO profileDTO, CancellationToken cancellationToken)
+		[HttpPatch("Block-User/{id}")]
+		public async Task<IActionResult> BlockUser(string id, CancellationToken cancellationToken)
 		{
-			if (profileDTO.Id.IsNullOrEmpty() && profileDTO.Role.IsNullOrEmpty() && profileDTO != null)
+			if (id.IsNullOrEmpty())
 			{
 				return Unauthorized(new { Message = "Invalid User" });
 			}
 			else
 			{
-				ResultDTO res = await _adminServices.BlockUser(profileDTO, cancellationToken);
+				ResultDTO res = await _adminServices.BlockUser(id, cancellationToken);
 				return StatusCode(res.StatusCode, new { Message = res.Message });
 			}
 		}
 
-		[HttpPost("Unblock-User")]
+		[HttpPatch("Unblock-User")]
 		public async Task<IActionResult> UnblockUser(ProfileDTO profileDTO, CancellationToken cancellationToken) //not working yet
 		{
 			if (profileDTO.Id.IsNullOrEmpty() && profileDTO.Role.IsNullOrEmpty() && profileDTO != null)
@@ -87,13 +113,26 @@ namespace grad.Controllers
 			}
 		}
 
-		[HttpPost("List-Subjects")]
+		[HttpGet("List-Subjects")]
 		[Authorize(Roles = "Admin")]
 		public async Task<IActionResult> ListSubject(CancellationToken cancellationToken)
 		{
 			ResultDTO res = await _adminServices.ViewSubjects(cancellationToken);
 			return StatusCode(res.StatusCode, new { Message = res.Message, Data = res.result });
 		}
+
+		[HttpGet("View-Subject/{sid}")]
+		[Authorize(Roles = "Admin")]
+		public async Task<IActionResult> ViewSubject(string sid,CancellationToken cancellationToken)
+		{
+			if(sid.IsNullOrEmpty())
+			{
+				return StatusCode(400, new { Message = "invalid subject" });
+			}
+			ResultDTO res = await _adminServices.ViewSubject(sid, cancellationToken);
+			return StatusCode(res.StatusCode, new { Message = res.Message, Data = res.result });
+		}
+
 
 		[HttpPost("Add-Subject")]
 		[Authorize(Roles = "Admin")]
@@ -110,31 +149,42 @@ namespace grad.Controllers
 			}
 		}
 
-		[HttpPost("Edit-Subject")]
+		[HttpPatch("Edit-Subject/{sid}")]
 		[Authorize(Roles = "Admin")]
 		public async Task<IActionResult> EditSubject(SubjectDTO subject, CancellationToken cancellationToken)
 		{
-			return BadRequest();
-		}
-
-		[HttpPost("Remove-Subject")]
-		[Authorize(Roles = "Admin")]
-		public async Task<IActionResult> RemoveSubject(SubjectDTO subject, CancellationToken cancellationToken)
-		{
-			return BadRequest();
-		}
-
-
-		[HttpPost("Approve-teacher")]
-		public async Task<IActionResult> ApproveTeacher(ProfileDTO profileDTO, CancellationToken cancellationToken)
-		{
-			if (profileDTO.Id.IsNullOrEmpty() && profileDTO.Role.IsNullOrEmpty() && profileDTO != null)
+			if (subject != null)
 			{
-				return Unauthorized(new { Message = "Invalid User" });
+				if (subject.SubjectId.IsNullOrEmpty())
+				{
+					return BadRequest();
+				}
+				else
+				{
+					throw new NotImplementedException();
+				}
+			}
+			return BadRequest();
+		} //not implemented yet
+
+		[HttpDelete("Remove-Subject/{sid}")]
+		[Authorize(Roles = "Admin")]
+		public async Task<IActionResult> RemoveSubject(string sid, CancellationToken cancellationToken) //not implemented yet
+		{
+			throw new NotImplementedException();
+		}
+
+
+		[HttpPatch("Approve-teacher")]
+		public async Task<IActionResult> ApproveTeacher(AssignTeacherDTO teacherDTO, CancellationToken cancellationToken)
+		{
+			if(!ModelState.IsValid)
+			{
+				return StatusCode(StatusCodes.Status400BadRequest, new { Message = "Invalid user or subject" });
 			}
 			else
 			{
-				ResultDTO res = await _adminServices.ActivateTeacher(profileDTO, cancellationToken);
+				ResultDTO res = await _adminServices.AssignTeacherToSubject(teacherDTO, cancellationToken);
 				return StatusCode(res.StatusCode, new { Message = res.Message });
 			}
 		}

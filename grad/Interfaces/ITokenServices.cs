@@ -7,7 +7,7 @@ namespace grad.Interfaces
 	{
 		public string generateAccessToken(User user, bool reset = false);
 
-		public string generateRefreshToken();
+		public Task<string> generateRefreshToken(User user,CancellationToken cancellationToken);
 
 		//private Task<object> validateToken(string token);
 
@@ -15,7 +15,11 @@ namespace grad.Interfaces
 
 		public Task<bool> IsTokenBlacklisted(string token);
 
-		public Task<AccessTokenDto> getTokenInfo(string token);
+		public Task<bool> RevokeRefreshToken(string RefreshToken, CancellationToken cancellationToken);
+
+		public Task<RefreshTokenDTO> getTokenInfo(string token, CancellationToken cancellationToken = default);
+
+		//public Task<object> getTokenInfo(string token);
 		//public string getUID(string token);
 	}
 }

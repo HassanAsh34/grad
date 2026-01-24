@@ -17,10 +17,12 @@ namespace grad.Interfaces
 			CancellationToken cancellationToken = default
 		) where TEntity : class;
 
-		public Task CreateEntityAsync<TEntity>(
-			TEntity entity,
-			CancellationToken cancellationToken = default
-		) where TEntity : class;
+		//public Task CreateEntityAsync<TEntity>(
+		//	TEntity entity,
+		//	CancellationToken cancellationToken = default
+		//) where TEntity : class;
+
+		public void CreateEntityAsync<TEntity>(TEntity entity, CancellationToken cancellationToken = default) where TEntity : class;
 
 		public void UpdateEntityAsync<TEntity>(
 			TEntity entity,

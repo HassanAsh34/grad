@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace grad.DTO
 {
@@ -6,11 +7,18 @@ namespace grad.DTO
 	{
 		//public string username { get; set; }
 
+		public IFormFile file { get; set; }
+
+		[JsonIgnore]
+		public string? filePath { get; set; } 
+
 		[Required]
 		[EmailAddress]
 		public string email { get; set; }
-
+			
 		public int role { get; set; }
+
+		public int ?Gender { get; set; }
 
 		[Required]
 		[RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^()_+\-])[A-Za-z\d@$!%*?&#^()_+\-]{8,}$",

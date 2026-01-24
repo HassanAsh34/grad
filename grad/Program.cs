@@ -1,15 +1,19 @@
 ﻿
+using System.Security.Claims;
+using System.Text;
 using grad.Data;
 using grad.Interfaces;
+using grad.Model;
 using grad.Repositories;
 using grad.Services;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using StackExchange.Redis;
 using MailerSend.AspNetCore;
-using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using MongoDB.Driver;
+using StackExchange.Redis;
 
 
 namespace grad
@@ -33,8 +37,23 @@ namespace grad
 			builder.Services.AddScoped<IAdminServices, AdminServices>();
 			builder.Services.AddScoped<ISubjectServices, SubjectServices>();
 			builder.Services.AddScoped<IUowServices, UowServices>();
-			builder.Services.AddSingleton<FireStoreContext>();
-			builder.Services.AddScoped<FireStoreRepository>();
+			builder.Services.AddHostedService<SeedHostedService>();
+
+			//firestore
+			//builder.Services.AddSingleton<FireStoreContext>();
+			//builder.Services.AddScoped<FireStoreRepository>();
+
+			//mongo db configuration
+			builder.Services.Configure<MongoDBSettings>(builder.Configuration.GetSection(nameof(MongoDBSettings)));
+
+			builder.Services.AddSingleton<IMongoClient>(sp =>
+			{
+				var settings = sp.GetRequiredService<IOptions<MongoDBSettings>>().Value;
+				return new MongoClient(settings.ConnectionString);
+			});
+
+			builder.Services.AddSingleton<MongoDBContext>();
+
 			//builder.Services.AddScoped<ITeacherServices, TeacherServices>();
 			builder.Services.AddHttpClient<IEmailServices, EmailServices>();
 			builder.Services.Configure<MailerSendOptions>(builder.Configuration.GetSection("MailerSend"));
@@ -82,6 +101,10 @@ namespace grad
 							context.Token = context.Request.Cookies["Reset_Token"];
 						else
 							context.Token = context.Request.Cookies["access_token"];
+						//else if (!context.Request.Cookies["access_token"].IsNullOrEmpty())
+						//	context.Token = context.Request.Cookies["access_token"];
+						//else
+						//	context.Token = context.Request.Cookies["refresh_token"];---
 						return Task.CompletedTask;
 					}
 				};
@@ -165,6 +188,14 @@ namespace grad
 					});
 				});
 			}
+
+			app.UseStaticFiles(new StaticFileOptions
+			{
+				FileProvider = new PhysicalFileProvider(
+					Path.Combine(Directory.GetCurrentDirectory(), "uploads")
+				),
+				RequestPath = "/uploads"
+			});
 
 
 			////for deployment only

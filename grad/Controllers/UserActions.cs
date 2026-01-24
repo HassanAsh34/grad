@@ -26,7 +26,8 @@ namespace grad.Controllers
 		public async Task<IActionResult> viewProfile()//Tested
 		{
 			//bool NotAuth = await _tokenServices.IsTokenBlacklisted(Request.Headers.Authorization.ToString());
-			if (!(await _tokenServices.IsTokenBlacklisted(Request.Headers.Authorization.ToString())))
+			string token = Request.Cookies["access-token"];
+			if (!(await _tokenServices.IsTokenBlacklisted(token)))
 			{
 				var idClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
 				var roleClaim = User.FindFirst(System.Security.Claims.ClaimTypes.Role);
@@ -40,6 +41,11 @@ namespace grad.Controllers
 					Role = roleClaim.Value,
 				};
 				ResultDTO res = await _userService.ViewProfile(user);
+				if(res.StatusCode == StatusCodes.Status200OK && res.result is ProfileDTO profile)
+				{
+					profile.pfpURL = $"{Request.Scheme}://{Request.Host}/{profile.pfpPath}";
+					Console.WriteLine(profile.pfpURL);
+				}
 				return StatusCode(res.StatusCode, new
 				{
 					Message = res.Message,

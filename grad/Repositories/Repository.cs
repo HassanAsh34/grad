@@ -60,11 +60,15 @@ namespace grad.Repositories
 			return await query.FirstOrDefaultAsync(cancellationToken);
 		}
 
-		public async Task CreateEntityAsync<TEntity>(TEntity entity, CancellationToken cancellationToken = default) where TEntity : class
+		//public async Task CreateEntityAsync<TEntity>(TEntity entity, CancellationToken cancellationToken = default) where TEntity : class
+		//{
+		//	//await _context.Set<TEntity>().AddAsync(entity, cancellationToken);
+		//	_context.Set<TEntity>().Add(entity);
+		//}
+		public void CreateEntityAsync<TEntity>(TEntity entity, CancellationToken cancellationToken = default) where TEntity : class 
 		{
-			await _context.Set<TEntity>().AddAsync(entity, cancellationToken);
+			_context.Set<TEntity>().Add(entity);
 		}
-
 		public void UpdateEntityAsync<TEntity>(TEntity entity, CancellationToken cancellationToken = default) where TEntity : class
 		{
 			_context.Set<TEntity>().Update(entity);

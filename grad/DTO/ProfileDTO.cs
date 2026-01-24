@@ -24,6 +24,13 @@ namespace grad.DTO
 		[JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
 		public Parent ?Parent { get; private set; }
 
+		[JsonIgnore]
+		public string ?pfpPath { get; set; }
+		
+		public string ?pfpURL { get; set; }
+
+		public string ?Teaches { get; set; }
+
 		public void setParent(Parent p)
 		{
 			this.Parent = p;

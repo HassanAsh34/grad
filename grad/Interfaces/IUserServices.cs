@@ -19,7 +19,7 @@ namespace grad.Interfaces
 
 		//public Task<ResultDTO> refreshToken(string token, CancellationToken cancellationToken = default);
 
-		public Task<ResultDTO> refreshToken(ResponseTokenDTO token, CancellationToken cancellationToken = default);
+		public Task<ResultDTO> refreshToken(string token, CancellationToken cancellationToken = default);
 
 
 		//public Task<ResultDTO> ResetPassword(string token, string NewPassword, User user);

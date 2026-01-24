@@ -12,7 +12,11 @@ namespace grad.Interfaces
 
 		public Task<ResultDTO> ViewSubjectsAsync(CancellationToken cancellationToken);
 
-		public Task<ResultDTO> ViewSubjectAsync(SubjectDTO subject, CancellationToken cancellationToken);
+		public Task<ResultDTO> AddLesson(LessonDTO lessonDTO, CancellationToken cancellationToken);
 
+		public Task<ResultDTO> ViewLessons(LessonDTO lesson, CancellationToken cancellation);
+		public Task<ResultDTO> ViewSubjectAsync(string sid, CancellationToken cancellationToken);
+
+		public Task<bool> IsSubjectExist(string? subjectName = "", bool? deaf_mute = false, string? subjectId = "", CancellationToken cancellationToken = default);
 	}
 }
