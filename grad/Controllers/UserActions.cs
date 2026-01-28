@@ -21,40 +21,41 @@ namespace grad.Controllers
 			_tokenServices = tokenServices ?? throw new ArgumentNullException(nameof(tokenServices));
 		}
 
-		[HttpPost("view-profile")]
+		[HttpGet("view-profile")]
 		[Authorize(Roles = "Admin,Teacher,Student,Parent")]
 		public async Task<IActionResult> viewProfile()//Tested
 		{
 			//bool NotAuth = await _tokenServices.IsTokenBlacklisted(Request.Headers.Authorization.ToString());
-			string token = Request.Cookies["access-token"];
+			string token = Request.Cookies["access_token"];
 			if (!(await _tokenServices.IsTokenBlacklisted(token)))
 			{
-				var idClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
-				var roleClaim = User.FindFirst(System.Security.Claims.ClaimTypes.Role);
-				if (idClaim == null || roleClaim == null)
+				string idClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+				string roleClaim = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+				if (Guid.TryParse(idClaim,out Guid ID) && !roleClaim.IsNullOrEmpty())
 				{
+					ProfileDTO user = new ProfileDTO
+					{
+						Id = ID,
+						Role = roleClaim,
+					};
+					ResultDTO res = await _userService.ViewProfile(user);
+					if (res.StatusCode == StatusCodes.Status200OK && res.result is ProfileDTO profile)
+					{
+						profile.pfpURL = $"{Request.Scheme}://{Request.Host}/{profile.pfpPath}";
+						Console.WriteLine(profile.pfpURL);
+					}
+					return StatusCode(res.StatusCode, new
+					{
+						Message = res.Message,
+						Data = res.result
+					});
+				}
+				else
 					return Unauthorized(new { Message = "Invalid token" });
-				}
-				ProfileDTO user = new ProfileDTO
-				{
-					Id = idClaim.Value,
-					Role = roleClaim.Value,
-				};
-				ResultDTO res = await _userService.ViewProfile(user);
-				if(res.StatusCode == StatusCodes.Status200OK && res.result is ProfileDTO profile)
-				{
-					profile.pfpURL = $"{Request.Scheme}://{Request.Host}/{profile.pfpPath}";
-					Console.WriteLine(profile.pfpURL);
-				}
-				return StatusCode(res.StatusCode, new
-				{
-					Message = res.Message,
-					Data = res.result
-				});
 			}
 			else
 			{
-				return Forbid();
+				return Unauthorized();
 			}
 			//// Implementation for viewing profile goes here
 			//return Ok(User.Claims.ToList());

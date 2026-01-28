@@ -3,26 +3,25 @@ using System.Text.Json.Serialization;
 
 namespace grad.DTO
 {
-	public class SignupDTO
+	public class SignupDTO //finish the rest of validation
 	{
 		//public string username { get; set; }
 
 		public IFormFile file { get; set; }
 
 		[JsonIgnore]
-		public string? filePath { get; set; } 
+		public string? filePath { get; set; }
 
-		[Required]
-		[EmailAddress]
+		[EmailAddress(ErrorMessage = "Invalid Email")]
+		[Required(ErrorMessage = "Email field is required")]
 		public string email { get; set; }
 			
 		public int role { get; set; }
 
 		public int ?Gender { get; set; }
 
-		[Required]
-		[RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^()_+\-])[A-Za-z\d@$!%*?&#^()_+\-]{8,}$",
-		ErrorMessage = "Password must be at least 8 characters, with uppercase, lowercase, digit, and special character.")]
+		[Required(ErrorMessage = "Password Field is required")]
+		[RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$", ErrorMessage = "Password must be at least 8 characters long, contain upper and lower case letters, a number, and a special character.")]
 		public string password { get; set; }
 
 
@@ -38,7 +37,7 @@ namespace grad.DTO
 
 		public string ?Job { get; set; }
 
-		public string ?SubjectID { get; set; }
+		public Guid ?SubjectID { get; set; }
 
 	}
 }

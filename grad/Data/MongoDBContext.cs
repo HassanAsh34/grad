@@ -14,5 +14,6 @@ namespace grad.Data
 		}
 
 		public IMongoCollection<SubjectContent> Subjects => _database.GetCollection<SubjectContent>("Subjects");
+		public IMongoCollection<StudentProgress> StudentProgress => _database.GetCollection<StudentProgress>("StudentProgress");
 	}
 }

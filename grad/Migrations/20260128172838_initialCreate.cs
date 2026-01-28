@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace grad.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class initialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -15,9 +15,10 @@ namespace grad.Migrations
                 name: "subjects",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     deaf_mute = table.Column<bool>(type: "bit", nullable: false),
+                    LessonCount = table.Column<int>(type: "int", nullable: false),
                     CreatedAt = table.Column<DateOnly>(type: "date", nullable: false),
                     UpdatedAt = table.Column<DateOnly>(type: "date", nullable: false)
                 },
@@ -30,10 +31,10 @@ namespace grad.Migrations
                 name: "users",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     EmailorUserName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ProfilePicture = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Password = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Password = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Role = table.Column<int>(type: "int", nullable: false),
                     gender = table.Column<int>(type: "int", nullable: true),
                     IsVerified = table.Column<bool>(type: "bit", nullable: false),
@@ -49,7 +50,7 @@ namespace grad.Migrations
                 name: "Admins",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     AdminType = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
@@ -67,7 +68,7 @@ namespace grad.Migrations
                 name: "Parents",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     FName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     LName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     phoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
@@ -90,10 +91,10 @@ namespace grad.Migrations
                 name: "RefreshTokens",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     TokenKey = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedById = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    CreatedById = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Revoked = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
@@ -111,13 +112,13 @@ namespace grad.Migrations
                 name: "Teachers",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     FName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     LName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     phoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Address = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     SubjectName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    SubjectFK = table.Column<string>(type: "nvarchar(450)", nullable: true)
+                    SubjectFK = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -140,13 +141,13 @@ namespace grad.Migrations
                 name: "Students",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     FName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     LName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     BirthDate = table.Column<DateOnly>(type: "date", nullable: false),
                     age = table.Column<int>(type: "int", nullable: false),
                     Disability = table.Column<int>(type: "int", nullable: false),
-                    PID = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                    PID = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -165,25 +166,26 @@ namespace grad.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "EnrolledSubjects",
+                name: "Enrollents",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    STUFK = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    SUBFK = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    STUFK = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    SUBFK = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Enrolled_At = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_EnrolledSubjects", x => x.Id);
-                    table.UniqueConstraint("AK_EnrolledSubjects_STUFK_SUBFK", x => new { x.STUFK, x.SUBFK });
+                    table.PrimaryKey("PK_Enrollents", x => x.Id);
+                    table.UniqueConstraint("AK_Enrollents_STUFK_SUBFK", x => new { x.STUFK, x.SUBFK });
                     table.ForeignKey(
-                        name: "FK_EnrolledSubjects_Students_STUFK",
+                        name: "FK_Enrollents_Students_STUFK",
                         column: x => x.STUFK,
                         principalTable: "Students",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_EnrolledSubjects_subjects_SUBFK",
+                        name: "FK_Enrollents_subjects_SUBFK",
                         column: x => x.SUBFK,
                         principalTable: "subjects",
                         principalColumn: "Id",
@@ -191,8 +193,8 @@ namespace grad.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_EnrolledSubjects_SUBFK",
-                table: "EnrolledSubjects",
+                name: "IX_Enrollents_SUBFK",
+                table: "Enrollents",
                 column: "SUBFK");
 
             migrationBuilder.CreateIndex(
@@ -219,7 +221,7 @@ namespace grad.Migrations
                 name: "Admins");
 
             migrationBuilder.DropTable(
-                name: "EnrolledSubjects");
+                name: "Enrollents");
 
             migrationBuilder.DropTable(
                 name: "RefreshTokens");

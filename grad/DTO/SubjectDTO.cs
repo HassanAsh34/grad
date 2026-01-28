@@ -4,7 +4,7 @@ namespace grad.DTO
 {
 	public class SubjectDTO
 	{
-		public string? SubjectId { get; set; }
+		public Guid? SubjectId { get; set; }
 
 		[Required]
 		[RegularExpression("^[A-Za-z]{4,}$",ErrorMessage = "Invalid Subject Name")]

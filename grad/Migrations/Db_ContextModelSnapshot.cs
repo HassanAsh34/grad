@@ -22,18 +22,20 @@ namespace grad.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("grad.Model.EnrolledStudent", b =>
+            modelBuilder.Entity("grad.Model.Enrollement", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("STUFK")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<DateTime>("Enrolled_At")
+                        .HasColumnType("datetime2");
 
-                    b.Property<string>("SUBFK")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<Guid>("STUFK")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("SUBFK")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -41,20 +43,20 @@ namespace grad.Migrations
 
                     b.HasIndex("SUBFK");
 
-                    b.ToTable("EnrolledSubjects");
+                    b.ToTable("Enrollents");
                 });
 
             modelBuilder.Entity("grad.Model.RefreshToken", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("CreatedById")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<Guid>("CreatedById")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<bool>("Revoked")
                         .HasColumnType("bit");
@@ -73,11 +75,15 @@ namespace grad.Migrations
 
             modelBuilder.Entity("grad.Model.Subject", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateOnly>("CreatedAt")
                         .HasColumnType("date");
+
+                    b.Property<int>("LessonCount")
+                        .HasColumnType("int");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -96,8 +102,9 @@ namespace grad.Migrations
 
             modelBuilder.Entity("grad.Model.User", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("EmailorUserName")
                         .IsRequired()
@@ -113,7 +120,6 @@ namespace grad.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("Password")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ProfilePicture")
@@ -191,9 +197,8 @@ namespace grad.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("PID")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<Guid?>("PID")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("age")
                         .HasColumnType("int");
@@ -219,8 +224,8 @@ namespace grad.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("SubjectFK")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<Guid?>("SubjectFK")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("SubjectName")
                         .HasColumnType("nvarchar(max)");
@@ -234,7 +239,7 @@ namespace grad.Migrations
                     b.ToTable("Teachers", (string)null);
                 });
 
-            modelBuilder.Entity("grad.Model.EnrolledStudent", b =>
+            modelBuilder.Entity("grad.Model.Enrollement", b =>
                 {
                     b.HasOne("grad.Model.Student", "Student")
                         .WithMany("EnrolledSubjects")
@@ -293,8 +298,7 @@ namespace grad.Migrations
                     b.HasOne("grad.Model.Parent", "parent")
                         .WithMany("students")
                         .HasForeignKey("PID")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.Navigation("parent");
                 });

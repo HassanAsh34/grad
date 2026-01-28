@@ -4,10 +4,10 @@ namespace grad.DTO
 { 
 	public class LessonDTO
 	{
-		public string? Id { get; set; }
+		public Guid? Id { get; set; }
 
 		[JsonIgnore]
-		public string? subjectID { get; set; }
+		public Guid? subjectID { get; set; }
 		public string? Title { get; set; }
 
 		public string? Description { get; set; }

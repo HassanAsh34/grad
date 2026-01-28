@@ -17,12 +17,14 @@ namespace grad.Services
 		private readonly IRepository _repository;
 		private readonly IUowServices _uowServices;
 		private readonly IMongoCollection<SubjectContent> _subjects;
+		private readonly ILessonServices _lessonServices;
 
-		public SubjectServices(IRepository repository, IUowServices uowServices, MongoDBContext context)
+		public SubjectServices(IRepository repository, IUowServices uowServices,ILessonServices lessonServices,MongoDBContext context)
 		{
-			_repository = repository ?? throw new ArgumentNullException();
-			_subjects = context.Subjects ?? throw new ArgumentNullException();
-			_uowServices = uowServices ?? throw new ArgumentNullException();
+			_repository = repository ?? throw new ArgumentNullException(nameof(repository));
+			_subjects = context.Subjects ?? throw new ArgumentNullException(nameof(context));
+			_uowServices = uowServices ?? throw new ArgumentNullException(nameof(uowServices));
+			_lessonServices = lessonServices ?? throw new ArgumentNullException(nameof(lessonServices));
 		}
 
 		public async Task<ResultDTO> AddSubject(SubjectDTO subject, CancellationToken cancellationToken)
@@ -85,14 +87,18 @@ namespace grad.Services
 
 
 
-		public Task<ResultDTO> UpdateSubject(SubjectDTO subject,string SubjectName, CancellationToken cancellationToken)
+		public Task<ResultDTO> UpdateSubject(Guid subjectid,string SubjectName, CancellationToken cancellationToken)
 		{
 			throw new NotImplementedException();
 		}
 
-		public async Task<ResultDTO> ViewSubjectsAsync(CancellationToken cancellationToken)
+		public async Task<ResultDTO> ViewSubjectsAsync(int disability = -1,CancellationToken cancellationToken = default)
 		{
-			IEnumerable<Subject> subjects =await _repository.GetEntitiesAsync<Subject>(cancellationToken: cancellationToken);
+			IEnumerable<Subject> subjects = new List<Subject>();
+			if (disability == -1)
+				 subjects = await _repository.GetEntitiesAsync<Subject>(cancellationToken: cancellationToken);
+			else
+				subjects = await _repository.GetEntitiesAsync<Subject>(s=>disability > 0? s.deaf_mute == true: s.deaf_mute == false, cancellationToken: cancellationToken);
 			IEnumerable<SubjectDTO> subjectDTOs = subjects.Select(s => new SubjectDTO
 			{
 				SubjectId = s.Id,
@@ -109,13 +115,13 @@ namespace grad.Services
 
 
 
-		public async Task<ResultDTO> ViewSubjectAsync(string sid, CancellationToken cancellationToken)
+		public async Task<ResultDTO> ViewSubjectAsync(Guid sid, CancellationToken cancellationToken)
 		{
-			Subject? res = await _repository.GetEntityAsync<Subject>(s =>s.Id.ToLower().Equals(sid) , q => q.Include(s => s.Teachers).Include(s => s.Students), cancellationToken: cancellationToken);
+			Subject? res = await _repository.GetEntityAsync<Subject>(s =>s.Id == sid , q => q.Include(s => s.Teachers).Include(s => s.Students), cancellationToken: cancellationToken);
 			if (res != null)
 			{
 				//var lessonRef = _firestoreDb._Db.Collection("Subjects").Document(res.Id).Collection("Lessons");
-				SubjectContent subjectContent = await _subjects.Find(s => s.Id.Equals(res.Id)).FirstOrDefaultAsync();
+				SubjectContent subjectContent = await _subjects.Find(s => s.Id == res.Id).FirstOrDefaultAsync();
 				Console.WriteLine(subjectContent);
 				int lessonsCount = subjectContent.Lessons != null ? subjectContent.Lessons.Count():0;
 				int levelsCount = subjectContent.Levels != null ? subjectContent.Levels.Count() : 0;
@@ -148,90 +154,123 @@ namespace grad.Services
 			}
 		}
 
-		public Task<ResultDTO> RemoveSubject(SubjectDTO subject, CancellationToken cancellationToken)
+
+		public Task<ResultDTO> RemoveSubject(Guid subjectid, CancellationToken cancellationToken)
 		{
 			throw new NotImplementedException();
 		}
 
 		public async Task<ResultDTO> AddLesson(LessonDTO lessonDTO, CancellationToken cancellationToken)
 		{
-			if (lessonDTO.VideoFile.Length > 0 && lessonDTO.VideoFile != null)
+			ResultDTO result = await _lessonServices.AddLesson(lessonDTO, cancellationToken);
+			
+			if(result.StatusCode == StatusCodes.Status201Created)
 			{
-				string directory = Path.Combine("uploads", "subjects", $"{lessonDTO.subjectID}", "lessons");
-				if (!File.Exists(directory))
-					Directory.CreateDirectory(directory);
-
-				lessonDTO.VideoPath = Path.Combine(directory, $"{lessonDTO.Title}.mp4");
-
-				using var stream = new FileStream(lessonDTO.VideoPath, FileMode.Create);
-				await lessonDTO.VideoFile.CopyToAsync(stream, cancellationToken);
-			}
-			var filter = Builders<SubjectContent>.Filter.And(Builders<SubjectContent>.Filter.Eq(s => s.Id, lessonDTO.subjectID), Builders<SubjectContent>.Filter.Not(
-				Builders<SubjectContent>.Filter.ElemMatch(s => s.Lessons, l => l.Title == lessonDTO.Title)));
-			Lesson lesson = new Lesson
-			{
-				Description = lessonDTO.Description,
-				Title = lessonDTO.Title,
-				VideoPath = lessonDTO.VideoPath
-			};
-			var update = Builders<SubjectContent>.Update.Push(s => s.Lessons,lesson);
-			var res = await _subjects.UpdateOneAsync(filter, update);
-			if(res.ModifiedCount == 0)
-			{
-				if (File.Exists(lesson.VideoPath))
+				Subject subject = await _repository.GetEntityAsync<Subject>(s => s.Id == lessonDTO.subjectID, cancellationToken: cancellationToken);
+				if(subject != null)
 				{
-					File.Delete(lesson.VideoPath);
+					subject.LessonCount += 1;
+					_repository.UpdateEntityAsync<Subject>(subject);
+					await _uowServices.SaveChangesAsync();
 				}
-				return new ResultDTO
-				{
-					Message = "Lesson already exists or subject not found",
-					StatusCode = StatusCodes.Status409Conflict
-				};
 			}
-			else
-			{
-				return new ResultDTO
-				{
-					Message = "lesson was added successfully",
-					StatusCode = StatusCodes.Status201Created
-				};
-			}
+			return result;
 		}
 
-
-		public async Task<ResultDTO> ViewLessons(LessonDTO lesson,CancellationToken cancellation)
+		public async Task<bool> IsSubjectExist(string? subjectName = "", bool? deaf_mute = false, Guid? subjectId = null, CancellationToken cancellationToken = default)
 		{
-			SubjectContent subjectContent = await _subjects.Find(s=>s.Id.ToLower().Equals(lesson.subjectID)).FirstOrDefaultAsync();
-			if(subjectContent.Lessons == null)
-				return new ResultDTO
-				{
-					Message = "No lessons were found",
-					StatusCode = StatusCodes.Status204NoContent
-				};
-			else
+			Subject? subject;
+			if (subjectId == null && !subjectName.IsNullOrEmpty())
 			{
-				List<Lesson> lessons = subjectContent.Lessons;
-				List<LessonDTO> lessonDTOs = new List<LessonDTO>();
-				lessons.ForEach(l =>
-				{
-					lessonDTOs.Add(new LessonDTO
-					{
-						Description = l.Description,
-						Id = l.Id,
-						ReleaseDate = l.ReleaseDate,
-						Title = l.Title,
-						VideoPath = l.VideoPath,
-					});
-				});
-
-				return new ResultDTO
-				{
-					Message = $"{lessonDTOs.Count} lessons were found",
-					result = lessonDTOs,
-					StatusCode = StatusCodes.Status200OK
-				};
+				subjectName = subjectName.Trim().ToLower();
+				subject = await _repository.GetEntityAsync<Subject>(s => s.Name.Equals(subjectName) && s.deaf_mute == deaf_mute, cancellationToken: cancellationToken);
 			}
+			else
+				subject = await _repository.GetEntityAsync<Subject>(s => s.Id == subjectId, cancellationToken: cancellationToken);
+			return subject != null;
 		}
+
+
+
+
+
+		//	if (lessonDTO.VideoFile.Length > 0 && lessonDTO.VideoFile != null)
+		//	{
+		//		string directory = Path.Combine("uploads", "subjects", $"{lessonDTO.subjectID}", "lessons");
+		//		if (!File.Exists(directory))
+		//			Directory.CreateDirectory(directory);
+
+		//		lessonDTO.VideoPath = Path.Combine(directory, $"{lessonDTO.Title}.mp4");
+
+		//		using var stream = new FileStream(lessonDTO.VideoPath, FileMode.Create);
+		//		await lessonDTO.VideoFile.CopyToAsync(stream, cancellationToken);
+		//	}
+		//	var filter = Builders<SubjectContent>.Filter.And(Builders<SubjectContent>.Filter.Eq(s => s.Id, lessonDTO.subjectID), Builders<SubjectContent>.Filter.Not(
+		//		Builders<SubjectContent>.Filter.ElemMatch(s => s.Lessons, l => l.Title == lessonDTO.Title)));
+		//	Lesson lesson = new Lesson
+		//	{
+		//		Description = lessonDTO.Description,
+		//		Title = lessonDTO.Title,
+		//		VideoPath = lessonDTO.VideoPath
+		//	};
+		//	var update = Builders<SubjectContent>.Update.Push(s => s.Lessons,lesson);
+		//	var res = await _subjects.UpdateOneAsync(filter, update);
+		//	if(res.ModifiedCount == 0)
+		//	{
+		//		if (File.Exists(lesson.VideoPath))
+		//		{
+		//			File.Delete(lesson.VideoPath);
+		//		}
+		//		return new ResultDTO
+		//		{
+		//			Message = "Lesson already exists or subject not found",
+		//			StatusCode = StatusCodes.Status409Conflict
+		//		};
+		//	}
+		//	else
+		//	{
+		//		return new ResultDTO
+		//		{
+		//			Message = "lesson was added successfully",
+		//			StatusCode = StatusCodes.Status201Created
+		//		};
+		//	}
+		//}
+
+
+		//public async Task<ResultDTO> ViewLessons(string sid,CancellationToken cancellation)
+		//{
+		//	SubjectContent subjectContent = await _subjects.Find(s=>s.Id.ToLower().Equals(sid)).FirstOrDefaultAsync();
+		//	if(subjectContent.Lessons == null)
+		//		return new ResultDTO
+		//		{
+		//			Message = "No lessons were found",
+		//			StatusCode = StatusCodes.Status204NoContent
+		//		};
+		//	else
+		//	{
+		//		List<Lesson> lessons = subjectContent.Lessons;
+		//		List<LessonDTO> lessonDTOs = new List<LessonDTO>();
+		//		lessons.ForEach(l =>
+		//		{
+		//			lessonDTOs.Add(new LessonDTO
+		//			{
+		//				Description = l.Description,
+		//				Id = l.Id,
+		//				ReleaseDate = l.ReleaseDate,
+		//				Title = l.Title,
+		//				VideoPath = l.VideoPath,
+		//			});
+		//		});
+
+		//		return new ResultDTO
+		//		{
+		//			Message = $"{lessonDTOs.Count} lessons were found",
+		//			result = lessonDTOs,
+		//			StatusCode = StatusCodes.Status200OK
+		//		};
+		//	}
+		//}
 
 
 		//{
@@ -319,16 +358,6 @@ namespace grad.Services
 		//		};
 		//	}
 		//}
-
-
-		public async Task<bool> IsSubjectExist (string ?subjectName = "", bool ?deaf_mute=false,string ?subjectId="",CancellationToken cancellationToken = default)
-		{
-			Subject? subject;
-			if (subjectId.IsNullOrEmpty()&& !subjectName.IsNullOrEmpty())
-				subject = await _repository.GetEntityAsync<Subject>(s => s.Name.ToLower().Equals(subjectName.ToLower()) && s.deaf_mute == deaf_mute, cancellationToken: cancellationToken);
-			else
-				subject = await _repository.GetEntityAsync<Subject>(s=> s.Id.ToLower().Equals(subjectId.ToLower()), cancellationToken: cancellationToken);
-			return subject != null;
-		}
 	}
 }
+

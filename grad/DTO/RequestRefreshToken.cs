@@ -5,7 +5,7 @@ namespace grad.DTO
 	public class RequestRefreshToken
 	{
 		[JsonIgnore]
-		public string? uid { get; set; }
+		public Guid? uid { get; set; }
 
 		[JsonIgnore]
 		public string? AccessToken { get; set; }

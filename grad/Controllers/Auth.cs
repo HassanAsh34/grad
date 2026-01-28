@@ -1,4 +1,5 @@
-﻿using System.Security.Claims;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using grad.DTO;
 using grad.Interfaces;
 using grad.Model;
@@ -7,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json.Linq;
 
 namespace grad.Controllers
 {
@@ -36,21 +38,65 @@ namespace grad.Controllers
 				ResultDTO res = await _userService.login(login,cancellationToken);
 				if(res.result != null && res.result is ResponseTokenDTO token)
 				{
-					
-					Response.Cookies.Append("access_token", token.AccessToken,new CookieOptions
+
+					//for testing purposes
+					bool isHttps = Request.IsHttps; // Detect if the request is HTTPS
+
+					//Response.Cookies.Append("access_token", token.AccessToken, new CookieOptions
+					//{
+					//	HttpOnly = true,
+					//	Secure = isHttps, // Only secure if HTTPS
+					//	SameSite = isHttps ? SameSiteMode.None : SameSiteMode.Lax, // Lax works on HTTP
+					//	Expires = DateTimeOffset.UtcNow.AddMinutes(15),
+					//	Path = "/"
+					//});
+
+
+					//Response.Cookies.Append("refresh_token", token.RefreshToken, new CookieOptions
+					//{
+					//	HttpOnly = true,
+					//	Secure = isHttps,
+					//	SameSite = isHttps ? SameSiteMode.None : SameSiteMode.Lax,
+					//	Expires = DateTimeOffset.UtcNow.AddDays(7),
+					//	Path = "/"
+					//});
+
+
+					//for docker and production we use this when both backend and frontend are using https
+					Response.Cookies.Append("access_token", token.AccessToken, new CookieOptions
 					{
 						HttpOnly = true,
 						Secure = true,
-						SameSite = SameSiteMode.Lax,
-						Expires = DateTimeOffset.UtcNow.AddMinutes(15)
+						SameSite = SameSiteMode.None,
+						Expires = DateTimeOffset.UtcNow.AddMinutes(15),
+						Path = "/"
 					});
+
 					Response.Cookies.Append("refresh_token", token.RefreshToken, new CookieOptions
 					{
-						HttpOnly = true,           
-						Secure = true,              
-						SameSite = SameSiteMode.Strict, 
-						Expires = DateTimeOffset.UtcNow.AddDays(7)
+						HttpOnly = true,
+						Secure = true,
+						SameSite = SameSiteMode.None,
+						Expires = DateTimeOffset.UtcNow.AddDays(7),
+						Path = "/"
 					});
+
+
+
+					//Response.Cookies.Append("access_token", token.AccessToken,new CookieOptions
+					//{
+					//	HttpOnly = true,
+					//	Secure = true,
+					//	SameSite = SameSiteMode.Lax,
+					//	Expires = DateTimeOffset.UtcNow.AddMinutes(15)
+					//});
+					//Response.Cookies.Append("refresh_token", token.RefreshToken, new CookieOptions
+					//{
+					//	HttpOnly = true,           
+					//	Secure = true,              
+					//	SameSite = SameSiteMode.Strict, 
+					//	Expires = DateTimeOffset.UtcNow.AddDays(7)
+					//});
 					return Ok(res.Message);
 				}
 				else
@@ -83,12 +129,23 @@ namespace grad.Controllers
 				ResultDTO res = await _userService.refreshToken(refreshToken, cancellationToken);
 				if (res.result is ResponseTokenDTO tokenDTO)
 				{
+					//bool isHttps = Request.IsHttps;
+					//Response.Cookies.Append("access_token", tokenDTO.AccessToken, new CookieOptions
+					//{
+					//	HttpOnly = true,
+					//	Secure = isHttps, // Only secure if HTTPS
+					//	SameSite = isHttps ? SameSiteMode.None : SameSiteMode.Lax, // Lax works on HTTP
+					//	Expires = DateTimeOffset.UtcNow.AddMinutes(15),
+					//	Path = "/"
+					//});
+					//for docker and production we use this when both backend and frontend are using https
 					Response.Cookies.Append("access_token", tokenDTO.AccessToken, new CookieOptions
 					{
 						HttpOnly = true,
 						Secure = true,
-						SameSite = SameSiteMode.Lax,
-						Expires = DateTimeOffset.UtcNow.AddMinutes(15)
+						SameSite = SameSiteMode.None,
+						Expires = DateTimeOffset.UtcNow.AddMinutes(15),
+						Path = "/"
 					});
 					return Ok();
 				}
@@ -126,12 +183,12 @@ namespace grad.Controllers
 
 
 		[AllowAnonymous]
-		[HttpPost("Request-Password-change")]
-		public async Task<IActionResult> RPCHANGE(string EmailorUserName, CancellationToken cancellationToken)
+		[HttpPost("Request-Password-change/{Email}")]
+		public async Task<IActionResult> RPCHANGE(string Email, CancellationToken cancellationToken)
 		{
 			User user = new User
 			{
-				EmailorUserName = EmailorUserName
+				EmailorUserName = Email
 			};
 			ResultDTO result = await _userService.RequestChangePass(user, cancellationToken);
 			return StatusCode(result.StatusCode, new
@@ -152,8 +209,18 @@ namespace grad.Controllers
 				return BadRequest(ModelState);
 			}
 			ResultDTO result = await _userService.ResetPasswordOTP(otp, cancellationToken);
-			if (result.result is string s && !s.IsNullOrEmpty())
-				Response.Cookies.Append("Reset_Token",s);
+			if (result.result is string s && !s.IsNullOrEmpty() && result.StatusCode == StatusCodes.Status200OK)
+			{
+				bool isHttps = Request.IsHttps;
+				Response.Cookies.Append("reset_token", s, new CookieOptions
+				{
+					HttpOnly = true,
+					Secure = isHttps, // Only secure if HTTPS
+					SameSite = isHttps ? SameSiteMode.None : SameSiteMode.Lax, // Lax works on HTTP
+					Expires = DateTimeOffset.UtcNow.AddMinutes(15),
+					Path = "/"
+				});
+			}
 			return StatusCode(result.StatusCode,result.Message);
 		}
 
@@ -162,9 +229,6 @@ namespace grad.Controllers
 		[HttpPatch("reset-password")]
 		public async Task<IActionResult> resetPassword(ChangePasswordDTO newpass,CancellationToken cancellationToken) //isnt completed yet when its done we need to configure the email right also dont forget to enable redis
 		{
-			/*var passwordRegex = new System.Text.RegularExpressions.Regex(
-				@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^()_+\-])[A-Za-z\d@$!%*?&#^()_+\-]{8,}$"
-			);*/
 			if (newpass.NewPassword.IsNullOrEmpty())
 			{
 				return StatusCode(StatusCodes.Status400BadRequest, new
@@ -172,38 +236,47 @@ namespace grad.Controllers
 					Message = "Invalid credentials"
 				});
 			}
-			//else if (!passwordRegex.IsMatch(newpass))
-			//{
-			//	return StatusCode(StatusCodes.Status400BadRequest, new
-			//	{
-			//		Message = "Password must be at least 8 characters long, contain upper and lower case letters, a number, and a special character."
-			//	});
-			//}
 			else
 			{
-				string accsstoken = Request.Cookies["Reset_Token"];
+				string accsstoken = Request.Cookies["reset_token"];
 				if (!await _tokenServices.IsTokenBlacklisted(accsstoken))
 				{
 					string Id = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-					if (string.IsNullOrEmpty(Id))
+					if(Guid.TryParse(Id, out Guid guid))
 					{
-						return Unauthorized(new { Message = "Invalid token" });
-					}
-					else
-					{
-						//string email = User.FindFirst(System.Security.Claims.ClaimTypes.Email).Value;
-
 						ChangePasswordDTO resetPass = new ChangePasswordDTO
 						{
-							Id = Id,
+							Id = guid,
 							NewPassword = newpass.NewPassword,
 							token = Request.Headers.Authorization.ToString()
 						};
-						ResultDTO result = await _userService.ResetPassword(resetPass,true, cancellationToken);
+						ResultDTO result = await _userService.ResetPassword(resetPass, true, cancellationToken);
+						if (result.StatusCode == StatusCodes.Status200OK)
+						{
+							var expiredOptions = new CookieOptions
+							{
+								HttpOnly = true,
+								Secure = Request.IsHttps,
+								SameSite = Request.IsHttps ? SameSiteMode.None : SameSiteMode.Lax,
+								Path = "/", // MUST match the Path used when setting
+								Expires = DateTimeOffset.UtcNow.AddDays(-1)
+							};
+
+							Response.Cookies.Append("access_token", string.Empty, expiredOptions);
+							Response.Cookies.Append("refresh_token", string.Empty, expiredOptions);
+							Response.Cookies.Append("reset_token", string.Empty, expiredOptions);
+							Response.Cookies.Delete("access_token", expiredOptions);
+							Response.Cookies.Delete("refresh_token", expiredOptions);
+							Response.Cookies.Delete("reset_token", expiredOptions);
+						}
 						return StatusCode(result.StatusCode, new
 						{
 							Message = result.Message
 						});
+					}
+					else
+					{
+						return Unauthorized(new { Message = "Invalid token" });
 					}
 				}
 				else
@@ -225,19 +298,38 @@ namespace grad.Controllers
 				if (!await _tokenServices.IsTokenBlacklisted(changePassword.token))
 				{
 					string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-					if (string.IsNullOrEmpty(userId))
+					
+					if(Guid.TryParse(userId, out Guid guid))
 					{
-						return Unauthorized(new { Message = "Invalid token" });
-					}
-					else
-					{
-						changePassword.Id = userId;
+						changePassword.Id = guid;
 						//changePassword.token = Request.Headers.Authorization.ToString();
-						ResultDTO result = await _userService.ResetPassword(changePassword,cancellationToken: cancellationToken);
+						ResultDTO result = await _userService.ResetPassword(changePassword, cancellationToken: cancellationToken);
+						if (result.StatusCode == StatusCodes.Status200OK)
+						{
+							var expiredOptions = new CookieOptions
+							{
+								HttpOnly = true,
+								Secure = Request.IsHttps,
+								SameSite = Request.IsHttps ? SameSiteMode.None : SameSiteMode.Lax,
+								Path = "/", // MUST match the Path used when setting
+								Expires = DateTimeOffset.UtcNow.AddDays(-1)
+							};
+
+							Response.Cookies.Append("access_token", string.Empty, expiredOptions);
+							Response.Cookies.Append("refresh_token", string.Empty, expiredOptions);
+							Response.Cookies.Append("reset_token", string.Empty, expiredOptions);
+							Response.Cookies.Delete("access_token", expiredOptions);
+							Response.Cookies.Delete("refresh_token", expiredOptions);
+							Response.Cookies.Delete("reset_token", expiredOptions);
+						}
 						return StatusCode(result.StatusCode, new
 						{
 							Message = result.Message
 						});
+					}
+					else
+					{
+						return Unauthorized(new { Message = "Invalid token" });
 					}
 				}
 				else
@@ -252,20 +344,58 @@ namespace grad.Controllers
 		}
 
 		[Authorize(Roles = "Admin,Teacher,Student,Parent")]
-		[HttpPatch("logout")]
+		[HttpPost("logout")]
 		public async Task<IActionResult> logout(CancellationToken cancellationToken)// needs mofication
 		{
 			string accesstoken = Request.Cookies["access_token"];
 			string refreshtoken = Request.Cookies["refresh_token"];
-			if (string.IsNullOrEmpty(accesstoken)||refreshtoken.IsNullOrEmpty()) {
-				return NoContent();
+			if (string.IsNullOrEmpty(accesstoken)) {
+				return Unauthorized();
 			}
-			string Id = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier).Value;
-			ResultDTO res = await _userService.LogOut(accesstoken,refreshtoken,Id,cancellationToken);
-			return StatusCode(res.StatusCode, new
+			else
 			{
-				Message = res.Message
-			});
+				var expClaim = User.FindFirst(JwtRegisteredClaimNames.Exp)?.Value;
+				var expiredOptions = new CookieOptions
+				{
+					HttpOnly = true,
+					Secure = Request.IsHttps,
+					SameSite = Request.IsHttps ? SameSiteMode.None : SameSiteMode.Lax,
+					Path = "/", // MUST match the Path used when setting
+					Expires = DateTimeOffset.UtcNow.AddDays(-1)
+				};
+
+				Response.Cookies.Append("access_token", string.Empty, expiredOptions);
+				Response.Cookies.Append("refresh_token", string.Empty, expiredOptions);
+				Response.Cookies.Delete("access_token", expiredOptions);
+				Response.Cookies.Delete("refresh_token", expiredOptions);
+				if (expClaim == null)
+				{
+					return BadRequest("Token has no expiration.");
+				}
+				var expUnix = long.Parse(expClaim);
+				var expirationTime = DateTimeOffset.FromUnixTimeSeconds(expUnix);
+
+				int remainingMinutes = Math.Max(0, (int)Math.Ceiling(
+					(expirationTime - DateTimeOffset.UtcNow).TotalMinutes
+				));
+				string Id = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier).Value;
+				if(string.IsNullOrEmpty(Id))
+				{
+					return Unauthorized(new { Message = "Invalid token" });
+				}
+
+				LogoutDTO logoutDTO = new LogoutDTO
+				{
+					RefreshToken = refreshtoken,
+					accessToken = accesstoken,
+					RemainingTimeAcc = remainingMinutes
+				};
+				ResultDTO res = await _userService.LogOut(logoutDTO,cancellationToken);
+				return StatusCode(res.StatusCode, new
+				{
+					Message = res.Message
+				});
+			}
 		}
 
 	}

@@ -13,7 +13,7 @@
 
 		public string ?SubjectName { get; set; }
 
-		public string ?SubjectFK { get; set; }
+		public Guid ?SubjectFK { get; set; }
 
 		public Subject ?Subject { get; set; }
 		//public IEnumerable<Class> Classes { get; set; }

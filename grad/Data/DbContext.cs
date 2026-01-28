@@ -20,7 +20,7 @@ namespace grad.Data
 
 		public DbSet<RefreshToken> RefreshTokens { get; set; }
 
-		public DbSet<EnrolledStudent> EnrolledSubjects { get; set; }
+		public DbSet<Enrollement> Enrollents { get; set; }
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
@@ -38,11 +38,11 @@ namespace grad.Data
 
 			modelBuilder.Entity<Subject>().HasMany(s => s.Teachers).WithOne(t => t.Subject).HasForeignKey(t => t.SubjectFK).OnDelete(DeleteBehavior.SetNull);
 
-			modelBuilder.Entity<EnrolledStudent>().HasAlternateKey(es => new { es.STUFK, es.SUBFK });
+			modelBuilder.Entity<Enrollement>().HasAlternateKey(es => new { es.STUFK, es.SUBFK });
 
-			modelBuilder.Entity<EnrolledStudent>().HasOne(S=>S.subject).WithMany(s => s.Students).HasForeignKey(S => S.SUBFK).OnDelete(DeleteBehavior.Cascade);
+			modelBuilder.Entity<Enrollement>().HasOne(S=>S.subject).WithMany(s => s.Students).HasForeignKey(S => S.SUBFK).OnDelete(DeleteBehavior.Cascade);
 
-			modelBuilder.Entity<EnrolledStudent>().HasOne(S => S.Student).WithMany(s => s.EnrolledSubjects).HasForeignKey(S => S.STUFK).OnDelete(DeleteBehavior.Cascade);
+			modelBuilder.Entity<Enrollement>().HasOne(S => S.Student).WithMany(s => s.EnrolledSubjects).HasForeignKey(S => S.STUFK).OnDelete(DeleteBehavior.Cascade);
 
 			modelBuilder.Entity<Student>()
 			.HasOne(s => s.parent)

@@ -2,9 +2,9 @@
 {
 	public class RefreshTokenDTO
 	{
-		public string Id { get; set; }
+		public Guid Id { get; set; }
 
-		public string Uid { get; set; }
+		public Guid Uid { get; set; }
 
 		public int role { get; set; }
 

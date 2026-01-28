@@ -1,11 +1,18 @@
 ﻿using System.Text.Json.Serialization;
+using grad.Model;
 
 namespace grad.DTO
 {
 	public class RegisterStudentDTO
 	{
 		[JsonIgnore]
-		public string ?p_Id { get; set; }
+		public Guid ?p_Id { get; set; }
+
+		public IFormFile ?image { get; set; }
+
+		[JsonIgnore]
+		public string ?Image_Path { get; set; }
+
 
 		public string FName { get; set; }
 
@@ -14,6 +21,8 @@ namespace grad.DTO
 
 		public DateOnly BirthDate { get; set; }
 
+		public int ?gender { get; set; }
+
 		public int Disability { get; set; } // 0: None, 1: Hearing, 2: Speech
 
 		//public string Address { get; set; }
@@ -21,6 +30,10 @@ namespace grad.DTO
 		[JsonIgnore]
 		
 		public string ?PEmail { get; set; }
+
+		[JsonIgnore]
+
+		public string ?Username { get; set; }
 
 	}
 }

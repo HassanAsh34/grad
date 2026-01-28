@@ -1,6 +1,7 @@
 ﻿using grad.DTO;
 using grad.Interfaces;
 using grad.Model;
+using Grpc.Core;
 using Microsoft.IdentityModel.Tokens;
 
 namespace grad.Services
@@ -17,7 +18,7 @@ namespace grad.Services
 			_repository = repository ?? throw new ArgumentNullException(nameof(repository));
 			_uowServices = uowServices ?? throw new ArgumentNullException(nameof(uowServices));
 		}
-		public async Task<ResultDTO> registerStudent(RegisterStudentDTO studentDTO, CancellationToken cancellationToken)//need to fix pfp
+		public async Task<ResultDTO> registerStudent(RegisterStudentDTO studentDTO, CancellationToken cancellationToken)//need to be tested
 		{
 			if (studentDTO == null)
 			{
@@ -29,69 +30,63 @@ namespace grad.Services
 			}
 			else
 			{
-				Student student = new Student
-				{
-					FName = studentDTO.FName,
-					LName = studentDTO.Pname.Split(' ')[0],
-					age = DateOnly.FromDateTime(DateTime.UtcNow).Year - studentDTO.BirthDate.Year,
-					PID = studentDTO.p_Id,
-					BirthDate = studentDTO.BirthDate,
-					Disability = (Student.DisablityType)studentDTO.Disability,
-					Role = User.UserRole.Student,
-					IsActive = false
-				};
-				GenerateUserName(student);
-				return await _userServices.register(student: student, cancellationToken: cancellationToken, Reg: true);
+				GenerateUserName(studentDTO);
+				return await _userServices.register(student: studentDTO, cancellationToken: cancellationToken, Reg: true);
 			}
 		}
 
-		public async Task<ResultDTO> activateAccount(LoginDTO login, CancellationToken cancellationToken)
+		public async Task<ResultDTO> activateAccount(LoginDTO login, Guid parentId, CancellationToken cancellationToken)
 		{
 			//var res = await _userServices.login(login, cancellationToken);
-			User user = await _repository.GetEntityAsync<User>((u => u.EmailorUserName.ToLower().Equals(login.UsernameorEmail.ToLower())), cancellationToken: cancellationToken);
-			if (user == null)
+			string email = login.UsernameorEmail.ToLower().Trim();
+			Student student = await _repository.GetEntityAsync<Student>(u => u.EmailorUserName.Equals(email)
+				&& u.PID == parentId, cancellationToken: cancellationToken);
+			if (student == null)
 			{
 				return new ResultDTO
 				{
-					StatusCode = StatusCodes.Status404NotFound,
-					Message = "User not found"
-				};
-			}
-			else if (user.IsActive || !user.Password.IsNullOrEmpty())
-			{
-				return new ResultDTO
-				{
-					StatusCode = StatusCodes.Status400BadRequest,
-					Message = "Account is already active"
+					Message = "Failed to activate account.",
+					StatusCode = StatusCodes.Status500InternalServerError
 				};
 			}
 			else
 			{
-				user.Password = BCrypt.Net.BCrypt.HashPassword(login.password);
-				_repository.UpdateEntityAsync<User>(user, cancellationToken: cancellationToken);
-				int res = await _uowServices.SaveChangesAsync();
-				if (res!=0)
-				{
+				if(student.IsActive)
 					return new ResultDTO
 					{
-						StatusCode = StatusCodes.Status200OK,
-						Message = "Account activated successfully"
+					StatusCode = StatusCodes.Status400BadRequest,
+					Message = "Student account is already active"
 					};
-				}
 				else
 				{
-					return new ResultDTO
+					student.Password = BCrypt.Net.BCrypt.HashPassword(login.password);
+					_repository.UpdateEntityAsync<Student>(student, cancellationToken: cancellationToken);
+					int res = await _uowServices.SaveChangesAsync();
+					if (res != 0)
 					{
-						StatusCode = StatusCodes.Status400BadRequest,
-						Message = "Failed to activate account"
-					};
+						return new ResultDTO
+						{
+							StatusCode = StatusCodes.Status200OK,
+							Message = "Account activated successfully"
+						};
+					}
+					else
+					{
+						return new ResultDTO
+						{
+							StatusCode = StatusCodes.Status400BadRequest,
+							Message = "Failed to activate account"
+						};
+					}
 				}
 			}
 		}
+					
+				
 
-		public async Task<ResultDTO> ShowChildren(string? pid, CancellationToken cancellationToken)
+		public async Task<ResultDTO> ShowChildren(Guid pid, CancellationToken cancellationToken)
 		{
-			IEnumerable<Student> children = await _repository.GetEntitiesAsync<Student>((s => s.PID == pid),cancellationToken: cancellationToken);
+			IEnumerable<Student> children = await _repository.GetEntitiesAsync<Student>((s => s.PID == pid), cancellationToken: cancellationToken);
 			IEnumerable<ProfileDTO> profileDTOs = new List<ProfileDTO>();
 			if (children == null || !children.Any())
 			{
@@ -103,12 +98,13 @@ namespace grad.Services
 			}
 			else
 			{
-                foreach (var child in children)
-                {
+				foreach (var child in children)
+				{
 					profileDTOs = profileDTOs.Append(new ProfileDTO
 					{
 						Id = child.Id,
 						Name = $"{child.FName} {child.LName}",
+						Email = child.EmailorUserName,
 						BirthDate = child.BirthDate,
 						Disability = child.Disability.ToString()
 					});
@@ -123,10 +119,11 @@ namespace grad.Services
 		}
 
 
-		private void GenerateUserName(Student student)// need further improvement
+		private void GenerateUserName(RegisterStudentDTO student)// need further improvement
 		{
 			// Implement username generation logic here
-			student.EmailorUserName = $"{student.FName.ToLower()[3]}-{student.Id.ToLower()}";
+			string shortGuid = Guid.NewGuid().ToString("N")[..8];
+			student.Username = $"{student.FName.ToLower()[3]}.{shortGuid}@System.com";
 		}
 
 	}

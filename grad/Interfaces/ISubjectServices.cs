@@ -4,19 +4,19 @@ namespace grad.Interfaces
 {
 	public interface ISubjectServices
 	{
-		public Task<ResultDTO> AddSubject(SubjectDTO subject, CancellationToken cancellationToken);
+		public Task<ResultDTO> AddSubject(SubjectDTO subject, CancellationToken cancellationToken = default);
 
-		public Task<ResultDTO> RemoveSubject(SubjectDTO subject, CancellationToken cancellationToken);
+		public Task<ResultDTO> RemoveSubject(Guid subjectid, CancellationToken cancellationToken = default);
 
-		public Task<ResultDTO> UpdateSubject(SubjectDTO subject,string SubjectName, CancellationToken cancellationToken);
+		public Task<ResultDTO> UpdateSubject(Guid subjectid,string SubjectName, CancellationToken cancellationToken = default);
 
-		public Task<ResultDTO> ViewSubjectsAsync(CancellationToken cancellationToken);
+		public Task<ResultDTO> ViewSubjectsAsync(int disability = -1, CancellationToken cancellationToken = default);
 
-		public Task<ResultDTO> AddLesson(LessonDTO lessonDTO, CancellationToken cancellationToken);
+		public Task<ResultDTO> AddLesson(LessonDTO lessonDTO, CancellationToken cancellationToken = default);
 
-		public Task<ResultDTO> ViewLessons(LessonDTO lesson, CancellationToken cancellation);
-		public Task<ResultDTO> ViewSubjectAsync(string sid, CancellationToken cancellationToken);
+		//public Task<ResultDTO> ViewLessons(Guid lessonid, CancellationToken cancellation = default);
+		public Task<ResultDTO> ViewSubjectAsync(Guid sid, CancellationToken cancellationToken = default);
 
-		public Task<bool> IsSubjectExist(string? subjectName = "", bool? deaf_mute = false, string? subjectId = "", CancellationToken cancellationToken = default);
+		public Task<bool> IsSubjectExist(string? subjectName = "", bool? deaf_mute = false, Guid? subjectId = null, CancellationToken cancellationToken = default);
 	}
 }

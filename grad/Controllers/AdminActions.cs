@@ -13,9 +13,11 @@ namespace grad.Controllers
 	public class AdminActions : ControllerBase
 	{
 		private readonly IAdminServices _adminServices;
-		public AdminActions(IAdminServices adminServices)
+		private readonly ITokenServices _tokenServices;
+		public AdminActions(IAdminServices adminServices, ITokenServices tokenServices)
 		{
 			_adminServices = adminServices ?? throw new ArgumentNullException(nameof(adminServices));
+			_tokenServices = tokenServices ?? throw new ArgumentNullException(nameof(tokenServices));
 		}
 
 
@@ -34,23 +36,48 @@ namespace grad.Controllers
 			return StatusCode(res.StatusCode, new { Message = res.Message, Data = res.result });
 		}
 
-		[HttpPost("view-user")]
-		public async Task<IActionResult> ViewUser(ProfileDTO profileDTO, CancellationToken cancellationToken)
+		//[HttpPost("view-user")]
+		//public async Task<IActionResult> ViewUser(ProfileDTO profileDTO, CancellationToken cancellationToken)
+		//{
+		//	if (profileDTO.Id.IsNullOrEmpty() && profileDTO.Role.IsNullOrEmpty() && profileDTO != null)
+		//	{
+		//		return Unauthorized(new { Message = "Invalid User" });
+		//	}
+		//	else
+		//	{
+		//		ResultDTO res = await _adminServices.ViewUser(profileDTO, cancellationToken);
+		//		if (res.StatusCode == StatusCodes.Status200OK && res.result is ProfileDTO profile)
+		//		{
+		//			profile.pfpURL = $"{Request.Scheme}://{Request.Host}/{profile.pfpPath}";
+		//			Console.WriteLine(profile.pfpURL);
+		//		}
+		//		return StatusCode(res.StatusCode, new { Message = res.Message, Data = res.result });
+		//	}
+		//}
+
+		[HttpGet("view-user/{id}")]
+		public async Task<IActionResult> ViewUser(string id, [FromQuery] string role, CancellationToken cancellationToken)
 		{
-			if (profileDTO.Id.IsNullOrEmpty() && profileDTO.Role.IsNullOrEmpty() && profileDTO != null)
+			string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
 			{
-				return Unauthorized(new { Message = "Invalid User" });
+				return Unauthorized();
 			}
-			else
+			if(Guid.TryParse(id, out Guid guid))
 			{
-				ResultDTO res = await _adminServices.ViewUser(profileDTO, cancellationToken);
+				var dto = new ProfileDTO { Id = guid, Role = role };
+				ResultDTO res = await _adminServices.ViewUser(dto, cancellationToken);
 				if (res.StatusCode == StatusCodes.Status200OK && res.result is ProfileDTO profile)
 				{
 					profile.pfpURL = $"{Request.Scheme}://{Request.Host}/{profile.pfpPath}";
-					Console.WriteLine(profile.pfpURL);
 				}
 				return StatusCode(res.StatusCode, new { Message = res.Message, Data = res.result });
 			}
+			else
+			{
+				return Unauthorized(new { Message = "Invalid User" });
+			}
+
 		}
 
 		//[HttpGet("view-user/{id}")]
@@ -76,47 +103,67 @@ namespace grad.Controllers
 		[HttpPatch("End-Session/{id}")]
 		public async Task<IActionResult> EndSession(string id, CancellationToken cancellationToken)
 		{
-			if (id.IsNullOrEmpty())
+			string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
 			{
-				return Unauthorized(new { Message = "Invalid User" });
+				return Unauthorized();
+			}
+			if (Guid.TryParse(id,out Guid guid))
+			{
+				ResultDTO res = await _adminServices.EndSession(guid, cancellationToken);
+				return StatusCode(res.StatusCode, new { Message = res.Message });
 			}
 			else
 			{
-				ResultDTO res = await _adminServices.EndSession(id, cancellationToken);
-				return StatusCode(res.StatusCode, new { Message = res.Message });
+				return Unauthorized(new { Message = "Invalid User" });
 			}
 		}
 		[HttpPatch("Block-User/{id}")]
-		public async Task<IActionResult> BlockUser(string id, CancellationToken cancellationToken)
+		public async Task<IActionResult> BlockUser(string id, CancellationToken cancellationToken) // need to be updated to toggle block/unblock
 		{
-			if (id.IsNullOrEmpty())
+			string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
 			{
-				return Unauthorized(new { Message = "Invalid User" });
+				return Unauthorized();
+			}
+			if (Guid.TryParse(id, out Guid guid))
+			{
+				ResultDTO res = await _adminServices.BlockUser(guid, cancellationToken);
+				return StatusCode(res.StatusCode, new { Message = res.Message });
 			}
 			else
 			{
-				ResultDTO res = await _adminServices.BlockUser(id, cancellationToken);
-				return StatusCode(res.StatusCode, new { Message = res.Message });
+				return Unauthorized(new { Message = "Invalid User" });
 			}
 		}
 
-		[HttpPatch("Unblock-User")]
-		public async Task<IActionResult> UnblockUser(ProfileDTO profileDTO, CancellationToken cancellationToken) //not working yet
-		{
-			if (profileDTO.Id.IsNullOrEmpty() && profileDTO.Role.IsNullOrEmpty() && profileDTO != null)
-			{
-				return Unauthorized(new { Message = "Invalid User" });
-			}
-			else
-			{
-				throw new NotImplementedException();
-			}
-		}
+		//[HttpPatch("Unblock-User")]
+		//public async Task<IActionResult> UnblockUser(ProfileDTO profileDTO, CancellationToken cancellationToken) //not working yet
+		//{
+		//	string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
+		//	if (!await _tokenServices.IsTokenBlacklisted(accessToken))
+		//	{
+		//		return Unauthorized();
+		//	}
+		//	if (profileDTO.Id.IsNullOrEmpty() && profileDTO.Role.IsNullOrEmpty() && profileDTO != null)
+		//	{
+		//		return Unauthorized(new { Message = "Invalid User" });
+		//	}
+		//	else
+		//	{
+		//		throw new NotImplementedException();
+		//	}
+		//}
 
 		[HttpGet("List-Subjects")]
 		[Authorize(Roles = "Admin")]
 		public async Task<IActionResult> ListSubject(CancellationToken cancellationToken)
 		{
+			string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
+			{
+				return Unauthorized();
+			}
 			ResultDTO res = await _adminServices.ViewSubjects(cancellationToken);
 			return StatusCode(res.StatusCode, new { Message = res.Message, Data = res.result });
 		}
@@ -125,12 +172,20 @@ namespace grad.Controllers
 		[Authorize(Roles = "Admin")]
 		public async Task<IActionResult> ViewSubject(string sid,CancellationToken cancellationToken)
 		{
-			if(sid.IsNullOrEmpty())
+			string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
+			{
+				return Unauthorized();
+			}
+			if (Guid.TryParse(sid, out Guid guid))
+			{
+				ResultDTO res = await _adminServices.ViewSubject(guid, cancellationToken);
+				return StatusCode(res.StatusCode, new { Message = res.Message, Data = res.result });
+			}
+			else
 			{
 				return StatusCode(400, new { Message = "invalid subject" });
 			}
-			ResultDTO res = await _adminServices.ViewSubject(sid, cancellationToken);
-			return StatusCode(res.StatusCode, new { Message = res.Message, Data = res.result });
 		}
 
 
@@ -138,7 +193,12 @@ namespace grad.Controllers
 		[Authorize(Roles = "Admin")]
 		public async Task<IActionResult> AddSubject(SubjectDTO subject, CancellationToken cancellationToken)
 		{
-			if(!ModelState.IsValid) 
+			string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
+			{
+				return Unauthorized();
+			}
+			if (!ModelState.IsValid) 
 			{
 				return StatusCode(400, new { Message = ModelState });
 			}
@@ -153,9 +213,14 @@ namespace grad.Controllers
 		[Authorize(Roles = "Admin")]
 		public async Task<IActionResult> EditSubject(SubjectDTO subject, CancellationToken cancellationToken)
 		{
+			string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
+			{
+				return Unauthorized();
+			}
 			if (subject != null)
 			{
-				if (subject.SubjectId.IsNullOrEmpty())
+				if (subject.SubjectId != null)
 				{
 					return BadRequest();
 				}
@@ -178,7 +243,12 @@ namespace grad.Controllers
 		[HttpPatch("Approve-teacher")]
 		public async Task<IActionResult> ApproveTeacher(AssignTeacherDTO teacherDTO, CancellationToken cancellationToken)
 		{
-			if(!ModelState.IsValid)
+			string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
+			{
+				return Unauthorized();
+			}
+			if (!ModelState.IsValid)
 			{
 				return StatusCode(StatusCodes.Status400BadRequest, new { Message = "Invalid user or subject" });
 			}

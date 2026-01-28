@@ -2,7 +2,7 @@
 {
 	public class AssignTeacherDTO
 	{
-		public string TeacherId { get; set; }
-		public string SubjectId { get; set; }
+		public Guid TeacherId { get; set; }
+		public Guid SubjectId { get; set; }
 	}
 }

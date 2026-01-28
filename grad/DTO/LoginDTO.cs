@@ -1,14 +1,19 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
+using Newtonsoft.Json.Serialization;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace grad.DTO
 {
 	public class LoginDTO
 	{
-		[Required]
+		[EmailAddress(ErrorMessage = "Invalid Email")]
+		[Required(ErrorMessage ="Email field is required")]
 		public string UsernameorEmail { get; set; }
 
 		//public string  { get; set; }
-		[Required]
+		[Required(ErrorMessage ="Password Field is required")]
+		[RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$",ErrorMessage = "Password must be at least 8 characters long, contain upper and lower case letters, a number, and a special character.")]
 		public string password { get; set; }
 	}
 }

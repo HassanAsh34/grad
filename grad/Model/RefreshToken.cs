@@ -5,7 +5,7 @@ namespace grad.Model
 	public class RefreshToken
 	{
 		[Key]
-		public string Id { get; private set; } = Guid.NewGuid().ToString();
+		public Guid Id { get; private set; } = Guid.NewGuid();
 
 		public string TokenKey { get; set; }
 
@@ -13,7 +13,7 @@ namespace grad.Model
 
 		public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-		public string CreatedById { get; set; }
+		public Guid CreatedById { get; set; }
 
 		public User User { get; set; }
 

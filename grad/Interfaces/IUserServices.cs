@@ -12,7 +12,7 @@ namespace grad.Interfaces
 
 		//public Task<object> register(SignupDTO user, CancellationToken cancellationToken);
 
-		public Task<ResultDTO> register(SignupDTO? user = null, Student? student = null, bool Reg = false, CancellationToken cancellationToken = default);
+		public Task<ResultDTO> register(SignupDTO? user = null, RegisterStudentDTO? student = null, bool Reg = false, CancellationToken cancellationToken = default);
 		public Task<ResultDTO> RequestChangePass(User user,CancellationToken cancellationToken = default);
 
 		public Task<ResultDTO> ResetPasswordOTP(OTP_DTO otp, CancellationToken cancellationToken = default);
@@ -32,7 +32,7 @@ namespace grad.Interfaces
 		public Task<ResultDTO> ViewProfile(ProfileDTO user, CancellationToken cancellationToken = default);
 
 		//public Task<ResultDTO> LogOut(string token, string uid, CancellationToken cancellationToken = default);
-		public Task<ResultDTO> LogOut(string token, string refreshtoken, string uid, CancellationToken cancellationToken = default);
+		public Task<ResultDTO> LogOut(LogoutDTO login, CancellationToken cancellationToken = default);
 
 
 

@@ -33,7 +33,7 @@ namespace grad.Services
 				Claims = new List<Claim>
 						{
 							new Claim(JwtRegisteredClaimNames.Email, user.EmailorUserName),
-							new Claim(JwtRegisteredClaimNames.NameId, user.Id),
+							new Claim(JwtRegisteredClaimNames.NameId, user.Id.ToString().ToString()),
 							new Claim(ClaimTypes.Role,"ResetPassword"),
 						};
 			else
@@ -41,7 +41,7 @@ namespace grad.Services
 				Claims = new List<Claim>
 						{
 							new Claim(JwtRegisteredClaimNames.Email, user.EmailorUserName),
-							new Claim(JwtRegisteredClaimNames.NameId, user.Id)
+							new Claim(JwtRegisteredClaimNames.NameId, user.Id.ToString())
 						};
 				switch (user)
 				{
@@ -57,11 +57,12 @@ namespace grad.Services
 						break;
 					case Student s:
 						Claims.Add(new Claim(JwtRegisteredClaimNames.GivenName, $"{s.FName} {s.LName}"));
+						Claims.Add(new Claim("Disability",s.Disability.ToString()));
 						break;
 					case Teacher t:
 						Claims.AddRange(new List<Claim>{
 							new Claim(JwtRegisteredClaimNames.GivenName, $"{t.FName} {t.LName}"),
-							new Claim("SubjectID", t.SubjectFK)
+							new Claim("SubjectID", t.SubjectFK.ToString())
 						});
 					deafult:
 						Claims.Add(new Claim(JwtRegisteredClaimNames.GivenName, "User"));
@@ -73,7 +74,7 @@ namespace grad.Services
 			var tokenDescriptor = new SecurityTokenDescriptor
 			{
 				Subject = new ClaimsIdentity(Claims),
-				Expires = System.DateTime.UtcNow.AddMinutes(15),//short living token
+				Expires = reset ? System.DateTime.UtcNow.AddMinutes(30) : System.DateTime.UtcNow.AddMinutes(15),//short living token
 				SigningCredentials = creds,
 			};
 			var TokenHandler = new JwtSecurityTokenHandler();
@@ -114,8 +115,8 @@ namespace grad.Services
 				List<Claim> Claims = new List<Claim>
 				{
 					new Claim(JwtRegisteredClaimNames.Email, user.EmailorUserName),
-					new Claim(JwtRegisteredClaimNames.NameId, refreshToken.Id),
-					new Claim(JwtRegisteredClaimNames.Sub,user.Id),
+					new Claim(JwtRegisteredClaimNames.NameId, refreshToken.Id.ToString()),
+					new Claim(JwtRegisteredClaimNames.Sub,user.Id.ToString()),
 					new Claim(JwtRegisteredClaimNames.Jti,TokenKey)
 				};
 				var creds = new SigningCredentials(_secretKey, SecurityAlgorithms.HmacSha256Signature);
@@ -148,12 +149,14 @@ namespace grad.Services
 			}
 		}
 
-		public async Task<RefreshTokenDTO> getTokenInfo(string token, CancellationToken cancellationToken = default)
+
+
+		public async Task<RefreshTokenDTO> getTokenInfo(string token,bool refresh, CancellationToken cancellationToken = default)
 		{
-			var validToken = await validateRefreshToken(token,cancellationToken: cancellationToken);
-			if (validToken is RefreshTokenDTO refreshDto && refreshDto != null)
+			RefreshTokenDTO validToken = await validateRefreshToken(token,refresh: refresh,cancellationToken: cancellationToken) as RefreshTokenDTO;
+			if (validToken != null)
 			{
-				return refreshDto;
+				return validToken;
 			}
 			else
 			{
@@ -165,28 +168,24 @@ namespace grad.Services
 		{
 			if (!token.IsNullOrEmpty())
 			{
-				var res = await _redisServices.get(token);
-				return res != null;
+				string res = await _redisServices.get(token);
+				return res.IsNullOrEmpty() ? false : true;
+			}
+			else
+			{ 
+				return true; 
+			}
+		}
+
+		public async Task<bool> blacklistToken(string token,int remainingTime = 30)
+		{
+			if (!token.IsNullOrEmpty())
+			{
+				bool res = await _redisServices.store(token, "blacklisted", TimeSpan.FromMinutes(remainingTime));
+				return res;
 			}
 			else
 			{ return false; }
-		}
-
-		public async Task<bool> blacklistToken(string token)
-		{
-			//var validtoken = await validateRefreshToken(token);
-			//if (validtoken is AccessTokenDto tokenDto && tokenDto != null)
-			//{
-			//	if (!tokenDto.expired)
-			//		return await _redisServices.store(tokenDto.Token, "blacklisted", tokenDto.remainingtime);
-			//	else
-			//		return true;
-			//}
-			//else
-			//{
-			//	return false;
-			//}
-			throw new NotImplementedException();
 		}
 
 		private string generateRefreshTokenKey()
@@ -198,7 +197,7 @@ namespace grad.Services
 		}
 
 
-		private async Task<object> validateRefreshToken(string token, bool revoke = false, CancellationToken cancellationToken = default)
+		private async Task<object> validateRefreshToken(string token,bool refresh = false,bool revoke = false, CancellationToken cancellationToken = default)
 		{
 			if (string.IsNullOrWhiteSpace(token))
 				return null;
@@ -236,16 +235,26 @@ namespace grad.Services
 					return null;
 				}
 
-				RefreshTokenDTO refreshTokenDTO = new RefreshTokenDTO
+				RefreshTokenDTO refreshTokenDTO = null;
+				if (Guid.TryParse(nameIdClaim, out Guid Tid) && Guid.TryParse(subClaim, out Guid Uid))
 				{
-					Id = nameIdClaim,
-					Uid = subClaim,
-					TokenKey = jtiClaim,
-				};
+					refreshTokenDTO = new RefreshTokenDTO
+					{
+						Id = Tid,
+						Uid = Uid,
+						TokenKey = jtiClaim,
+					};
+				}
+				else
+				{
+					return null;
+				}
+
 
 				// Ensure we retrieve the user with included RefreshToken
+
 				User user = await _repository.GetEntityAsync<User>(
-					u => u.Id.ToLower().Equals(refreshTokenDTO.Uid.ToLower()),
+					u => u.Id == refreshTokenDTO.Uid,
 					include: q => q.Include(u => u.RefreshToken),
 					cancellationToken: cancellationToken);
 
@@ -285,8 +294,12 @@ namespace grad.Services
 					return null;
 
 				refreshTokenDTO.role = (int)user.Role;
-
-				if (revoke)
+				if(refresh && refreshToken.Revoked)
+				{
+					Console.WriteLine($"[validateRefreshToken] refresh token has been revoked.");
+					return null;
+				}
+				else if (revoke)
 					return refreshToken;
 				else
 					return refreshTokenDTO;

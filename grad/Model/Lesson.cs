@@ -5,7 +5,7 @@ namespace grad.Model
 	public class Lesson
 	{
 		[BsonId]
-		public string Id { get; private set; } 
+		public Guid Id { get; private set; } = Guid.NewGuid();
 
 		public string Title { get; set; }
 

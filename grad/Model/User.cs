@@ -5,11 +5,11 @@ namespace grad.Model
 	public class User
 	{
 		[Key]
-		public string Id { get; private set; } = Guid.NewGuid().ToString();
+		public Guid Id { get; private set; } = Guid.NewGuid();
 		public string EmailorUserName { get; set; }
 
 		public string ?ProfilePicture { get; set; }
-		public string Password { get; set; }
+		public string ?Password { get; set; }
 
 		public UserRole Role { get; set; }
 

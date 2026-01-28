@@ -5,7 +5,7 @@ namespace grad.Model
 	public class SubjectContent
 	{
 		[BsonId]
-		public string Id { get; set; }
+		public Guid Id { get; set; }
 
 		public Vocabulary ?Dictionary { get; set; }
 

@@ -2,7 +2,7 @@
 {
 	public class ModelExam
 	{
-		public string Id { get; private set; } = Guid.NewGuid().ToString();
+		public Guid Id { get; private set; } = Guid.NewGuid();
 
 		public string Title { get; set; }
 

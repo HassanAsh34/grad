@@ -1,5 +1,10 @@
-﻿using grad.DTO;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
+using System.Security.Claims;
+using Google.Cloud.Firestore.V1;
+using grad.DTO;
 using grad.Interfaces;
+using grad.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
@@ -12,17 +17,25 @@ namespace grad.Controllers
 	public class ParentActions : ControllerBase
 	{
 		private readonly IParentServices _parentServices;
+		private readonly ITokenServices _tokenServices;
 
-		public ParentActions(IParentServices parentServices)
+		public ParentActions(IParentServices parentServices, ITokenServices tokenServices)
 		{
 			_parentServices = parentServices ?? throw new ArgumentNullException(nameof(parentServices));
+			_tokenServices = tokenServices ?? throw new ArgumentNullException(nameof(parentServices));
 		}
 
 
 		[HttpPost("register-student")]
-		public async Task<IActionResult> RegisterStudent(RegisterStudentDTO studentDTO,CancellationToken cancellationToken)
+		[Consumes("multipart/form-data")]
+		public async Task<IActionResult> RegisterStudent([FromForm] RegisterStudentDTO studentDTO,CancellationToken cancellationToken)
 		{
 			//studentDTO.
+			string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
+			{
+				return Unauthorized();
+			}
 			string pid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 
 			string email = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
@@ -32,10 +45,17 @@ namespace grad.Controllers
 			string PhoneNumber = User.FindFirst("Phone")?.Value;
 
 			if (pid.IsNullOrEmpty() || email.IsNullOrEmpty() || PName.IsNullOrEmpty() || PhoneNumber.IsNullOrEmpty())
-				return StatusCode(StatusCodes.Status400BadRequest, new { Message = "Invalid credentials" });
+				return Unauthorized();
 			else
 			{
-				studentDTO.p_Id = pid;
+				if(Guid.TryParse(pid,out Guid parentId))
+				{
+					studentDTO.p_Id = parentId;
+				}
+				else
+				{
+					return Unauthorized();
+				}
 				studentDTO.PEmail = email;
 				studentDTO.Pname = PName;
 				ResultDTO res = await _parentServices.registerStudent(studentDTO, cancellationToken);
@@ -45,54 +65,64 @@ namespace grad.Controllers
 				});
 			}
 
-			}
-		[Authorize(Roles = "Parent")]
+		}
+		
+		
+		
+		
 		[HttpPost("Activate-student")]
 		public async Task<IActionResult> ActivateStudent(LoginDTO login, CancellationToken cancellationToken)
 		{
-			var passwordRegex = new System.Text.RegularExpressions.Regex(
-				@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
-			);
-			if (login.UsernameorEmail.IsNullOrEmpty() || login.password.IsNullOrEmpty())
+			string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
 			{
-				return StatusCode(StatusCodes.Status400BadRequest, new { Message = "Invalid credentials" });
+				return Unauthorized();
 			}
-			else if (!passwordRegex.IsMatch(login.password))
+			if (!ModelState.IsValid)
 			{
-				return StatusCode(StatusCodes.Status400BadRequest, new {
-					Message = "Password must be at least 8 characters long, contain upper and lower case letters, a number, and a special character."
-				});
+				return BadRequest(ModelState);
 			}
 			else
 			{
-				ResultDTO res = await _parentServices.activateAccount(login, cancellationToken);
-				return StatusCode(res.StatusCode, new
+				string pid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+				if (Guid.TryParse(pid, out Guid parentId))
 				{
-					Message = res.Message
-				});
+					ResultDTO res = await _parentServices.activateAccount(login, parentId, cancellationToken);
+					return StatusCode(res.StatusCode, new
+					{
+						Message = res.Message
+					});
+				}
+				else
+				{
+					return Unauthorized();
+				}
 			} 
 		}
 
 		[HttpPost("Show-children")]
-		[Authorize(Roles = "Parent")]
+		//[Authorize(Roles = "Parent")]
 		public async Task<IActionResult> ShowChildren(CancellationToken cancellationToken)
 		{
-			string pid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-
-			if (pid.IsNullOrEmpty())
-				return StatusCode(StatusCodes.Status400BadRequest, new { ErrMessage = "Invalid credentials" });
-			else
+			string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
 			{
-				ResultDTO res = await _parentServices.ShowChildren(pid,cancellationToken);
+				return Unauthorized();
+			}
+			string pid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+			if (Guid.TryParse(pid, out Guid parentId))
+			{
+				ResultDTO res = await _parentServices.ShowChildren(parentId, cancellationToken);
 				return StatusCode(res.StatusCode, new
 				{
 					Message = res.Message,
 					Data = res.result
 				});
 			}
+			else
+			{
+				return Unauthorized();
+			}
 		}
-
-
-
 	}
 }

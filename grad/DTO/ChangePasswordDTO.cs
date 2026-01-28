@@ -6,7 +6,7 @@ namespace grad.DTO
 	public class ChangePasswordDTO
 	{
 		[JsonIgnore]
-		public string ?Id { get; set; }
+		public Guid ?Id { get; set; }
 
 		[JsonIgnore]
 		public string ?refreshToken { get; set; }

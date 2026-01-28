@@ -53,7 +53,7 @@ namespace grad.Services
 
 
 		
-		public async Task<ResultDTO> BlockUser(string UID, CancellationToken cancellationToken)
+		public async Task<ResultDTO> BlockUser(Guid UID, CancellationToken cancellationToken)
 		{
 			User user = await _repository.GetEntityAsync<User>(u=>u.Id == UID,q=>q.Include(u=>u.RefreshToken) ,cancellationToken: cancellationToken);
 			if (user == null)
@@ -107,7 +107,7 @@ namespace grad.Services
 		//	}
 		//}
 
-		public async Task<ResultDTO> EndSession(string UID, CancellationToken cancellationToken)
+		public async Task<ResultDTO> EndSession(Guid UID, CancellationToken cancellationToken)
 		{
 			User user = await _repository.GetEntityAsync<User>(u => u.Id == UID, q => q.Include(u => u.RefreshToken), cancellationToken: cancellationToken);
 			if (user == null)
@@ -153,7 +153,7 @@ namespace grad.Services
 			};
 		}
 
-		public async Task<ResultDTO> ViewSubject(string sid, CancellationToken cancellation)
+		public async Task<ResultDTO> ViewSubject(Guid sid, CancellationToken cancellation)
 		{
 			//if(subject != null && !subject.SubjectId.IsNullOrEmpty())
 			//{
@@ -172,7 +172,7 @@ namespace grad.Services
 
 		public async Task<ResultDTO> AssignTeacherToSubject(AssignTeacherDTO assignTeacherDTO, CancellationToken cancellationToken)
 		{
-			Teacher teacher = await _repository.GetEntityAsync<Teacher>(t => t.Id.ToLower().Equals(assignTeacherDTO.TeacherId.ToLower()), cancellationToken: cancellationToken);
+			Teacher teacher = await _repository.GetEntityAsync<Teacher>(t => t.Id == assignTeacherDTO.TeacherId, cancellationToken: cancellationToken);
 			if(!await _subjectServices.IsSubjectExist(subjectId: assignTeacherDTO.SubjectId, cancellationToken: cancellationToken))
 			{
 				return new ResultDTO
@@ -207,19 +207,19 @@ namespace grad.Services
 			}
 		}
 
-		public Task<ResultDTO> RemoveSubject(string sid, CancellationToken cancellationToken)
+		public Task<ResultDTO> RemoveSubject(Guid sid, CancellationToken cancellationToken)
 		{
 			throw new NotImplementedException();
 		}
 
-		public Task<ResultDTO> UpdateSubject(string sid, CancellationToken cancellationToken)
+		public Task<ResultDTO> UpdateSubject(Guid sid, CancellationToken cancellationToken)
 		{
 			throw new NotImplementedException();
 		}
 
 		public async Task<ResultDTO> ViewSubjects(CancellationToken cancellationToken)
 		{
-			ResultDTO res = await _subjectServices.ViewSubjectsAsync(cancellationToken);
+			ResultDTO res = await _subjectServices.ViewSubjectsAsync(cancellationToken: cancellationToken);
 			return res;
 		}
 
