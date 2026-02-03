@@ -2,6 +2,7 @@
 using grad.DTO;
 using grad.Interfaces;
 using grad.Model;
+using Microsoft.EntityFrameworkCore;
 using MongoDB.Driver;
 
 namespace grad.Services
@@ -12,28 +13,55 @@ namespace grad.Services
 		private readonly IRepository _Repository;
 		private readonly IMongoCollection<StudentProgress> _studentProgress;
 		private readonly IUowServices _uowServices;
+		private readonly ILessonServices _lessonServices;
 
-		public StudentServices(ISubjectServices subjectServices,IRepository repository,IUowServices uow, MongoDBContext context)
+		public StudentServices(ISubjectServices subjectServices,IRepository repository,IUowServices uow,ILessonServices lessonServices,MongoDBContext context)
 		{
 			_subjectServices = subjectServices ??  throw new ArgumentNullException(nameof(subjectServices));
 			_Repository = repository ?? throw new ArgumentNullException(nameof(repository));
 			_uowServices = uow ?? throw new ArgumentNullException(nameof(uow));
 			_studentProgress = context.StudentProgress ?? throw new ArgumentNullException(nameof(context));
+			_lessonServices = lessonServices ?? throw new ArgumentException(nameof(lessonServices));
 		}
 
-		public async Task<ResultDTO> ViewSubjects(Guid id, CancellationToken cancellationToken)
+		public async Task<ResultDTO> ViewSubjects(Guid id,bool Enrolled,CancellationToken cancellationToken)
 		{
-			Student student = await _Repository.GetEntityAsync<Student>(s => s.Id == id);
+			Student student = null;
+			if (Enrolled)
+			{
+				student = await _Repository.GetEntityAsync<Student>(s => s.Id == id, include: q => q.Include(s => s.EnrolledSubjects),cancellationToken);
+			}
+			else
+			{
+				student = await _Repository.GetEntityAsync<Student>(s => s.Id == id,cancellationToken: cancellationToken);
+			}
 			if(student != null)
 			{
-				switch(student.Disability)
+				if(student.EnrolledSubjects == null)
 				{
-					case Student.DisablityType.Hearing:
-						return await _subjectServices.ViewSubjectsAsync(2, cancellationToken);
-					case Student.DisablityType.Speech:
-						return await _subjectServices.ViewSubjectsAsync(3, cancellationToken);
-					default:
-						return await _subjectServices.ViewSubjectsAsync(1, cancellationToken);
+					switch(student.Disability)
+					{
+						case Student.DisablityType.Hearing:
+							return await _subjectServices.ViewSubjectsAsync(disability: 2,cancellationToken: cancellationToken);
+						case Student.DisablityType.Speech:
+							return await _subjectServices.ViewSubjectsAsync(disability: 3,cancellationToken: cancellationToken);
+						default:
+							return await _subjectServices.ViewSubjectsAsync(disability: 1,cancellationToken: cancellationToken);
+					}
+				}
+				else
+				{
+					List<Guid> guids = student.EnrolledSubjects.Select(s => s.Id).ToList();
+					if (guids.Count == 0)
+						return new ResultDTO
+						{
+							StatusCode = StatusCodes.Status404NotFound,
+							Message = "No subjects yet 😊 Let’s add one and start learning!"
+						};
+					else
+					{
+						return await _subjectServices.ViewSubjectsAsync(guids: guids, cancellationToken: cancellationToken);
+					}
 				}
 			}
 			else
@@ -128,6 +156,28 @@ namespace grad.Services
 					Message = "Student Not Found"
 				};
 			}
+		}
+
+		public async Task<ResultDTO> viewLessons(EnrollSubjectDTO enrollSubject, CancellationToken cancellationToken)
+		{
+			if (await _Repository.GetEntityAsync<Enrollement>(e => e.STUFK == enrollSubject.stdFK && e.SUBFK == enrollSubject.subFK) is Enrollement enrollement)
+			{
+				return await _lessonServices.ViewLessons(enrollement.SUBFK, cancellationToken);
+			}
+			else
+			{
+				return new ResultDTO
+				{
+					Message = "You dont have access to these lessons",
+					StatusCode = StatusCodes.Status403Forbidden
+				};
+			}
+		}
+
+		public async Task<ResultDTO> viewLesson(LessonDTO lessonDTO, CancellationToken cancellationToken)
+		{
+			//return null;
+			return	await _lessonServices.viewLesson(lessonDTO, cancellationToken);
 		}
 	}
 }

@@ -1,4 +1,4 @@
-﻿namespace grad.Model
+﻿namespace grad.Data
 {
 	public class MongoDBSettings
 	{

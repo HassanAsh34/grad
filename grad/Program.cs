@@ -2,7 +2,6 @@
 using System.Text;
 using grad.Data;
 using grad.Interfaces;
-using grad.Model;
 using grad.Repositories;
 using grad.Services;
 using MailerSend.AspNetCore;
@@ -105,10 +104,10 @@ namespace grad
 
 
 			// ================= Email =================
-			builder.Services.Configure<ResendSettings>(
-				builder.Configuration.GetSection("Resend")
+			builder.Services.Configure<SMTPsettings>(
+				builder.Configuration.GetSection("SMTPsettings")
 			);
-			builder.Services.AddScoped<IEmailServices, ResendEmailService>();
+			builder.Services.AddScoped<IEmailServices, EmailService>();
 
 			// ================= CORS =================
 			builder.Services.AddCors(options =>

@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Google.Rpc;
 
 namespace grad.Model
 {
@@ -15,16 +16,31 @@ namespace grad.Model
 
 		public Gender ?gender { get; set; }
 
-		public bool IsVerified { get; set; } = true;
+		//public bool IsVerified { get; set; } = true;
+		public Status status { get; set; } = Status.Active;
 
-		public bool IsActive { get; set; } = true;
+		//public bool IsActive => status == Status.Active;
 
-		public bool IsLockedOut { get; set; } = false;
+		//public bool IsLockedOut { get; set; } = false;
+
+		public String FName { get; set; } = string.Empty;
+
+		public String LName { get; set; } = string.Empty;
 
 
 		//public string TID { get; set; }
 
 		public RefreshToken RefreshToken { get; set; }
+		
+		public enum Status
+		{
+			Active = 1,
+			Inactive = 0,
+			Pending = 2,
+			Banned = 3,
+			locked = 4
+		}
+
 		public enum UserRole
 		{
 			Admin,

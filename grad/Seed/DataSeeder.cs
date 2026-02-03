@@ -21,7 +21,7 @@ public static class DataSeeder
 		{
 			AdminType = "SuperAdmin",
 			EmailorUserName = adminEmail,
-			IsActive = true,
+			status = Status.Active,
 			Role = UserRole.Admin,
 			Password = BCrypt.Net.BCrypt.HashPassword("Admin@123")
 		};

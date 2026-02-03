@@ -66,13 +66,13 @@ namespace grad.Services
 						FName = studentDTO.FName,
 						LName = studentDTO.Pname.Split(' ')[0],
 						age = DateOnly.FromDateTime(DateTime.UtcNow).Year - studentDTO.BirthDate.Year,
-						EmailorUserName = studentDTO.Username,
+						EmailorUserName = studentDTO.Email,
 						PID = studentDTO.p_Id,
 						BirthDate = studentDTO.BirthDate,
 						Disability = (Student.DisablityType)studentDTO.Disability,
 						gender = studentDTO.gender == 0 ? User.Gender.Male : studentDTO.gender == 2 ? User.Gender.Female : 0,
 						Role = User.UserRole.Student,
-						IsActive = false
+						Password = studentDTO.password
 					};
 					_repository.CreateEntityAsync<Student>(student, cancellationToken: cancellationToken);
 					u = student;
@@ -131,8 +131,7 @@ namespace grad.Services
 							Address = user.Address,
 							Role = User.UserRole.Teacher,
 							gender = user.Gender == 1 ? User.Gender.Male : user.Gender == 2 ? User.Gender.Female : 0,
-							IsActive = false,
-							IsVerified = false,
+							status = User.Status.Pending
 						};
 						_repository.CreateEntityAsync<Teacher>(teacher, cancellationToken: cancellationToken);
 						u = teacher;
@@ -201,33 +200,62 @@ namespace grad.Services
 			}
 			else
 			{
-				if (!user.IsActive)
+				switch(user.status)
 				{
-					return new ResultDTO
-					{
-						StatusCode = StatusCodes.Status403Forbidden,
-						Message = "account is deactivated"
-					};
+					case User.Status.Banned:
+						return new ResultDTO
+						{
+							StatusCode = StatusCodes.Status403Forbidden,
+							Message = "account is banned"
+						};
+					case User.Status.Pending:
+						return new ResultDTO
+						{
+							StatusCode = StatusCodes.Status403Forbidden,
+							Message = "account is pending approval"
+						};
+					case User.Status.Inactive:
+						return new ResultDTO
+						{
+							StatusCode = StatusCodes.Status403Forbidden,
+							Message = "account is deactivated"
+						};
+					case User.Status.locked:
+						return new ResultDTO
+						{
+							StatusCode = StatusCodes.Status403Forbidden,
+							Message = "Your account is temporarily locked after several unsuccessful login attempts. You can regain access by resetting your password."
+						};
+					case User.Status.Active:
+						break;
 				}
-				else if (!user.IsVerified)
+				//if (!user.IsActive)
+				//{
+				//	return new ResultDTO
+				//	{
+				//		StatusCode = StatusCodes.Status403Forbidden,
+				//		Message = "account is deactivated"
+				//	};
+				//}
+				//else if (!user.IsVerified)
+				//{
+				//	return new ResultDTO
+				//	{
+				//		StatusCode = StatusCodes.Status403Forbidden,
+				//		Message = "account is not verified"
+				//	};
+				//}
+				//else if (user.IsLockedOut)
+				//{
+				//	return new ResultDTO
+				//	{
+				//		StatusCode = StatusCodes.Status403Forbidden,
+				//		Message = "Your account is temporarily locked after several unsuccessful login attempts. You can regain access by resetting your password."
+				//	};
+				//}
+				if (await getAttempts(user.EmailorUserName) >= 5) //dont forget to impletement refresh token part
 				{
-					return new ResultDTO
-					{
-						StatusCode = StatusCodes.Status403Forbidden,
-						Message = "account is not verified"
-					};
-				}
-				else if (user.IsLockedOut)
-				{
-					return new ResultDTO
-					{
-						StatusCode = StatusCodes.Status403Forbidden,
-						Message = "Your account is temporarily locked after several unsuccessful login attempts. You can regain access by resetting your password."
-					};
-				}
-				else if (await getAttempts(user.EmailorUserName) >= 5) //dont forget to impletement refresh token part
-				{
-					user.IsLockedOut = true;
+					user.status = User.Status.locked;
 					_repository.UpdateEntityAsync<User>(user);
 					await _uow.SaveChangesAsync();
 					string token = _TokenServices.generateAccessToken(user, true);
@@ -276,9 +304,17 @@ namespace grad.Services
 				bool res = await storeOTP(user.EmailorUserName, hashedotp);
 				if (res)
 				{
-					bool sent = await _emailServices.SendOTPEmail(user.EmailorUserName, otp, cancellationToken); //keep it for testing
-
-					sent = true;
+					string email = string.Empty;
+					bool sent = false;
+					if (user.Role == User.UserRole.Student)
+					{
+						Student student = await _repository.GetEntityAsync<Student>(s => s.Id == user.Id, include: q => q.Include(s => s.parent), cancellationToken: cancellationToken);
+						email = student.parent != null ? student.parent.EmailorUserName : student.EmailorUserName;
+					}
+					else
+						email = user.EmailorUserName;
+					sent = await _emailServices.SendOTPEmail(email, otp, cancellationToken); //keep it for testing
+																								 //sent = true;
 					Console.WriteLine($"otp {otp}");
 					//
 					if (sent)
@@ -446,7 +482,7 @@ namespace grad.Services
 		}
 
 
-		public async Task<ResultDTO> ViewProfile(ProfileDTO user, CancellationToken cancellationToken)//need to be fixed to show user pfp and add teacher 
+		public async Task<ResultDTO> ViewProfile(ProfileDTO user,Guid ?pid,CancellationToken cancellationToken)//need to be fixed to show user pfp and add teacher 
 		{
 			bool found = false;
 			if (user != null)
@@ -461,7 +497,7 @@ namespace grad.Services
 							{
 								user.Email = admin.EmailorUserName;
 								user.Name = "Admin";
-								user.pfpPath = admin.ProfilePicture;
+								user.pfpPath = admin.ProfilePicture == null ? string.Empty : admin.ProfilePicture;
 								found = true;
 							}
 							break;
@@ -476,11 +512,16 @@ namespace grad.Services
 								user.Address = parent.Address;
 								user.phone = parent.phoneNumber;
 								user.pfpPath = parent.ProfilePicture;
+								user.Job = parent.Job;
 								found = true;
 							}
 							break;
 						case User.UserRole.Student:
-							Student student = await _repository.GetEntityAsync<Student>(u => u.Id == user.Id,q=>q.Include(u=>u.parent),cancellationToken: cancellationToken);
+							Student student = null;
+							if (pid != null)
+								student = await _repository.GetEntityAsync<Student>(u => u.Id == user.Id && u.PID == pid, q => q.Include(u => u.parent), cancellationToken: cancellationToken);
+							else
+								student = await _repository.GetEntityAsync<Student>(u => u.Id == user.Id,q=>q.Include(u=>u.parent),cancellationToken: cancellationToken);
 							//Parent p = await _repository.GetEntityAsync<Parent>(u => u.Id.Equals(student.PID));
 							if(student != null)
 							{
@@ -491,6 +532,8 @@ namespace grad.Services
 								user.Address = student.parent.Address;
 								user.BirthDate = student.BirthDate;
 								user.Disability = student.Disability.ToString();
+								user.Job = string.Empty;
+								user.pfpPath = student.ProfilePicture;
 								if (student.parent != null)
 								{
 									user.setParent(new Parent
@@ -518,7 +561,13 @@ namespace grad.Services
 								user.phone = teacher.phoneNumber;
 								if(teacher.Subject != null) 
 								{
+									user.Job = $"{teacher.Subject.Name} Teacher";
 									user.Teaches = teacher.Subject.Name;
+								}
+								else
+								{
+									user.Job = "Techer";
+									user.Teaches = string.Empty;
 								}
 								found = true;
 							}
@@ -535,7 +584,7 @@ namespace grad.Services
 					return new ResultDTO
 					{
 						StatusCode = StatusCodes.Status404NotFound,
-						Message = "User isn't found"
+						Message = pid != null ? "Child's id is invalid" : "User isn't found"
 					};
 				else
 				{
@@ -617,7 +666,7 @@ namespace grad.Services
 			//}
 
 
-		private async Task<bool> UserExists(string ?EmailorUserName="",Guid ?uid = null,CancellationToken cancellationToken = default)
+		public async Task<bool> UserExists(string ?EmailorUserName="",Guid ?uid = null,CancellationToken cancellationToken = default)
 		{
 			User user;
 			EmailorUserName = EmailorUserName.ToLower().Trim();
@@ -643,8 +692,8 @@ namespace grad.Services
 			//revoke user token
 			//bool res = await revokeToken(user.RefreshToken, cancellationToken);
 			revokeToken(user.RefreshToken, cancellationToken);
-			if (user.IsLockedOut)
-				user.IsLockedOut = false;
+			if (user.status == User.Status.locked)
+				user.status = User.Status.Active;
 			user.Password = BCrypt.Net.BCrypt.HashPassword(NewPassword);
 			_repository.UpdateEntityAsync<User>(user, cancellationToken: cancellationToken);
 			int updateRes = await _uow.SaveChangesAsync();

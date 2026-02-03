@@ -32,7 +32,12 @@ namespace grad.Controllers
 		[HttpGet("Show-Users")]
 		public async Task<IActionResult> ShowUsers(CancellationToken cancellationToken)
 		{
-			ResultDTO res = await _adminServices.GetAllUsers(cancellationToken);
+			string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
+			{
+				return Unauthorized();
+			}
+			ResultDTO res = await _adminServices.GetAllUsers(Request.Scheme,$"{Request.Host}",cancellationToken);
 			return StatusCode(res.StatusCode, new { Message = res.Message, Data = res.result });
 		}
 
@@ -118,8 +123,8 @@ namespace grad.Controllers
 				return Unauthorized(new { Message = "Invalid User" });
 			}
 		}
-		[HttpPatch("Block-User/{id}")]
-		public async Task<IActionResult> BlockUser(string id, CancellationToken cancellationToken) // need to be updated to toggle block/unblock
+		[HttpPatch("Toggle-Ban-User/{id}")]
+		public async Task<IActionResult> BanUser(string id, CancellationToken cancellationToken) // need to be updated to toggle block/unblock
 		{
 			string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
 			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
@@ -128,8 +133,8 @@ namespace grad.Controllers
 			}
 			if (Guid.TryParse(id, out Guid guid))
 			{
-				ResultDTO res = await _adminServices.BlockUser(guid, cancellationToken);
-				return StatusCode(res.StatusCode, new { Message = res.Message });
+				ResultDTO res = await _adminServices.ToggleBan(guid, cancellationToken);
+				return StatusCode(res.StatusCode);
 			}
 			else
 			{

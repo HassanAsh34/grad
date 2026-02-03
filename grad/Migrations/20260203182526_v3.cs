@@ -1,0 +1,62 @@
+﻿using Microsoft.EntityFrameworkCore.Migrations;
+
+#nullable disable
+
+namespace grad.Migrations
+{
+    /// <inheritdoc />
+    public partial class v3 : Migration
+    {
+        /// <inheritdoc />
+        protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DropColumn(
+                name: "IsActive",
+                table: "users");
+
+            migrationBuilder.DropColumn(
+                name: "IsLockedOut",
+                table: "users");
+
+            migrationBuilder.DropColumn(
+                name: "IsVerified",
+                table: "users");
+
+            migrationBuilder.AddColumn<int>(
+                name: "status",
+                table: "users",
+                type: "int",
+                nullable: false,
+                defaultValue: 0);
+        }
+
+        /// <inheritdoc />
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DropColumn(
+                name: "status",
+                table: "users");
+
+            migrationBuilder.AddColumn<bool>(
+                name: "IsActive",
+                table: "users",
+                type: "bit",
+                nullable: false,
+                defaultValue: false);
+
+            migrationBuilder.AddColumn<bool>(
+                name: "IsLockedOut",
+                table: "users",
+                type: "bit",
+                nullable: false,
+                defaultValue: false);
+
+            migrationBuilder.AddColumn<bool>(
+                name: "IsVerified",
+                table: "users",
+                type: "bit",
+                nullable: false,
+                defaultValue: false);
+        }
+    }
+}

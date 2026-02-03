@@ -2,9 +2,9 @@
 {
 	public class Parent : User
 	{
-		public String FName { get; set; }
+		//public String FName { get; set; }
 
-		public String LName { get; set; }
+		//public String LName { get; set; }
 
 		public string phoneNumber { get; set; }
 

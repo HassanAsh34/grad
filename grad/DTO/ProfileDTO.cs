@@ -11,9 +11,13 @@ namespace grad.DTO
 
 		public string ?Email { get; set; }
 
+		public User.Status ?Status { get; set; }
+
 		public string ?Address { get; set; }
 
 		public string ?phone { get; set; }
+
+		//public bool banned { get; set; } =====
 
 		public string Role { get; set; }
 
@@ -30,6 +34,8 @@ namespace grad.DTO
 		public string ?pfpURL { get; set; }
 
 		public string ?Teaches { get; set; }
+
+		public string ?Job { get; set; }
 
 		public void setParent(Parent p)
 		{

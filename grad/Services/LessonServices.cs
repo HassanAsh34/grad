@@ -96,5 +96,33 @@ namespace grad.Services
 				};
 			}
 		}
+
+		public async Task<ResultDTO> viewLesson(LessonDTO lessonDTO, CancellationToken cancellationToken)
+		{
+			var filter = Builders<SubjectContent>.Filter.And(Builders<SubjectContent>.Filter.Eq(s => s.Id, lessonDTO.subjectID), Builders<SubjectContent>.Filter.ElemMatch(s => s.Lessons, l => l.Id == lessonDTO.Id));
+			SubjectContent subjectContent = await _subjects.Find(filter).FirstOrDefaultAsync();
+			if (subjectContent == null || subjectContent.Lessons.Count == 0)
+			{
+				return new ResultDTO
+				{
+					Message = "Lesson not found",
+					StatusCode = StatusCodes.Status404NotFound
+				};
+			}
+			else
+			{
+				Lesson lesson = subjectContent.Lessons.FirstOrDefault(l => l.Id == lessonDTO.Id);
+				lessonDTO.Description = lesson.Description;	
+				lessonDTO.ReleaseDate = lesson.ReleaseDate;
+				lessonDTO.Title = lesson.Title;
+				lessonDTO.VideoPath = lesson.VideoPath;
+				return new ResultDTO
+				{
+					Message = "Lesson found",
+					result = lessonDTO,
+					StatusCode = StatusCodes.Status200OK
+				};
+			}
+		}
 	}
-}
+}	

@@ -23,7 +23,7 @@ namespace grad.Controllers
 
 		[HttpGet("view-profile")]
 		[Authorize(Roles = "Admin,Teacher,Student,Parent")]
-		public async Task<IActionResult> viewProfile()//Tested
+		public async Task<IActionResult> viewProfile(CancellationToken cancellationToken)//Tested
 		{
 			//bool NotAuth = await _tokenServices.IsTokenBlacklisted(Request.Headers.Authorization.ToString());
 			string token = Request.Cookies["access_token"];
@@ -38,10 +38,12 @@ namespace grad.Controllers
 						Id = ID,
 						Role = roleClaim,
 					};
-					ResultDTO res = await _userService.ViewProfile(user);
+					ResultDTO res = await _userService.ViewProfile(user,cancellationToken: cancellationToken);
 					if (res.StatusCode == StatusCodes.Status200OK && res.result is ProfileDTO profile)
 					{
-						profile.pfpURL = $"{Request.Scheme}://{Request.Host}/{profile.pfpPath}";
+						profile.pfpURL = string.Empty;
+						if (!profile.pfpPath.IsNullOrEmpty())
+							profile.pfpURL = $"{Request.Scheme}://{Request.Host}/{profile.pfpPath}";	
 						Console.WriteLine(profile.pfpURL);
 					}
 					return StatusCode(res.StatusCode, new

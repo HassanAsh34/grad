@@ -32,8 +32,8 @@ namespace grad.Controllers
 			string id = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 			if (Guid.TryParse(id, out Guid guid))
 			{
-				ResultDTO result = await _studentServices.ViewSubjects(guid, cancellationToken);
-				return StatusCode(result.StatusCode, new { message = result.Message, result = result });
+				ResultDTO result = await _studentServices.ViewSubjects(guid,cancellationToken: cancellationToken);
+				return StatusCode(result.StatusCode, new { message = result.Message, result = result.result });
 			}
 			else
 			{
@@ -52,7 +52,7 @@ namespace grad.Controllers
 			if (Guid.TryParse(sid, out Guid guid))
 			{
 				ResultDTO result = await _studentServices.viewSubject(guid, cancellationToken);
-				return StatusCode(result.StatusCode, new { message = result.Message, result = result });
+				return StatusCode(result.StatusCode, new { message = result.Message, result = result.result });
 			}
 			else
 			{
@@ -90,9 +90,97 @@ namespace grad.Controllers
 				return StatusCode(result.StatusCode, new { Message = result.Message, result = result });
 			}
 		}
-		//[HttpGet("View-Lessons")]
+
+		[HttpGet("View-Enrolled-Subjects")]
+		public async Task<IActionResult> viewEnrolledSubjects(CancellationToken cancellationToken)
+		{
+			string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
+			{
+				return Unauthorized();
+			}
+			string id = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+			if (Guid.TryParse(id, out Guid guid))
+			{
+				ResultDTO result = await _studentServices.ViewSubjects(guid,true,cancellationToken);
+				return StatusCode(result.StatusCode, new { message = result.Message, result = result.result });
+			}
+			else
+			{
+				return Unauthorized(new { Message = "Invalid User" });
+			}
+		}
+
 		//view lesson
 
-		//view enrolled subjects
+		[HttpGet("View-Lessons/{Sid}")]
+		public async Task<IActionResult> viewEnrolledSubjects(string Sid,CancellationToken cancellationToken)
+		{
+			string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
+			{
+				return Unauthorized();
+			}
+			string id = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+			if (Guid.TryParse(id, out Guid guid))
+			{
+				if(Guid.TryParse(Sid, out Guid Gsid))
+				{
+					EnrollSubjectDTO enroll = new EnrollSubjectDTO
+					{
+						stdFK = guid,
+						subFK = Gsid
+					};
+					ResultDTO result = await _studentServices.viewLessons(enroll, cancellationToken);
+					return StatusCode(result.StatusCode, new { message = result.Message, result = result.result });
+				}
+				else
+				{
+					return BadRequest("Invalid Subject");
+				}
+			}
+			else
+			{
+				return Unauthorized(new { Message = "Invalid User" });
+			}
+		}
+
+		//view lesson
+		[HttpGet("View-lesson/{sid}/{lid}")]
+		public async Task<IActionResult> viewLesson(string sid,string lid, CancellationToken cancellationToken)
+		{
+			string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
+			{
+				return Unauthorized();
+			}
+			string id = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+			if (Guid.TryParse(id, out Guid guid))
+			{
+				if(Guid.TryParse(sid, out Guid Gsid) && Guid.TryParse(lid, out Guid Glid))
+				{
+					LessonDTO lessonDTO = new LessonDTO
+					{
+						Id = Glid,
+						subjectID = Gsid
+					};
+					ResultDTO result = await _studentServices.viewLesson(lessonDTO, cancellationToken);
+					if(result.StatusCode == 200 && result.result is LessonDTO lesson)
+					{
+						lesson.videoUrl = $"{Request.Scheme}://{Request.Host}/{lesson.VideoPath}";
+						Console.WriteLine(lesson.videoUrl);
+					}
+					return StatusCode(result.StatusCode, new { message = result.Message, result = result.result });
+				}
+				else
+				{
+					return BadRequest("Invalid Subject or Lesson");
+				}
+			}
+			else
+			{
+				return Unauthorized();
+			}
+		}
 	}
 }

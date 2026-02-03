@@ -92,13 +92,15 @@ namespace grad.Services
 			throw new NotImplementedException();
 		}
 
-		public async Task<ResultDTO> ViewSubjectsAsync(int disability = -1,CancellationToken cancellationToken = default)
+		public async Task<ResultDTO> ViewSubjectsAsync(List<Guid> guids,int disability = -1,CancellationToken cancellationToken = default)
 		{
 			IEnumerable<Subject> subjects = new List<Subject>();
 			if (disability == -1)
-				 subjects = await _repository.GetEntitiesAsync<Subject>(cancellationToken: cancellationToken);
+				subjects = await _repository.GetEntitiesAsync<Subject>(cancellationToken: cancellationToken);
+			else if (guids != null)
+				subjects = await _repository.GetEntitiesAsync<Subject>(s => guids.Contains(s.Id), cancellationToken: cancellationToken);
 			else
-				subjects = await _repository.GetEntitiesAsync<Subject>(s=>disability > 0? s.deaf_mute == true: s.deaf_mute == false, cancellationToken: cancellationToken);
+				subjects = await _repository.GetEntitiesAsync<Subject>(s => disability > 0 ? s.deaf_mute == true : s.deaf_mute == false, cancellationToken: cancellationToken);
 			IEnumerable<SubjectDTO> subjectDTOs = subjects.Select(s => new SubjectDTO
 			{
 				SubjectId = s.Id,

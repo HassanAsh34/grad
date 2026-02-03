@@ -4,9 +4,10 @@ namespace grad.Interfaces
 {
 	public interface IAdminServices
 	{
-		public Task<ResultDTO> BlockUser(Guid uid, CancellationToken cancellationToken = default);
+		//public Task<ResultDTO> BlockUser(Guid uid, CancellationToken cancellationToken = default);
+		public Task<ResultDTO> ToggleBan(Guid UID, CancellationToken cancellationToken);
 		public Task<ResultDTO> EndSession(Guid uid, CancellationToken cancellationToken = default);
-		public Task<ResultDTO> GetAllUsers(CancellationToken cancellationToken = default);
+		public Task<ResultDTO> GetAllUsers(string scheme, string host,CancellationToken cancellationToken = default);
 
 		public Task<ResultDTO> ViewUser(ProfileDTO profileDTO, CancellationToken cancellationToken = default);
 

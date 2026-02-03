@@ -56,6 +56,7 @@ namespace grad.Controllers
 				{
 					return Unauthorized();
 				}
+				studentDTO.Email = studentDTO.Email != null ? studentDTO.Email : string.Empty;
 				studentDTO.PEmail = email;
 				studentDTO.Pname = PName;
 				ResultDTO res = await _parentServices.registerStudent(studentDTO, cancellationToken);
@@ -70,37 +71,37 @@ namespace grad.Controllers
 		
 		
 		
-		[HttpPost("Activate-student")]
-		public async Task<IActionResult> ActivateStudent(LoginDTO login, CancellationToken cancellationToken)
-		{
-			string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
-			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
-			{
-				return Unauthorized();
-			}
-			if (!ModelState.IsValid)
-			{
-				return BadRequest(ModelState);
-			}
-			else
-			{
-				string pid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-				if (Guid.TryParse(pid, out Guid parentId))
-				{
-					ResultDTO res = await _parentServices.activateAccount(login, parentId, cancellationToken);
-					return StatusCode(res.StatusCode, new
-					{
-						Message = res.Message
-					});
-				}
-				else
-				{
-					return Unauthorized();
-				}
-			} 
-		}
+		//[HttpPost("Activate-student")]
+		//public async Task<IActionResult> ActivateStudent(LoginDTO login, CancellationToken cancellationToken)
+		//{
+		//	string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
+		//	if (!await _tokenServices.IsTokenBlacklisted(accessToken))
+		//	{
+		//		return Unauthorized();
+		//	}
+		//	if (!ModelState.IsValid)
+		//	{
+		//		return BadRequest(ModelState);
+		//	}
+		//	else
+		//	{
+		//		string pid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+		//		if (Guid.TryParse(pid, out Guid parentId))
+		//		{
+		//			ResultDTO res = await _parentServices.activateAccount(login, parentId, cancellationToken);
+		//			return StatusCode(res.StatusCode, new
+		//			{
+		//				Message = res.Message
+		//			});
+		//		}
+		//		else
+		//		{
+		//			return Unauthorized();
+		//		}
+		//	} 
+		//}
 
-		[HttpPost("Show-children")]
+		[HttpGet("Show-children")]
 		//[Authorize(Roles = "Parent")]
 		public async Task<IActionResult> ShowChildren(CancellationToken cancellationToken)
 		{
@@ -118,6 +119,37 @@ namespace grad.Controllers
 					Message = res.Message,
 					Data = res.result
 				});
+			}
+			else
+			{
+				return Unauthorized();
+			}
+		}
+
+		[HttpGet("View-Profile/{sid}")]
+		public async Task<IActionResult> ViewProfile(string sid, CancellationToken cancellationToken)
+		{
+			string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
+			{
+				return Unauthorized();
+			}
+			string pid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+			if (Guid.TryParse(pid, out Guid parentId))
+			{
+				if(Guid.TryParse(sid, out Guid studentId))
+				{
+					ResultDTO result = await _parentServices.viewProfile(parentId, studentId, cancellationToken);
+					return StatusCode(result.StatusCode, new
+					{
+						Message = result.Message,
+						Data = result.result
+					});
+				}
+				else
+				{
+					return BadRequest(new {message = "Invalid Student ID"});
+				}
 			}
 			else
 			{
