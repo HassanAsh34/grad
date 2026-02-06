@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using Google.Type;
 
 namespace grad.DTO
 {
@@ -29,12 +30,13 @@ namespace grad.DTO
 		public string Address { get; set; }
 
 		//public string NationalID { get; set; }
+		public int ?Disability { get; set ; } // 0: None, 1: Hearing, 2: Speech
 
 		public string FName { get; set; }
 
 		public string LName { get; set; }
 
-		public string phoneNumber { get; set; }
+		public string? phoneNumber { get; set; } = string.Empty;
 
 		public string ?Job { get; set; }
 

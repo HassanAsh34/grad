@@ -117,6 +117,12 @@ namespace grad.Services
 							gender = user.Gender == 1 ? User.Gender.Male : user.Gender == 2 ? User.Gender.Female : 0,
 							Role = User.UserRole.Parent
 						};
+						if(parent.phoneNumber.IsNullOrEmpty())
+							return new ResultDTO
+							{
+								StatusCode = StatusCodes.Status400BadRequest,
+								Message = "Phone number cant be empty"
+							};
 						_repository.CreateEntityAsync<Parent>(parent, cancellationToken: cancellationToken);
 						u= parent;
 						break;
@@ -133,6 +139,12 @@ namespace grad.Services
 							gender = user.Gender == 1 ? User.Gender.Male : user.Gender == 2 ? User.Gender.Female : 0,
 							status = User.Status.Pending
 						};
+						if (teacher.phoneNumber.IsNullOrEmpty())
+							return new ResultDTO
+							{
+								StatusCode = StatusCodes.Status400BadRequest,
+								Message = "Phone number cant be empty"
+							};
 						_repository.CreateEntityAsync<Teacher>(teacher, cancellationToken: cancellationToken);
 						u = teacher;
 						break;
@@ -143,13 +155,13 @@ namespace grad.Services
 							FName = user.FName,
 							LName = user.LName,
 							age = DateOnly.FromDateTime(DateTime.UtcNow).Year - (user.BirthDate != null ? user.BirthDate.Year :DateTime.UtcNow.Year),
-							EmailorUserName = studentDTO.Email,
-							PID = studentDTO.p_Id,
-							BirthDate = studentDTO.BirthDate,
-							Disability = (Student.DisablityType)studentDTO.Disability,
-							gender = studentDTO.gender == 1 ? User.Gender.Male : studentDTO.gender == 2 ? User.Gender.Female : 0,
+							EmailorUserName = user.email,
+							//PID = studentDTO.p_Id,
+							BirthDate = user.BirthDate,
+							Disability = (Student.DisablityType)(user.Disability == null ? 0 : user.Disability) ,
+							gender = user.Gender == 1 ? User.Gender.Male : studentDTO.gender == 2 ? User.Gender.Female : 0,
 							Role = User.UserRole.Student,
-							Password = studentDTO.password
+							Password = user.password
 						};
 						if(student.age == 0)
 						{
