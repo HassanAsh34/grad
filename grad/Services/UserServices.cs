@@ -70,7 +70,7 @@ namespace grad.Services
 						PID = studentDTO.p_Id,
 						BirthDate = studentDTO.BirthDate,
 						Disability = (Student.DisablityType)studentDTO.Disability,
-						gender = studentDTO.gender == 0 ? User.Gender.Male : studentDTO.gender == 2 ? User.Gender.Female : 0,
+						gender = studentDTO.gender == 1 ? User.Gender.Male : studentDTO.gender == 2 ? User.Gender.Female : 0,
 						Role = User.UserRole.Student,
 						Password = studentDTO.password
 					};
@@ -93,17 +93,17 @@ namespace grad.Services
 				object result;
 				switch (user.role)
 				{
-					case (int)User.UserRole.Admin:
-						Admin admin = new Admin
-						{
-							EmailorUserName = user.email,
-							Password = user.password,
-							Role = User.UserRole.Admin,
+					//case (int)User.UserRole.Admin:
+					//	Admin admin = new Admin
+					//	{
+					//		EmailorUserName = user.email,
+					//		Password = user.password,
+					//		Role = User.UserRole.Admin,
 							
-						};
-						_repository.CreateEntityAsync<Admin>(admin, cancellationToken: cancellationToken);
-						u = admin;
-						break;
+					//	};
+					//	_repository.CreateEntityAsync<Admin>(admin, cancellationToken: cancellationToken);
+					//	u = admin;
+					//	break;
 					case (int)User.UserRole.Parent:
 						Parent parent = new Parent
 						{
@@ -140,17 +140,25 @@ namespace grad.Services
 					case (int)User.UserRole.Student:
 						Student student = new Student
 						{
-							FName = studentDTO.FName,
-							LName = studentDTO.Pname.Split(' ')[0],
-							age = DateOnly.FromDateTime(DateTime.UtcNow).Year - studentDTO.BirthDate.Year,
+							FName = user.FName,
+							LName = user.LName,
+							age = DateOnly.FromDateTime(DateTime.UtcNow).Year - (user.BirthDate != null ? user.BirthDate.Year :DateTime.UtcNow.Year),
 							EmailorUserName = studentDTO.Email,
 							PID = studentDTO.p_Id,
 							BirthDate = studentDTO.BirthDate,
 							Disability = (Student.DisablityType)studentDTO.Disability,
-							gender = studentDTO.gender == 0 ? User.Gender.Male : studentDTO.gender == 2 ? User.Gender.Female : 0,
+							gender = studentDTO.gender == 1 ? User.Gender.Male : studentDTO.gender == 2 ? User.Gender.Female : 0,
 							Role = User.UserRole.Student,
 							Password = studentDTO.password
 						};
+						if(student.age == 0)
+						{
+							return new ResultDTO
+							{
+								StatusCode = StatusCodes.Status400BadRequest,
+								Message = "Invalid birth date"
+							};
+						}
 						_repository.CreateEntityAsync<Student>(student, cancellationToken: cancellationToken);
 						u = student;
 						break;
