@@ -137,6 +137,23 @@ namespace grad.Services
 						u = teacher;
 						break;
 					//case student need to be implemented
+					case (int)User.UserRole.Student:
+						Student student = new Student
+						{
+							FName = studentDTO.FName,
+							LName = studentDTO.Pname.Split(' ')[0],
+							age = DateOnly.FromDateTime(DateTime.UtcNow).Year - studentDTO.BirthDate.Year,
+							EmailorUserName = studentDTO.Email,
+							PID = studentDTO.p_Id,
+							BirthDate = studentDTO.BirthDate,
+							Disability = (Student.DisablityType)studentDTO.Disability,
+							gender = studentDTO.gender == 0 ? User.Gender.Male : studentDTO.gender == 2 ? User.Gender.Female : 0,
+							Role = User.UserRole.Student,
+							Password = studentDTO.password
+						};
+						_repository.CreateEntityAsync<Student>(student, cancellationToken: cancellationToken);
+						u = student;
+						break;
 					default:
 						return new ResultDTO
 						{
