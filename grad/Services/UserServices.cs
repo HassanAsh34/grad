@@ -159,7 +159,7 @@ namespace grad.Services
 							//PID = studentDTO.p_Id,
 							BirthDate = user.BD,
 							Disability = (Student.DisablityType)(user.Disability == null ? 0 : user.Disability),
-							gender = user.Gender == 1 ? User.Gender.Male : studentDTO.gender == 2 ? User.Gender.Female : 0,
+							gender = user.Gender == 1 ? User.Gender.Male : user.Gender == 2 ? User.Gender.Female : 0,
 							Role = User.UserRole.Student,
 							Password = user.password
 						};
