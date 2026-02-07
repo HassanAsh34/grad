@@ -173,7 +173,10 @@ namespace grad.Controllers
 				//we need to add a default picture for the users
 				ResultDTO result = await _userService.register(user, cancellationToken: cancellationToken);
 				if(result.StatusCode != StatusCodes.Status201Created)
-					System.IO.File.Delete(user.filePath);
+				{
+					if (!user.filePath.IsNullOrEmpty() && System.IO.File.Exists(user.filePath))
+									System.IO.File.Delete(user.filePath);
+				}
 				return StatusCode(result.StatusCode, new
 				{
 					Message = result.Message

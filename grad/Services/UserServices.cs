@@ -566,7 +566,10 @@ namespace grad.Services
 								user.Email = student.EmailorUserName;
 								user.Role = student.Role.ToString();
 								user.Name = $"{student.FName} {student.LName}";
-								user.Address = student.parent.Address;
+								if(student.parent != null)
+									user.Address = student.parent.Address;
+								//else
+								//	user.Address = student.;
 								user.BirthDate = student.BirthDate;
 								user.Disability = student.Disability.ToString();
 								user.Job = string.Empty;
