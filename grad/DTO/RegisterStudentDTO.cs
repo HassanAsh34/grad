@@ -28,6 +28,8 @@ namespace grad.DTO
 
 		public DateOnly BirthDate { get; set; }
 
+		
+
 		public int ?gender { get; set; }
 
 		public int Disability { get; set; } // 0: None, 1: Hearing, 2: Speech

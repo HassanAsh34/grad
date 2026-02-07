@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
-using Google.Type;
+//using Google.Type;
 
 namespace grad.DTO
 {
@@ -25,7 +25,9 @@ namespace grad.DTO
 		[RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$", ErrorMessage = "Password must be at least 8 characters long, contain upper and lower case letters, a number, and a special character.")]
 		public string password { get; set; }
 
-		public DateOnly BirthDate { get; set; }
+		public DateOnly ?BirthDate { get; set; }
+
+		public DateOnly BD => BirthDate == null ? DateOnly.FromDateTime(DateTime.UtcNow) : BirthDate.Value;
 
 		public string Address { get; set; }
 

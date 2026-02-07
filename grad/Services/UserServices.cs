@@ -154,11 +154,11 @@ namespace grad.Services
 						{
 							FName = user.FName,
 							LName = user.LName,
-							age = DateOnly.FromDateTime(DateTime.UtcNow).Year - (user.BirthDate != null ? user.BirthDate.Year :DateTime.UtcNow.Year),
+							age = GetYearsDifference(user.BD, DateOnly.FromDateTime(DateTime.UtcNow)),
 							EmailorUserName = user.email,
 							//PID = studentDTO.p_Id,
-							BirthDate = user.BirthDate,
-							Disability = (Student.DisablityType)(user.Disability == null ? 0 : user.Disability) ,
+							BirthDate = user.BD,
+							Disability = (Student.DisablityType)(user.Disability == null ? 0 : user.Disability),
 							gender = user.Gender == 1 ? User.Gender.Male : studentDTO.gender == 2 ? User.Gender.Female : 0,
 							Role = User.UserRole.Student,
 							Password = user.password
@@ -1078,8 +1078,24 @@ namespace grad.Services
 			//	};
 		}
 
+		private static int GetYearsDifference(DateOnly fromDate, DateOnly toDate)
+		{
+			if (toDate < fromDate)
+				return 0;
+
+			int years = toDate.Year - fromDate.Year;
+
+			// Adjust if the last year is not fully completed
+			if (toDate.Month < fromDate.Month ||
+			   (toDate.Month == fromDate.Month && toDate.Day < fromDate.Day))
+			{
+				years--;
+			}
+
+			return years;
+		}
 
 
-	} 
+} 
 }
 
