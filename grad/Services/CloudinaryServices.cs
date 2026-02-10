@@ -49,7 +49,7 @@ namespace grad.Services
 				var uploadParams = new VideoUploadParams()
 				{
 					File = new FileDescription(file.FileName, stream),
-					Folder = Path.Combine("uploads",folder),
+					Folder = $"uploads/{folder}",
 					PublicId = publicId,
 					Overwrite = true
 				};
