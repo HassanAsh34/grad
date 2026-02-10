@@ -2,6 +2,7 @@
 using grad.DTO;
 using grad.Interfaces;
 using grad.Model;
+using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
 
 namespace grad.Services
@@ -9,25 +10,36 @@ namespace grad.Services
 	public class LessonServices : ILessonServices
 	{
 		private readonly IMongoCollection<SubjectContent> _subjects;
+		private readonly ICloudinaryServices _cloudinaryServices;
 
-		public LessonServices(MongoDBContext context)
+		public LessonServices(MongoDBContext context,ICloudinaryServices cloudinaryServices)
 		{
 			_subjects = context.Subjects ?? throw new ArgumentNullException(nameof(context));
+			_cloudinaryServices = cloudinaryServices ?? throw new ArgumentNullException(nameof(cloudinaryServices));
 		}
 
 		public async Task<ResultDTO> AddLesson(LessonDTO lessonDTO, CancellationToken cancellationToken)
 		{
 			if (lessonDTO.VideoFile.Length > 0 && lessonDTO.VideoFile != null)
 			{
-				string directory = Path.Combine("uploads", "subjects", $"{lessonDTO.subjectID}", "lessons");
-				if (!File.Exists(directory))
-					Directory.CreateDirectory(directory);
+				string directory = $"subjects/{lessonDTO.subjectID}/lessons";
+				//string directory = Path.Combine("uploads", "subjects", $"{lessonDTO.subjectID}", "lessons");
 
-				lessonDTO.VideoPath = Path.Combine(directory, $"{lessonDTO.Title}.mp4");
+				//if (!File.Exists(directory))
+				//	Directory.CreateDirectory(directory);
+				lessonDTO.VideoPath = await _cloudinaryServices.UploadVideoAsync(lessonDTO.VideoFile, directory, $"{lessonDTO.Title}.mp4",cancellationToken);
 
-				using var stream = new FileStream(lessonDTO.VideoPath, FileMode.Create);
-				await lessonDTO.VideoFile.CopyToAsync(stream, cancellationToken);
+				//lessonDTO.VideoPath = Path.Combine(directory, $"{lessonDTO.Title}.mp4");
+
+				//using var stream = new FileStream(lessonDTO.VideoPath, FileMode.Create);
+				//await lessonDTO.VideoFile.CopyToAsync(stream, cancellationToken);
 			}
+			if (lessonDTO.VideoPath.IsNullOrEmpty())
+				return new ResultDTO
+				{
+					Message = "failed to uploud video, please try again",
+					StatusCode = StatusCodes.Status400BadRequest
+				};
 			var filter = Builders<SubjectContent>.Filter.And(Builders<SubjectContent>.Filter.Eq(s => s.Id, lessonDTO.subjectID), Builders<SubjectContent>.Filter.Not(
 				Builders<SubjectContent>.Filter.ElemMatch(s => s.Lessons, l => l.Title == lessonDTO.Title)));
 			Lesson lesson = new Lesson
@@ -84,7 +96,7 @@ namespace grad.Services
 						Id = l.Id,
 						ReleaseDate = l.ReleaseDate,
 						Title = l.Title,
-						VideoPath = l.VideoPath,
+						videoUrl = l.VideoPath
 					});
 				});
 

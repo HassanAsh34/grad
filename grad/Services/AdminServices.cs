@@ -148,16 +148,16 @@ namespace grad.Services
 			List<ProfileDTO> userProfiles = new List<ProfileDTO>();
 			foreach (var item in users)
 			{
-				string Url = string.Empty;
-				if(item.ProfilePicture != null)
-					Url = $"{scheme}://{host}/{item.ProfilePicture}";
+				//string Url = string.Empty;
+				//if(item.ProfilePicture != null)
+				//	Url = $"{scheme}://{host}/{item.ProfilePicture}";
 				userProfiles.Add(new ProfileDTO
 				{
 					Id = item.Id,
 					Name = item.FName != string.Empty && item.LName != string.Empty ? $"{item.FName} {item.LName}" : string.Empty,
 					Email = item.EmailorUserName,
 					Status = item.status,
-					pfpURL = Url,
+					pfpURL = item.ProfilePicture,
 					Role = item.Role.ToString(),
 				});
 			}

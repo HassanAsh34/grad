@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query.Internal;
 using Microsoft.IdentityModel.Tokens;
+
 using Newtonsoft.Json.Linq;
 using static System.Net.WebRequestMethods;
 
@@ -29,14 +30,16 @@ namespace grad.Services
 		private readonly IEmailServices _emailServices;
 		private readonly ITokenServices _TokenServices;
 		private readonly IUowServices _uow;
+		private readonly ICloudinaryServices _cloudinaryServices;
 
-		public UserServices(IRepository repository, IRedisServices redis, IEmailServices emailServices,ITokenServices tokenServices, IUowServices uow)
+		public UserServices(IRepository repository, IRedisServices redis, IEmailServices emailServices,ITokenServices tokenServices, IUowServices uow, ICloudinaryServices cloudinaryServices)
 		{
 			_repository = repository ?? throw new ArgumentNullException(nameof(repository));
 			_redis = redis ?? throw new ArgumentNullException(nameof(redis));
 			_emailServices = emailServices ?? throw new ArgumentNullException(nameof(emailServices));
 			_TokenServices = tokenServices as TokenServices ?? throw new ArgumentNullException(nameof(tokenServices));
 			_uow = uow ?? throw new ArgumentNullException(nameof(uow));
+			_cloudinaryServices = cloudinaryServices ?? throw new ArgumentNullException(nameof(cloudinaryServices));
 		}
 
 		public async Task<ResultDTO> register(SignupDTO ?user,RegisterStudentDTO ?studentDTO,bool Reg,CancellationToken cancellationToken)
@@ -205,16 +208,18 @@ namespace grad.Services
 		{
 			if (file != null && file.Length > 0)
 			{
-				string userFolder = Path.Combine("uploads", "users");
-				if (!System.IO.File.Exists(userFolder))
-				{
-					Directory.CreateDirectory(userFolder);
-				}
+				//string userFolder = Path.Combine("uploads", "users");
+				//if (!System.IO.File.Exists(userFolder))
+				//{
+				//	Directory.CreateDirectory(userFolder);
+				//}
 
-				user.ProfilePicture = Path.Combine(userFolder, $"{user.Id}.jpg");
+				//user.ProfilePicture = Path.Combine(userFolder, $"{user.Id}.jpg");
 
-				using var stream = new FileStream(user.ProfilePicture, FileMode.Create);
-				await file.CopyToAsync(stream, cancellationToken);
+				//using var stream = new FileStream(user.ProfilePicture, FileMode.Create);
+				//await file.CopyToAsync(stream, cancellationToken);
+				string publicId = $"{user.Id}";
+				user.ProfilePicture = await _cloudinaryServices.UploadImageAsync(file,"user",publicId,cancellationToken);
 				_repository.UpdateEntityAsync<User>(user, cancellationToken: cancellationToken);
 				await _uow.SaveChangesAsync();
 			}

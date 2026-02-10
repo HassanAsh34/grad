@@ -43,7 +43,8 @@ namespace grad.Controllers
 					{
 						profile.pfpURL = string.Empty;
 						if (!profile.pfpPath.IsNullOrEmpty())
-							profile.pfpURL = $"{Request.Scheme}://{Request.Host}/{profile.pfpPath}";	
+							profile.pfpURL = profile.pfpPath;
+						//profile.pfpURL = $"{Request.Scheme}://{Request.Host}/{profile.pfpPath}";	
 						Console.WriteLine(profile.pfpURL);
 					}
 					return StatusCode(res.StatusCode, new

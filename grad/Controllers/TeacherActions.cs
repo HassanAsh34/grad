@@ -1,5 +1,7 @@
-﻿using grad.DTO;
+﻿using System.Text.Json;
+using grad.DTO;
 using grad.Interfaces;
+using grad.Model;
 using grad.Services;
 using Grpc.Core;
 using Microsoft.AspNetCore.Authorization;
@@ -11,7 +13,7 @@ namespace grad.Controllers
 	[ApiController]
 	[Route("/Teacher")]
 	[Authorize(Roles = "Teacher")]
-	public class TeacherActions :ControllerBase
+	public class TeacherActions : ControllerBase
 	{
 		//private readonly ISubjectServices _SubjectServices;
 		private readonly ITokenServices _tokenServices;
@@ -35,17 +37,17 @@ namespace grad.Controllers
 				return Unauthorized();
 			}
 			string sid = User.FindFirst("SubjectID")?.Value;
-			if (Guid.TryParse(sid,out Guid Id))
+			if (Guid.TryParse(sid, out Guid Id))
 			{
 				ResultDTO result = await _teacherServices.ShowStudents(Id, cancellation);
 				return StatusCode(result.StatusCode, new { message = result.Message, result = result.result });
 			}
 			else
 				return StatusCode(StatusCodes.Status400BadRequest, new { message = "You still have been verified yet" });
-			
+
 		}
 
-		
+
 
 		[HttpGet("get-lessons")]
 		public async Task<IActionResult> viewLessons(CancellationToken cancellationToken)
@@ -83,9 +85,38 @@ namespace grad.Controllers
 				lessonDTO.subjectID = Id;
 				ResultDTO res = await _teacherServices.AddLesson(lessonDTO, cancellationToken);
 				return StatusCode(res.StatusCode, new { res.Message, res.result });
-			}	
+			}
 			else
 				return StatusCode(StatusCodes.Status400BadRequest, new { message = "You still have not been verified yet" });
 		}
+
+		[HttpPost("Add-words-to-Dictionary")]
+		//[Consumes("multipart/form-data")]
+		public async Task<IActionResult> addWordsToDictionary([FromForm] AddVocabDTO vocabDTO, CancellationToken cancellationToken)
+		{
+			if (vocabDTO.word == null || vocabDTO.files == null)
+				return BadRequest("Invalid input");
+			if (vocabDTO.word.Count != vocabDTO.files.Count)
+				return BadRequest("Each word must have exactly one file");
+			//return BadRequest(new { message = vocabDTO.word.Count - vocabDTO.files.Count  > 1 ? $"{vocabDTO.word.Count - vocabDTO.files.Count} words are messing images" : "One word is messing an image" });
+			else
+			{
+				List<WordDTO> wordDTOs = new List<WordDTO>();
+
+				for(int i = 0;i <vocabDTO.word.Count; i++)
+				{
+					wordDTOs.Add(new WordDTO
+					{
+						word = vocabDTO.word[i],
+						file = vocabDTO.files[i]
+					});
+				}
+				//implement add vocab in service layer
+				return Ok(wordDTOs);
+			}
+		}
+
+		//implement add exercises
+			
 	}
 }

@@ -75,6 +75,10 @@ namespace grad
 					}
 				});
 			});
+			builder.Services.Configure<CloudinarySettings>(
+				builder.Configuration.GetSection("CloudinarySettings")
+			);
+			//builder.Services.AddSingleton<CloudinaryServices>();
 
 			// ================= DI =================
 			builder.Services.AddScoped<IRepository, Repository>();
@@ -88,6 +92,7 @@ namespace grad
 			builder.Services.AddScoped<ITeacherServices,TeacherServices>();
 			builder.Services.AddScoped<IStudentServices, StudentServices>();
 			builder.Services.AddScoped<ILessonServices, LessonServices>();
+			builder.Services.AddScoped<ICloudinaryServices,CloudinaryServices>();
 			builder.Services.AddHostedService<SeedHostedService>();
 
 			// ================= MongoDB =================
@@ -178,6 +183,8 @@ namespace grad
 								context.Token = reset;
 							else if (context.Request.Cookies.TryGetValue("access_token", out var access))
 								context.Token = access;
+							//else (context.Request.Cookies.TryGetValue("refresh_token", out var refresh))
+							//	context.Token = refresh;
 
 							return Task.CompletedTask;
 						}
