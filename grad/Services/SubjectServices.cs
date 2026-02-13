@@ -18,13 +18,14 @@ namespace grad.Services
 		private readonly IUowServices _uowServices;
 		private readonly IMongoCollection<SubjectContent> _subjects;
 		private readonly ILessonServices _lessonServices;
-
-		public SubjectServices(IRepository repository, IUowServices uowServices,ILessonServices lessonServices,MongoDBContext context)
+		private readonly ICloudinaryServices _cloudinary;
+		public SubjectServices(IRepository repository, IUowServices uowServices,ILessonServices lessonServices,MongoDBContext context,ICloudinaryServices cloudinary)
 		{
 			_repository = repository ?? throw new ArgumentNullException(nameof(repository));
 			_subjects = context.Subjects ?? throw new ArgumentNullException(nameof(context));
 			_uowServices = uowServices ?? throw new ArgumentNullException(nameof(uowServices));
 			_lessonServices = lessonServices ?? throw new ArgumentNullException(nameof(lessonServices));
+			_cloudinary = cloudinary ?? throw new ArgumentNullException(nameof(cloudinary));
 		}
 
 		public async Task<ResultDTO> AddSubject(SubjectDTO subject, CancellationToken cancellationToken)
@@ -92,13 +93,18 @@ namespace grad.Services
 			throw new NotImplementedException();
 		}
 
-		public async Task<ResultDTO> ViewSubjectsAsync(List<Guid> guids,int disability = -1,CancellationToken cancellationToken = default)
+		public async Task<ResultDTO> ViewSubjectsAsync(List<Guid> guids,int disability = -1,bool enrolled = false,CancellationToken cancellationToken = default)
 		{
 			IEnumerable<Subject> subjects = new List<Subject>();
-			if (disability == -1)
+			if (guids != null)
+			{
+				if(enrolled)
+					subjects = await _repository.GetEntitiesAsync<Subject>(s => guids.Contains(s.Id), cancellationToken: cancellationToken);
+				else
+					subjects = await _repository.GetEntitiesAsync<Subject>(s =>(disability > 0 ? s.deaf_mute == true : s.deaf_mute == false) && (guids == null || !guids.Contains(s.Id)), cancellationToken: cancellationToken);
+			}
+			else if (disability == -1)
 				subjects = await _repository.GetEntitiesAsync<Subject>(cancellationToken: cancellationToken);
-			else if (guids != null)
-				subjects = await _repository.GetEntitiesAsync<Subject>(s => guids.Contains(s.Id), cancellationToken: cancellationToken);
 			else
 				subjects = await _repository.GetEntitiesAsync<Subject>(s => disability > 0 ? s.deaf_mute == true : s.deaf_mute == false, cancellationToken: cancellationToken);
 			IEnumerable<SubjectDTO> subjectDTOs = subjects.Select(s => new SubjectDTO
@@ -117,7 +123,7 @@ namespace grad.Services
 
 
 
-		public async Task<ResultDTO> ViewSubjectAsync(Guid sid, CancellationToken cancellationToken)
+		public async Task<ResultDTO> ViewSubjectAsync(Guid sid,bool all,CancellationToken cancellationToken)
 		{
 			Subject? res = await _repository.GetEntityAsync<Subject>(s =>s.Id == sid , q => q.Include(s => s.Teachers).Include(s => s.Students), cancellationToken: cancellationToken);
 			if (res != null)
@@ -134,10 +140,10 @@ namespace grad.Services
 					SubjectId = res.Id,
 					SubjectName = res.Name,
 					deaf_mute = res.deaf_mute,
-					studentsCount = res.Students != null ? res.Students.Count() : 0,
-					teachersCount = res.Teachers != null ? res.Teachers.Count() : 0,
+					studentsCount =all ? res.Students != null ? res.Students.Count() : 0 :0,
+					teachersCount =all ? res.Teachers != null ? res.Teachers.Count() : 0 :0,
 					lessonsCount = lessonsCount,
-					levelsCount = lessonsCount
+					levelsCount =all ?  lessonsCount : 0
 				};
 				return new ResultDTO
 				{
@@ -193,7 +199,65 @@ namespace grad.Services
 		}
 
 
+		public async Task<ResultDTO> addwords(AddVocabDTO vocabDTO,CancellationToken cancellationToken)
+		{
+			string folder = $"subjects/{vocabDTO.sid}/vocabulary";
+			//IEnumerable<string> publicIds = vocabDTO.word;
+			IEnumerable<string> urls = await _cloudinary.UploadImagesAsync(vocabDTO.files, folder, vocabDTO.word, cancellationToken);
+			Vocabulary vocab = new Vocabulary();
+			for (int i = 0; i < vocabDTO.word.Count; i++)
+			{
+				vocab.wordItems.Add(new WordItem
+				{
+					Word = vocabDTO.word[i],
+					ImagePath = urls.ElementAt(i)
+				});
+			}
+			var filter = Builders<SubjectContent>.Filter.Eq(s => s.Id, vocabDTO.sid);
 
+			var subject = await _subjects.Find(filter).FirstOrDefaultAsync();
+			int modifiedCount = 0;
+			if (subject.Dictionary == null)
+			{
+				var update = Builders<SubjectContent>.Update
+					.Set(s => s.Dictionary, vocab);
+				var res = await _subjects.UpdateOneAsync(filter, update);
+				modifiedCount = (int)res.ModifiedCount;
+			}
+			else
+			{
+				var update = Builders<SubjectContent>.Update
+					.PushEach(s => s.Dictionary.wordItems, vocab.wordItems);
+				var res = await _subjects.UpdateOneAsync(filter, update);
+				modifiedCount = (int)res.ModifiedCount;
+			}
+
+			if (modifiedCount == 0)
+			{
+				return new ResultDTO
+				{
+					Message = $"These words may be already existing or subject was not found",
+					StatusCode = StatusCodes.Status409Conflict
+				};
+			}
+			else if(modifiedCount < vocabDTO.word.Count)
+			{
+				return new ResultDTO
+				{
+					Message = $"Some words were not added because they already exist or failed to save them",
+					StatusCode = StatusCodes.Status207MultiStatus
+				};
+			}
+			else
+			{
+				return new ResultDTO
+				{
+					Message = "Words were added successfully",
+					StatusCode = StatusCodes.Status201Created
+				};
+			}
+		}
+	}
 
 
 		//	if (lessonDTO.VideoFile.Length > 0 && lessonDTO.VideoFile != null)
@@ -360,6 +424,6 @@ namespace grad.Services
 		//		};
 		//	}
 		//}
-	}
 }
+
 

@@ -34,6 +34,8 @@ namespace grad.Interfaces
 		//public Task<ResultDTO> LogOut(string token, string uid, CancellationToken cancellationToken = default);
 		public Task<ResultDTO> LogOut(LogoutDTO login, CancellationToken cancellationToken = default);
 
+		public Task<ResultDTO> EditProfile(EditProfileDTO editProfile, CancellationToken cancellationToken = default);
+
 
 		public Task<bool> UserExists(string? EmailorUserName = "", Guid? uid = null, CancellationToken cancellationToken = default);
 

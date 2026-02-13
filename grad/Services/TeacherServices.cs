@@ -79,9 +79,30 @@ namespace grad.Services
 			return await _subjectServices.AddLesson(lesson, cancellationToken);
 		}
 
+		public async Task<ResultDTO> ViewSubject(Guid sid,CancellationToken cancellationToken)
+		{
+			return await _subjectServices.ViewSubjectAsync(sid,cancellationToken: cancellationToken);
+		}
+
 		public async Task<ResultDTO> ViewLessons(Guid sid, CancellationToken cancellation)
 		{
 			return await _lessonServices.ViewLessons(sid, cancellation);
 		}
+
+		public async Task<ResultDTO> EditLesson(EditLessonDTO lesson, CancellationToken cancellationToken) 
+		{
+			return await _lessonServices.editLesson(lesson, cancellationToken); 
+		}
+
+		public async Task<ResultDTO> DeleteLesson(Guid sid,Guid lid,CancellationToken cancellationToken)
+		{
+			return await _lessonServices.DeleteLesson(sid, lid, cancellationToken);
+		}
+
+		public async Task<ResultDTO> addWords(AddVocabDTO vocabDTO, CancellationToken cancellationToken)
+		{
+			return await _subjectServices.addwords(vocabDTO, cancellationToken);
+		}
+
 	}
 }

@@ -11,6 +11,7 @@ namespace grad.Controllers
 {
 	[ApiController]
 	[Route("Auth")]
+	[Authorize(Roles = "Admin,Teacher,Student,Parent")]
 	public class UserActions : ControllerBase
 	{
 		private readonly IUserServices _userService;
@@ -22,7 +23,7 @@ namespace grad.Controllers
 		}
 
 		[HttpGet("view-profile")]
-		[Authorize(Roles = "Admin,Teacher,Student,Parent")]
+		
 		public async Task<IActionResult> viewProfile(CancellationToken cancellationToken)//Tested
 		{
 			//bool NotAuth = await _tokenServices.IsTokenBlacklisted(Request.Headers.Authorization.ToString());
@@ -64,9 +65,27 @@ namespace grad.Controllers
 			//return Ok(User.Claims.ToList());
 		}
 
-
-
-
-
+		[HttpPatch("Edit-profile")]
+		[Consumes("multipart/form-data")]
+		public async Task<IActionResult> editProfile([FromForm] EditProfileDTO editProfile, CancellationToken cancellationToken)
+		{
+			string accesstoken = User.FindFirst("accessToken")?.Value;
+			if (!await _tokenServices.IsTokenBlacklisted(accesstoken))
+				return Unauthorized();
+			string id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+			string roleClaim = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+			if (Guid.TryParse(id, out Guid ID) && !roleClaim.IsNullOrEmpty())
+			{
+				editProfile.Id = ID;
+				editProfile.Role = roleClaim;
+				ResultDTO res = await _userService.EditProfile(editProfile, cancellationToken);
+				return StatusCode(res.StatusCode, new
+				{
+					Message = res.Message
+				});
+			}
+			else
+				return Unauthorized();
+		}
 	}
 }

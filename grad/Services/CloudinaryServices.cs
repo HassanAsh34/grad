@@ -61,10 +61,10 @@ namespace grad.Services
 			return string.Empty;
 		}
 
-		public async Task<IEnumerable<string>> UploadImagesAsync(List<IFormFile> formFiles, string folder, IEnumerable<string> publicIds,CancellationToken cancellationToken)
+		public async Task<IEnumerable<string>> UploadImagesAsync(IEnumerable<IFormFile> formFiles, string folder, IEnumerable<string> publicIds,CancellationToken cancellationToken)
 		{
 			List<string> urls = new List<string>();
-			if (formFiles == null || formFiles.Count == 0)
+			if (formFiles == null || formFiles.Count() == 0)
 				return urls;
 			else
 			{
@@ -93,6 +93,19 @@ namespace grad.Services
 				}
 				return urls;
 			}
+		}
+
+		public async Task<bool> DeleteAsync(string directory, bool video = false)
+		{
+			var deletionParams = new DeletionParams(directory)
+			{
+				ResourceType = video ? ResourceType.Video : ResourceType.Image
+			};
+			var res = await  _cloudinary.DestroyAsync(deletionParams);
+			if (res.Result == "ok")
+				return true;
+			else
+				return false;
 		}
 	}
 }

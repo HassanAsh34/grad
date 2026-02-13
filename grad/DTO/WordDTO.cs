@@ -4,7 +4,7 @@
 	{
 		public string word { get; set; }
 
-		public IFormFile file { get; set; }
+		public string url { get; set; }
 	}
 
 }

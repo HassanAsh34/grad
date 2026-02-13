@@ -27,31 +27,26 @@ namespace grad.Services
 		public async Task<ResultDTO> ViewSubjects(Guid id,bool Enrolled,CancellationToken cancellationToken)
 		{
 			Student student = null;
-			if (Enrolled)
-			{
-				student = await _Repository.GetEntityAsync<Student>(s => s.Id == id, include: q => q.Include(s => s.EnrolledSubjects),cancellationToken);
-			}
-			else
-			{
-				student = await _Repository.GetEntityAsync<Student>(s => s.Id == id,cancellationToken: cancellationToken);
-			}
+			student = await _Repository.GetEntityAsync<Student>(s => s.Id == id, include: q => q.Include(s => s.EnrolledSubjects),cancellationToken);
+			//if (Enrolled)
+			//{
+			//}
+			//else
+			//{
+			//	student = await _Repository.GetEntityAsync<Student>(s => s.Id == id,cancellationToken: cancellationToken);
+			//}
 			if(student != null)
 			{
-				if(student.EnrolledSubjects == null)
+				int disability = student.Disability switch
 				{
-					switch(student.Disability)
-					{
-						case Student.DisablityType.Hearing:
-							return await _subjectServices.ViewSubjectsAsync(disability: 2,cancellationToken: cancellationToken);
-						case Student.DisablityType.Speech:
-							return await _subjectServices.ViewSubjectsAsync(disability: 3,cancellationToken: cancellationToken);
-						default:
-							return await _subjectServices.ViewSubjectsAsync(disability: 1,cancellationToken: cancellationToken);
-					}
-				}
-				else
+					Student.DisablityType.Hearing => 2,
+					Student.DisablityType.Speech => 3,
+					_ => 1
+				};
+				List<Guid> guids = student.EnrolledSubjects.Select(s=>s.SUBFK).ToList();
+				if (Enrolled)
 				{
-					List<Guid> guids = student.EnrolledSubjects.Select(s => s.Id).ToList();
+					
 					if (guids.Count == 0)
 						return new ResultDTO
 						{
@@ -60,9 +55,45 @@ namespace grad.Services
 						};
 					else
 					{
-						return await _subjectServices.ViewSubjectsAsync(guids: guids, cancellationToken: cancellationToken);
+						return await _subjectServices.ViewSubjectsAsync(guids: guids, disability, Enrolled, cancellationToken: cancellationToken);
 					}
 				}
+				else
+				{
+					return await _subjectServices.ViewSubjectsAsync(guids: guids,disability: disability, cancellationToken: cancellationToken);
+				}
+				//if(student.EnrolledSubjects == null)
+				//{
+				//	switch(student.Disability)
+				//	{
+				//		case Student.DisablityType.Hearing:
+				//			return await _subjectServices.ViewSubjectsAsync(disability: 2,cancellationToken: cancellationToken);
+				//		case Student.DisablityType.Speech:
+				//			return await _subjectServices.ViewSubjectsAsync(disability: 3,cancellationToken: cancellationToken);
+				//		default:
+				//			return await _subjectServices.ViewSubjectsAsync(disability: 1,cancellationToken: cancellationToken);
+				//	}
+				//}
+				//else
+				//{
+				//	List<Guid> guids = student.EnrolledSubjects.Select(s => s.Id).ToList();
+
+				//	if (guids.Count == 0)
+				//		return new ResultDTO
+				//		{
+				//			StatusCode = StatusCodes.Status404NotFound,
+				//			Message = "No subjects yet 😊 Let’s add one and start learning!"
+				//		};
+				//	else
+				//	{
+				//int disability = student.Disability switch
+				//		{
+				//			Student.DisablityType.Hearing => 2,
+				//			Student.DisablityType.Speech => 3,
+				//			_ => 1
+				//		};
+				//		return await _subjectServices.ViewSubjectsAsync(guids: guids,disability,Enrolled, cancellationToken: cancellationToken);
+				//	}
 			}
 			else
 			{
@@ -76,7 +107,7 @@ namespace grad.Services
 
 		public async Task<ResultDTO> viewSubject(Guid Sid,CancellationToken cancellationToken)
 		{
-			return await _subjectServices.ViewSubjectAsync(Sid, cancellationToken);
+			return await _subjectServices.ViewSubjectAsync(Sid,false,cancellationToken);
 		}
 
 		public async Task<ResultDTO> EnrollSubject(EnrollSubjectDTO enrollSubject, CancellationToken cancellationToken)

@@ -114,7 +114,7 @@ namespace grad.Controllers
 		//view lesson
 
 		[HttpGet("View-Lessons/{Sid}")]
-		public async Task<IActionResult> viewEnrolledSubjects(string Sid,CancellationToken cancellationToken)
+		public async Task<IActionResult> viewLessons(string Sid,CancellationToken cancellationToken)
 		{
 			string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
 			if (!await _tokenServices.IsTokenBlacklisted(accessToken))

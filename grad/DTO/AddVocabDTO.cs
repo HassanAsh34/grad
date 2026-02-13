@@ -6,5 +6,7 @@
 
 		public List<IFormFile> files { get; set; }
 
+		public Guid ?sid { get; set; }
+
 	}
 }

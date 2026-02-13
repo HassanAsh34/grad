@@ -10,13 +10,15 @@ namespace grad.Interfaces
 
 		public Task<ResultDTO> UpdateSubject(Guid subjectid,string SubjectName, CancellationToken cancellationToken = default);
 
-		public Task<ResultDTO> ViewSubjectsAsync(List<Guid> guids = null, int disability = -1, CancellationToken cancellationToken = default);
+		public Task<ResultDTO> ViewSubjectsAsync(List<Guid> guids = null, int disability = -1, bool enrolled = false, CancellationToken cancellationToken = default);
 		//public Task<ResultDTO> ViewSubjectsAsync(int disability = -1, CancellationToken cancellationToken = default);
 
 		public Task<ResultDTO> AddLesson(LessonDTO lessonDTO, CancellationToken cancellationToken = default);
 
 		//public Task<ResultDTO> ViewLessons(Guid lessonid, CancellationToken cancellation = default);
-		public Task<ResultDTO> ViewSubjectAsync(Guid sid, CancellationToken cancellationToken = default);
+		public Task<ResultDTO> ViewSubjectAsync(Guid sid,bool all = true, CancellationToken cancellationToken = default);
+
+		public Task<ResultDTO> addwords(AddVocabDTO vocabDTO, CancellationToken cancellationToken = default);
 
 		public Task<bool> IsSubjectExist(string? subjectName = "", bool? deaf_mute = false, Guid? subjectId = null, CancellationToken cancellationToken = default);
 	}

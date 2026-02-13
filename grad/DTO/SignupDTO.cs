@@ -8,7 +8,7 @@ namespace grad.DTO
 	{
 		//public string username { get; set; }
 
-		public IFormFile file { get; set; }
+		public IFormFile ?file { get; set; }
 
 		[JsonIgnore]
 		public string? filePath { get; set; }

@@ -195,7 +195,8 @@ namespace grad.Services
 				};
 			else
 			{
-				await storeImage(u,file, cancellationToken);
+				if(file != null)
+					await storeImage(u,file, cancellationToken);
 				return new ResultDTO
 				{
 					StatusCode = StatusCodes.Status201Created,
@@ -523,6 +524,120 @@ namespace grad.Services
 			}
 		}
 
+		public async Task<ResultDTO> EditProfile(EditProfileDTO editProfile,CancellationToken cancellationToken)
+		{
+			if(editProfile != null)
+			{
+				if (Enum.TryParse<User.UserRole>(editProfile.Role, out var role))
+				{
+					User user = null;	
+					switch (role)
+					{
+						//case User.UserRole.Admin:
+						case User.UserRole.Parent:
+							Parent parent = await _repository.GetEntityAsync<Parent>(p => p.Id == editProfile.Id, cancellationToken: cancellationToken);
+							if (parent != null)
+							{
+								parent.FName = editProfile.FName ?? parent.FName;
+								parent.LName = editProfile.lName ?? parent.LName;
+								parent.Address = editProfile.Address ?? parent.Address;
+								parent.phoneNumber = editProfile.phone ?? parent.phoneNumber;
+								parent.Job = editProfile.Job ?? parent.Job;
+								//if (editProfile.image != null)
+								//	await storeImage(parent, editProfile.image, cancellationToken);
+								_repository.UpdateEntityAsync<Parent>(parent, cancellationToken: cancellationToken);
+								user = parent;
+							}
+							else
+							{
+								return new ResultDTO
+								{
+									StatusCode = StatusCodes.Status500InternalServerError,
+									Message = "Something went wrong"
+								};
+							}
+							break;
+						case User.UserRole.Teacher:
+							Teacher teacher = await _repository.GetEntityAsync<Teacher>(t => t.Id == editProfile.Id, cancellationToken: cancellationToken);
+							if (teacher != null)
+							{
+								teacher.FName = editProfile.FName ?? teacher.FName;
+								teacher.LName = editProfile.lName ?? teacher.LName;
+								teacher.Address = editProfile.Address ?? teacher.Address;
+								teacher.phoneNumber = editProfile.phone ?? teacher.phoneNumber;
+								_repository.UpdateEntityAsync<Teacher>(teacher, cancellationToken: cancellationToken);
+								user = teacher;
+							}
+							else
+							{
+								return new ResultDTO
+								{
+									StatusCode = StatusCodes.Status500InternalServerError,
+									Message = "Something went wrong"
+								};
+							}
+							break;
+						case User.UserRole.Student:
+							Student student = await _repository.GetEntityAsync<Student>(s => s.Id == editProfile.Id, cancellationToken: cancellationToken);
+							if (student != null)
+							{
+								student.FName = editProfile.FName ?? student.FName;
+								student.LName = editProfile.lName ?? student.LName;
+								_repository.UpdateEntityAsync<Student>(student, cancellationToken: cancellationToken);
+								user = student;
+							}
+							else
+							{
+								return new ResultDTO
+								{
+									StatusCode = StatusCodes.Status500InternalServerError,
+									Message = "Something went wrong"
+								};
+							}
+							break;
+						default:
+							return new ResultDTO
+							{
+								StatusCode = StatusCodes.Status403Forbidden,
+								Message = "invalid action" // unknown role
+							};
+					}
+					int res = await _uow.SaveChangesAsync();
+					if (editProfile.image != null)
+						await storeImage(user, editProfile.image, cancellationToken);
+					if (res != 0)
+					{
+						return new ResultDTO
+						{
+							StatusCode = StatusCodes.Status200OK,
+							Message = "Profile was updated successfully"
+						};
+					}
+					else
+						return new ResultDTO
+						{
+							StatusCode = StatusCodes.Status200OK,
+							Message = "No changes were made"
+						};
+				}
+				else
+				{
+					return new ResultDTO
+					{
+						StatusCode = StatusCodes.Status403Forbidden,
+						Message = "invalid action" // unknown role
+					};
+				}
+			}
+			else
+			{
+				return new ResultDTO
+				{
+					StatusCode = StatusCodes.Status400BadRequest,
+					Message = "Invalid profile data"
+				};
+			}
+		}
 
 		public async Task<ResultDTO> ViewProfile(ProfileDTO user,Guid ?pid,CancellationToken cancellationToken)//need to be fixed to show user pfp and add teacher 
 		{

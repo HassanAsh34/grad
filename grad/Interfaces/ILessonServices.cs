@@ -8,5 +8,8 @@ namespace grad.Interfaces
 		public Task<ResultDTO> ViewLessons(Guid sid, CancellationToken cancellation = default);
 
 		public Task<ResultDTO> viewLesson(LessonDTO lessonDTO, CancellationToken cancellationToken);
+
+		public Task<ResultDTO> editLesson(EditLessonDTO lessonDTO, CancellationToken cancellationToken);
+		public Task<ResultDTO> DeleteLesson(Guid sid, Guid lid, CancellationToken cancellationToken);
 	}
 }

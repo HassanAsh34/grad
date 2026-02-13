@@ -183,7 +183,7 @@ namespace grad.Services
 			//		StatusCode = StatusCodes.Status404NotFound
 			//	};
 			//}
-			return await _subjectServices.ViewSubjectAsync(sid, cancellation);
+			return await _subjectServices.ViewSubjectAsync(sid,cancellationToken: cancellation);
 		}
 
 		public async Task<ResultDTO> AssignTeacherToSubject(AssignTeacherDTO assignTeacherDTO, CancellationToken cancellationToken)

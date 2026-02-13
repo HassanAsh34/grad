@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace grad.DTO
 { 
@@ -8,11 +9,17 @@ namespace grad.DTO
 
 		[JsonIgnore]
 		public Guid? subjectID { get; set; }
-		public string? Title { get; set; }
 
-		public string? Description { get; set; }
+		[Required(ErrorMessage ="Title Field can't be empty")]
+		[MinLength(3, ErrorMessage = "Title must be at least 3 characters long.")]
+		public string Title { get; set; }
 
-		public IFormFile? VideoFile {  get; set; }
+		[Required(ErrorMessage = "Description for the video is required")]
+		[MinLength(3, ErrorMessage = "Title must be at least 3 characters long.")]
+		public string Description { get; set; }
+
+		[Required(ErrorMessage = "the video is required")]
+		public IFormFile VideoFile {  get; set; }
 
 		public string? videoUrl { get; set; }
 
