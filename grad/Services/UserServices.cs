@@ -639,7 +639,7 @@ namespace grad.Services
 			}
 		}
 
-		public async Task<ResultDTO> ViewProfile(ProfileDTO user,Guid ?pid,CancellationToken cancellationToken)//need to be fixed to show user pfp and add teacher 
+		public async Task<ResultDTO> ViewProfile(ProfileDTO user,Guid ?pid,bool adminview,CancellationToken cancellationToken)//need to be fixed to show user pfp and add teacher 
 		{
 			bool found = false;
 			if (user != null)
@@ -655,6 +655,7 @@ namespace grad.Services
 								user.Email = admin.EmailorUserName;
 								user.Name = "Admin";
 								user.pfpPath = admin.ProfilePicture == null ? string.Empty : admin.ProfilePicture;
+								user.Status = adminview ? admin.status : null;
 								found = true;
 							}
 							break;
@@ -670,6 +671,7 @@ namespace grad.Services
 								user.phone = parent.phoneNumber;
 								user.pfpPath = parent.ProfilePicture;
 								user.Job = parent.Job;
+								user.Status = adminview ? parent.status : null;
 								found = true;
 							}
 							break;
@@ -694,6 +696,7 @@ namespace grad.Services
 								user.Disability = student.Disability.ToString();
 								user.Job = string.Empty;
 								user.pfpPath = student.ProfilePicture;
+								user.Status = adminview ? student.status : null;
 								if (student.parent != null)
 								{
 									user.setParent(new Parent
@@ -719,6 +722,7 @@ namespace grad.Services
 								user.Address = teacher.Address;
 								user.pfpPath = teacher.ProfilePicture;
 								user.phone = teacher.phoneNumber;
+								user.Status = adminview ? teacher.status : null;
 								if(teacher.Subject != null) 
 								{
 									user.Job = $"{teacher.Subject.Name} Teacher";

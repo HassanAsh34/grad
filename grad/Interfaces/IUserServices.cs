@@ -29,7 +29,7 @@ namespace grad.Interfaces
 
 		public Task<ResultDTO> ResetPassword(ChangePasswordDTO changePassword, bool resetToken = false, CancellationToken cancellationToken = default);
 
-		public Task<ResultDTO> ViewProfile(ProfileDTO user,Guid ?pid = null,CancellationToken cancellationToken = default);
+		public Task<ResultDTO> ViewProfile(ProfileDTO user,Guid ?pid = null,bool adminview = false,CancellationToken cancellationToken = default);
 
 		//public Task<ResultDTO> LogOut(string token, string uid, CancellationToken cancellationToken = default);
 		public Task<ResultDTO> LogOut(LogoutDTO login, CancellationToken cancellationToken = default);

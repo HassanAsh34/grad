@@ -256,7 +256,7 @@ namespace grad.Services
 
 		public async Task<ResultDTO> ViewUser(ProfileDTO profileDTO, CancellationToken cancellationToken)
 		{
-			return await _userServices.ViewProfile(profileDTO,cancellationToken: cancellationToken);
+			return await _userServices.ViewProfile(profileDTO,adminview: true,cancellationToken: cancellationToken);
 		}
 	}
 }
