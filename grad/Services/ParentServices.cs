@@ -137,7 +137,7 @@ namespace grad.Services
 				Role = "Student"
 			};
 
-			return await _userServices.ViewProfile(profileDTO, pid, cancellationToken);
+			return await _userServices.ViewProfile(profileDTO, pid,cancellationToken: cancellationToken);
 			//Student? child = await _repository.GetEntityAsync<Student>(s => s.PID == pid && s.Id == Sid, cancellationToken: cancellationToken);
 			//if (child == null)
 			//{
