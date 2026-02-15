@@ -67,7 +67,15 @@ namespace grad.Services
 			}
 			else
 			{
-				if(user.status == User.Status.Banned)
+				if(user.status == User.Status.Pending)
+				{
+					return new ResultDTO
+					{
+						Message = "Teacher's account is still pending activation and cannot be banned",
+						StatusCode = StatusCodes.Status409Conflict
+					};
+				}
+				else if(user.status == User.Status.Banned)
 				{
 					user.status = User.Status.Active;
 					if (user.RefreshToken != null)

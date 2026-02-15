@@ -730,7 +730,7 @@ namespace grad.Services
 								}
 								else
 								{
-									user.Job = "Techer";
+									user.Job = "Teacher";
 									user.Teaches = string.Empty;
 								}
 								found = true;
