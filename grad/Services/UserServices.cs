@@ -678,7 +678,7 @@ namespace grad.Services
 							if(admin != null) 
 							{
 								user.Email = admin.EmailorUserName;
-								user.Name = "Admin";
+								user.FName = "Admin";
 								user.pfpPath = admin.ProfilePicture == null ? string.Empty : admin.ProfilePicture;
 								user.Status = adminview ? admin.status : null;
 								found = true;
@@ -691,7 +691,8 @@ namespace grad.Services
 								user.Id = parent.Id;
 								user.Email = parent.EmailorUserName;
 								user.Role = parent.Role.ToString();
-								user.Name = $"{parent.FName} {parent.LName}";
+								user.FName = parent.FName;
+								user.LName = parent.LName;
 								user.Address = parent.Address;
 								user.phone = parent.phoneNumber;
 								user.pfpPath = parent.ProfilePicture;
@@ -712,9 +713,14 @@ namespace grad.Services
 								user.Id = student.Id;
 								user.Email = student.EmailorUserName;
 								user.Role = student.Role.ToString();
-								user.Name = $"{student.FName} {student.LName}";
-								if(student.parent != null)
+								user.FName = student.FName;
+								if (student.parent != null)
+								{
 									user.Address = student.parent.Address;
+									user.LName = student.parent.FName;
+								}
+								else
+									user.LName = student.LName;
 								//else
 								//	user.Address = student.;
 								user.BirthDate = student.BirthDate;
@@ -743,7 +749,8 @@ namespace grad.Services
 								user.Id = teacher.Id;
 								user.Email = teacher.EmailorUserName;
 								user.Role = teacher.Role.ToString();
-								user.Name = $"{teacher.FName} {teacher.LName}";
+								user.FName = teacher.FName;
+								user.LName = teacher.LName;
 								user.Address = teacher.Address;
 								user.pfpPath = teacher.ProfilePicture;
 								user.phone = teacher.phoneNumber;

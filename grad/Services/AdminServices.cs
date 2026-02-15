@@ -162,7 +162,8 @@ namespace grad.Services
 				userProfiles.Add(new ProfileDTO
 				{
 					Id = item.Id,
-					Name = item.FName != string.Empty && item.LName != string.Empty ? $"{item.FName} {item.LName}" : string.Empty,
+					FName = item.FName != string.Empty ? item.FName : string.Empty,
+					LName = item.LName != string.Empty ? item.LName : string.Empty,
 					Email = item.EmailorUserName,
 					Status = item.status,
 					pfpURL = item.ProfilePicture,

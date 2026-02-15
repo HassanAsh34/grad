@@ -114,7 +114,8 @@ namespace grad.Services
 					profileDTOs = profileDTOs.Append(new ProfileDTO
 					{
 						Id = child.Id,
-						Name = $"{child.FName} {child.LName}",
+						FName = child.FName,
+						LName = child.LName,
 						Email = child.EmailorUserName,
 						BirthDate = child.BirthDate,
 						Disability = child.Disability.ToString()
