@@ -305,7 +305,6 @@ namespace grad.Controllers
 					if(Guid.TryParse(userId, out Guid guid))
 					{
 						changePassword.Id = guid;
-						//changePassword.token = Request.Headers.Authorization.ToString();
 						ResultDTO result = await _userService.ResetPassword(changePassword, cancellationToken: cancellationToken);
 						if (result.StatusCode == StatusCodes.Status200OK)
 						{

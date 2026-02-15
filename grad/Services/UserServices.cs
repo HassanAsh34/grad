@@ -468,19 +468,35 @@ namespace grad.Services
 		public async Task<ResultDTO> ResetPassword(ChangePasswordDTO changePassword,bool resetToken, CancellationToken cancellationToken) /// we need to reconfigure the whole function?
 		{
 			RefreshToken RT = null;
-			User user = null;
-			if (resetToken)
-			{
-				user = await _repository.GetEntityAsync<User>(u=>u.Id == changePassword.Id,q=>q.Include(r=>r.RefreshToken),cancellationToken);
-				RT = user.RefreshToken;
-			}
-			else
-			{
-				RT= await _repository.GetEntityAsync<RefreshToken>(filter: t => t.TokenKey == changePassword.refreshToken && t.CreatedById == changePassword.Id, q => q.Include(u => u.User),
-					cancellationToken: cancellationToken
-				);
-				user = RT.User;
-			}
+			//User user = null;
+			User user = await _repository.GetEntityAsync<User>(u => u.Id == changePassword.Id, q => q.Include(r => r.RefreshToken), cancellationToken);
+			RT = user.RefreshToken;
+
+			//if (resetToken) {
+
+			
+
+
+			//if (resetToken)
+			//{
+			//}
+			//else
+			//{
+			//	RefreshTokenDTO tokenDTO = await _TokenServices.getTokenInfo(changePassword.refreshToken, true, cancellationToken);
+			//	RT= await _repository.GetEntityAsync<RefreshToken>(filter:t=>t.CreatedById == changePassword.Id, q => q.Include(u => u.User),
+			//		cancellationToken: cancellationToken
+			//	);
+			//	if(BCrypt.Net.BCrypt.Verify(tokenDTO.TokenKey, RT.TokenKey))
+			//		user = RT.User;
+			//	else
+			//	{
+			//		return new ResultDTO
+			//		{
+			//			StatusCode = StatusCodes.Status400BadRequest,
+			//			Message = ""
+			//		};
+			//	}
+			//}
 			if (user == null)
 			{
 				return new ResultDTO
@@ -495,32 +511,41 @@ namespace grad.Services
 				{
 					RT.Revoked = true;
 				}
-				if (!changePassword.token.IsNullOrEmpty())
+				//if (!changePassword.token.IsNullOrEmpty())
+				//{
+				//	await _TokenServices.blacklistToken(changePassword.token);
+				//}
+				if (!resetToken)
 				{
-					await _TokenServices.blacklistToken(changePassword.token);
-				}
-				if (!changePassword.OldPassword.IsNullOrEmpty())
-				{
-					bool verified = BCrypt.Net.BCrypt.Verify(changePassword.OldPassword, user.Password);
-					if (!verified)
+					if (!changePassword.OldPassword.IsNullOrEmpty())
 					{
-						return new ResultDTO
+						bool verified = BCrypt.Net.BCrypt.Verify(changePassword.OldPassword, user.Password);
+						if (!verified)
 						{
-							StatusCode = StatusCodes.Status400BadRequest,
-							Message = "Wrong password"
-						};
-					}
-					else
-					{
-						if (changePassword.OldPassword.ToLower().Equals(changePassword.NewPassword.ToLower()))
 							return new ResultDTO
 							{
 								StatusCode = StatusCodes.Status400BadRequest,
-								Message = "New password should not match the old password"
+								Message = "Wrong password"
 							};
+						}
+						else
+						{
+							if (changePassword.OldPassword.ToLower().Equals(changePassword.NewPassword.ToLower()))
+								return new ResultDTO
+								{
+									StatusCode = StatusCodes.Status400BadRequest,
+									Message = "New password should not match the old password"
+								};
+						}
 					}
+					else
+						return new ResultDTO
+						{
+							StatusCode = StatusCodes.Status400BadRequest,
+							Message = "Old password cant be empty"
+						};
 				}
-				return await savePassword(user, changePassword.NewPassword, cancellationToken: cancellationToken);
+				return await savePassword(user, changePassword.NewPassword,changePassword.token,cancellationToken: cancellationToken);
 			}
 		}
 
@@ -851,7 +876,7 @@ namespace grad.Services
 		}
 
 
-		private async Task<ResultDTO> savePassword(User user,string NewPassword,CancellationToken cancellationToken = default)// we need to add the token to black list 
+		private async Task<ResultDTO> savePassword(User user,string NewPassword,string token,CancellationToken cancellationToken = default)// we need to add the token to black list 
 		{
 			//revoke user token
 			//bool res = await revokeToken(user.RefreshToken, cancellationToken);
@@ -863,7 +888,9 @@ namespace grad.Services
 			int updateRes = await _uow.SaveChangesAsync();
 			if (updateRes != 0)
 			{
-				await _emailServices.SendPasswordResetSuccessEmail(user.EmailorUserName);// remove comment
+				await _emailServices.SendPasswordResetSuccessEmail(user.EmailorUserName);
+				// remove comment
+				await _TokenServices.blacklistToken(token);
 				return new ResultDTO
 				{
 					StatusCode = StatusCodes.Status200OK,
