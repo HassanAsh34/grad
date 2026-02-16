@@ -117,6 +117,7 @@ namespace grad.Services
 						FName = child.FName,
 						LName = child.LName,
 						Email = child.EmailorUserName,
+						pfpURL = child.ProfilePicture,
 						BirthDate = child.BirthDate,
 						Disability = child.Disability.ToString()
 					});

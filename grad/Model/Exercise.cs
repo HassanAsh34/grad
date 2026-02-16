@@ -1,11 +1,11 @@
-﻿namespace grad.Model
-{
-	public class Exercise
-	{
-		public Guid Id { get; private set; } = Guid.NewGuid();
+﻿//namespace grad.Model
+//{
+//	public class Exercise
+//	{
+//		public Guid Id { get; private set; } = Guid.NewGuid();
 
-		public string Title { get; set; }
+//		public string Title { get; set; }
 
-		public IEnumerable<Question> Questions { get; set; }
-	}
-}
+//		public IEnumerable<Question> Questions { get; set; }
+//	}
+//}

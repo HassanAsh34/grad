@@ -29,12 +29,12 @@ namespace grad.Controllers
 		[HttpPost("sign-in")]
 		public async Task<IActionResult> login([FromBody] LoginDTO login,CancellationToken cancellationToken)
 		{
-			if (!ModelState.IsValid || login == null)
-			{ 
-				return BadRequest(ModelState);
-			}
-			else
-			{
+			//if (!ModelState.IsValid || login == null)
+			//{
+			//	return StatusCode(400, new { message = ModelState });
+			//}
+			//else
+			//{
 				ResultDTO res = await _userService.login(login,cancellationToken);
 				if(res.result != null && res.result is ResponseTokenDTO token)
 				{
@@ -103,7 +103,7 @@ namespace grad.Controllers
 				{
 					return StatusCode(res.StatusCode, new {Message = res.Message});
 				}
-			}
+			//}
 		}
 
 

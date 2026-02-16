@@ -11,13 +11,13 @@ namespace grad.DTO
 
 		public IFormFile ?image { get; set; }
 
-		[MinLength(3, ErrorMessage ="First Name is too short. Minimum length is 3 characters")]
+		[MinLength(3, ErrorMessage="First Name is too short. Minimum length is 3 characters")]
 		public string? FName { get; set; }
 
 		[MinLength(3, ErrorMessage = "Last Name is too short. Minimum length is 3 characters")]
 		public string? lName { get; set; }
 
-		[MinLength(10,ErrorMessage ="Invalide Home address")]
+		[MinLength(10,ErrorMessage ="Invalide Home")]
 		public string? Address { get; set; }
 
 		[Phone]
