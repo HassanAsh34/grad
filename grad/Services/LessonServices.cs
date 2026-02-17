@@ -264,7 +264,7 @@ namespace grad.Services
 			}
 			else
 			{
-				string directory = $"uploads/subjects/{sid}/lessons/{lesson.Lessons.FirstOrDefault(l => l.Id == lid).Id}.mp4";
+				string directory = $"uploads/subjects/{sid}/lessons/{lesson.Lessons.FirstOrDefault(l => l.Id == lid).Id}";
 				bool videoDeleted = await _cloudinaryServices.DeleteAsync(directory,true);
 				if (!videoDeleted) 
 				{ 
