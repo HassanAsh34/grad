@@ -138,15 +138,35 @@ namespace grad.Services
 			}
 			else
 			{
-				if(user.RefreshToken != null)
-					user.RefreshToken.Revoked = true;
-				_repository.UpdateEntityAsync<User>(user, cancellationToken: cancellationToken);
-				int res = await _uowServices.SaveChangesAsync();
-				return new ResultDTO
+				int res = 0;
+				if (user.RefreshToken != null && user.status == User.Status.Active)
 				{
-					StatusCode = res != 0 ? StatusCodes.Status200OK : StatusCodes.Status500InternalServerError,
-					Message = res != 0 ? "User session ended successfully" : "Failed to end user session"
-				};
+					if(user.RefreshToken.Revoked)
+					return new ResultDTO
+						{
+							StatusCode = StatusCodes.Status400BadRequest,
+							Message = "User session is already ended"
+						};
+					else
+					{
+						user.RefreshToken.Revoked = true;
+						_repository.UpdateEntityAsync<User>(user, cancellationToken: cancellationToken);
+						res = await _uowServices.SaveChangesAsync();
+						return new ResultDTO
+						{
+							StatusCode = res != 0 ? StatusCodes.Status200OK : StatusCodes.Status500InternalServerError,
+							Message = res != 0 ? "User session ended successfully" : "Failed to end user session"
+						};
+					}
+				}
+				else
+				{
+					return new ResultDTO
+					{
+						StatusCode = StatusCodes.Status400BadRequest,
+						Message = "User doesnt have any active sessions"
+					};
+				}
 			}
 		}
 

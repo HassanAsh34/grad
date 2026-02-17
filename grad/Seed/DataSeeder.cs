@@ -23,6 +23,8 @@ public static class DataSeeder
 			EmailorUserName = adminEmail,
 			status = Status.Active,
 			Role = UserRole.Admin,
+			Address = "",
+			phoneNumber= "01553244141",
 			Password = BCrypt.Net.BCrypt.HashPassword("Admin@123")
 		};
 

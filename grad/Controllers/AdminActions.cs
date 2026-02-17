@@ -72,11 +72,11 @@ namespace grad.Controllers
 			{
 				var dto = new ProfileDTO { Id = guid, Role = role };
 				ResultDTO res = await _adminServices.ViewUser(dto, cancellationToken);
-				if (res.StatusCode == StatusCodes.Status200OK && res.result is ProfileDTO profile)
-				{
-					//profile.pfpURL = $"{Request.Scheme}://{Request.Host}/{profile.pfpPath}";
-					profile.pfpURL = profile.pfpPath;
-				}
+				//if (res.StatusCode == StatusCodes.Status200OK && res.result is ProfileDTO profile)
+				//{
+				//	//profile.pfpURL = $"{Request.Scheme}://{Request.Host}/{profile.pfpPath}";
+				//	profile.pfpURL = profile.pfpPath;
+				//}
 				return StatusCode(res.StatusCode, new { Message = res.Message, Data = res.result });
 			}
 			else

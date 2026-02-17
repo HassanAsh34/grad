@@ -7,9 +7,11 @@
 
 		//public String LName { get; set; }
 
-		public string phoneNumber { get; set; }
+		//public string phoneNumber { get; set; }
 
-		public string Address { get; set; }
+		//public string Address { get; set; }
+		public DateOnly BirthDate { get; set; }
+		public int age { get; set; }
 
 		public string ?SubjectName { get; set; }
 

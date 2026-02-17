@@ -27,6 +27,9 @@ namespace grad.Model
 
 		public String LName { get; set; } = string.Empty;
 
+		public string Address { get; set; }
+
+		public string phoneNumber { get; set; }
 
 		//public string TID { get; set; }
 

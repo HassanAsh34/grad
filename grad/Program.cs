@@ -265,6 +265,18 @@ namespace grad
 			app.UseAuthentication();
 			app.UseAuthorization();
 			app.MapControllers();
+			app.Use(async (context, next) =>
+			{
+				try
+				{
+					await next();
+				}
+				catch (OperationCanceledException)
+				{
+					context.Response.StatusCode = 499; // Client Closed Request
+					await context.Response.WriteAsync("Request was cancelled.");
+				}
+			});
 
 			// ================= RUN =================
 			try

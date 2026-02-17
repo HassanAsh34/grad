@@ -58,7 +58,8 @@ namespace grad.Services
 				}
 				else
 				{
-					if (!await UserExists(uid: studentDTO.p_Id, cancellationToken: cancellationToken))
+					Parent parent = await _repository.GetEntityAsync<Parent>(p => p.Id == studentDTO.p_Id, cancellationToken: cancellationToken);
+					if (parent == null)
 						return new ResultDTO
 						{
 							StatusCode = StatusCodes.Status401Unauthorized,
@@ -70,8 +71,10 @@ namespace grad.Services
 						LName = studentDTO.Pname.Split(' ')[0],
 						age = DateOnly.FromDateTime(DateTime.UtcNow).Year - studentDTO.BirthDate.Year,
 						EmailorUserName = studentDTO.Email,
-						PID = studentDTO.p_Id,
+						PID = parent.Id,
 						BirthDate = studentDTO.BirthDate,
+						Address = parent.Address,
+						phoneNumber = parent.phoneNumber,
 						Disability = (Student.DisablityType)studentDTO.Disability,
 						gender = studentDTO.gender == 1 ? User.Gender.Male : studentDTO.gender == 2 ? User.Gender.Female : 0,
 						Role = User.UserRole.Student,
@@ -116,6 +119,7 @@ namespace grad.Services
 							LName = user.LName,
 							phoneNumber = user.phoneNumber,
 							Address = user.Address,
+							BirthDate = user.BD,
 							Job = user.Job,
 							gender = user.Gender == 1 ? User.Gender.Male : user.Gender == 2 ? User.Gender.Female : 0,
 							Role = User.UserRole.Parent
@@ -138,6 +142,7 @@ namespace grad.Services
 							LName = user.LName,
 							phoneNumber = user.phoneNumber,
 							Address = user.Address,
+							BirthDate = user.BD,
 							Role = User.UserRole.Teacher,
 							gender = user.Gender == 1 ? User.Gender.Male : user.Gender == 2 ? User.Gender.Female : 0,
 							status = User.Status.Pending
@@ -159,6 +164,8 @@ namespace grad.Services
 							LName = user.LName,
 							age = GetYearsDifference(user.BD, DateOnly.FromDateTime(DateTime.UtcNow)),
 							EmailorUserName = user.email,
+							phoneNumber = user.phoneNumber,
+							Address = user.Address,
 							//PID = studentDTO.p_Id,
 							BirthDate = user.BD,
 							Disability = (Student.DisablityType)(user.Disability == null ? 0 : user.Disability),
@@ -679,7 +686,7 @@ namespace grad.Services
 							{
 								user.Email = admin.EmailorUserName;
 								user.FName = "Admin";
-								user.pfpPath = admin.ProfilePicture == null ? string.Empty : admin.ProfilePicture;
+								user.pfpURL = admin.ProfilePicture == null ? string.Empty : admin.ProfilePicture;
 								user.Status = adminview ? admin.status : null;
 								found = true;
 							}
@@ -693,9 +700,10 @@ namespace grad.Services
 								user.Role = parent.Role.ToString();
 								user.FName = parent.FName;
 								user.LName = parent.LName;
+								user.BirthDate = parent.BirthDate;
 								user.Address = parent.Address;
 								user.phone = parent.phoneNumber;
-								user.pfpPath = parent.ProfilePicture;
+								user.pfpURL = parent.ProfilePicture;
 								user.Job = parent.Job;
 								user.Status = adminview ? parent.status : null;
 								found = true;
@@ -706,7 +714,7 @@ namespace grad.Services
 							if (pid != null)
 								student = await _repository.GetEntityAsync<Student>(u => u.Id == user.Id && u.PID == pid, q => q.Include(u => u.parent), cancellationToken: cancellationToken);
 							else
-								student = await _repository.GetEntityAsync<Student>(u => u.Id == user.Id,q=>q.Include(u=>u.parent),cancellationToken: cancellationToken);
+								student = await _repository.GetEntityAsync<Student>(u => u.Id == user.Id,q=>q.Include(u=>u.parent).Include(u=>u.EnrolledSubjects),cancellationToken: cancellationToken);
 							//Parent p = await _repository.GetEntityAsync<Parent>(u => u.Id.Equals(student.PID));
 							if(student != null)
 							{
@@ -714,19 +722,22 @@ namespace grad.Services
 								user.Email = student.EmailorUserName;
 								user.Role = student.Role.ToString();
 								user.FName = student.FName;
+								user.Job = User.UserRole.Student.ToString();
+								user.Address = student.parent.Address;
+								user.phone = student.phoneNumber;
 								if (student.parent != null)
 								{
-									user.Address = student.parent.Address;
 									user.LName = student.parent.FName;
 								}
 								else
 									user.LName = student.LName;
 								//else
 								//	user.Address = student.;
+								user.subjectsCount = student.EnrolledSubjects != null ? student.EnrolledSubjects.Count() : 0;
 								user.BirthDate = student.BirthDate;
 								user.Disability = student.Disability.ToString();
-								user.Job = string.Empty;
-								user.pfpPath = student.ProfilePicture;
+								//user.Job = string.Empty;
+								user.pfpURL = student.ProfilePicture;
 								user.Status = adminview ? student.status : null;
 								if (student.parent != null)
 								{
@@ -750,9 +761,10 @@ namespace grad.Services
 								user.Email = teacher.EmailorUserName;
 								user.Role = teacher.Role.ToString();
 								user.FName = teacher.FName;
+								user.BirthDate = teacher.BirthDate;
 								user.LName = teacher.LName;
 								user.Address = teacher.Address;
-								user.pfpPath = teacher.ProfilePicture;
+								user.pfpURL = teacher.ProfilePicture;
 								user.phone = teacher.phoneNumber;
 								user.Status = adminview ? teacher.status : null;
 								if(teacher.Subject != null) 

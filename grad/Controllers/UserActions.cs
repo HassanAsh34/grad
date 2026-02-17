@@ -40,14 +40,14 @@ namespace grad.Controllers
 						Role = roleClaim,
 					};
 					ResultDTO res = await _userService.ViewProfile(user,cancellationToken: cancellationToken);
-					if (res.StatusCode == StatusCodes.Status200OK && res.result is ProfileDTO profile)
-					{
-						profile.pfpURL = string.Empty;
-						if (!profile.pfpPath.IsNullOrEmpty())
-							profile.pfpURL = profile.pfpPath;
-						//profile.pfpURL = $"{Request.Scheme}://{Request.Host}/{profile.pfpPath}";	
-						Console.WriteLine(profile.pfpURL);
-					}
+					//if (res.StatusCode == StatusCodes.Status200OK && res.result is ProfileDTO profile)
+					//{
+					//	profile.pfpURL = string.Empty;
+					//	if (!profile.pfpPath.IsNullOrEmpty())
+					//		profile.pfpURL = profile.pfpPath;
+					//	//profile.pfpURL = $"{Request.Scheme}://{Request.Host}/{profile.pfpPath}";	
+					//	Console.WriteLine(profile.pfpURL);
+					//}
 					return StatusCode(res.StatusCode, new
 					{
 						Message = res.Message,

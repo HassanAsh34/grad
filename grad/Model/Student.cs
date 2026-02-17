@@ -1,4 +1,6 @@
-﻿namespace grad.Model
+﻿using Google.Type;
+
+namespace grad.Model
 {
 	public class Student : User
 	{
@@ -19,6 +21,8 @@
 		}
 
 		//public string Address { get; set; }
+
+		//public string phoneNumber { get; set; }
 
 		//public string NationalID { get; set; }
 
