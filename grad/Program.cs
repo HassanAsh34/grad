@@ -264,7 +264,8 @@ namespace grad
 			app.UseCors("DefaultCors");
 			app.UseAuthentication();
 			app.UseAuthorization();
-			app.MapControllers();
+
+			// Move cancellation middleware to wrap controller execution (must be registered before MapControllers)
 			app.Use(async (context, next) =>
 			{
 				try
@@ -277,6 +278,8 @@ namespace grad
 					await context.Response.WriteAsync("Request was cancelled.");
 				}
 			});
+
+			app.MapControllers();
 
 			// ================= RUN =================
 			try
@@ -572,7 +575,6 @@ namespace grad
 //			app.UseCors("DefaultCors");
 //			app.UseAuthentication();
 //			app.UseAuthorization();
-
 
 //			app.MapControllers();
 
