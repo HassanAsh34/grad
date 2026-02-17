@@ -1,10 +1,11 @@
 ﻿//v3
 using System.Linq.Expressions;
-using grad.Interfaces;
-using grad.DTO;
-using grad.Data;
-using Microsoft.EntityFrameworkCore;
 using System.Threading;
+using Google.Api;
+using grad.Data;
+using grad.DTO;
+using grad.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis;
 
 namespace grad.Repositories
@@ -41,7 +42,16 @@ namespace grad.Repositories
 			if (include != null)
 				query = include(query);
 
-			return await query.ToListAsync(cancellationToken);
+			
+			try
+			{
+				return await query.ToListAsync(cancellationToken);
+			}
+			catch (OperationCanceledException)
+			{
+				//IEnumerable<TEntity> emptyList =;
+				return new List<TEntity>();
+			}
 		}
 
 
@@ -56,8 +66,14 @@ namespace grad.Repositories
 
 			if (include != null)
 				query = include(query);
-
-			return await query.FirstOrDefaultAsync(cancellationToken);
+			try
+			{
+				return await query.FirstOrDefaultAsync(cancellationToken);
+			}
+			catch (OperationCanceledException)
+			{
+				return null;
+			}
 		}
 
 		//public async Task CreateEntityAsync<TEntity>(TEntity entity, CancellationToken cancellationToken = default) where TEntity : class
