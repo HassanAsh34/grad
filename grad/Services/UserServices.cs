@@ -723,14 +723,18 @@ namespace grad.Services
 								user.Role = student.Role.ToString();
 								user.FName = student.FName;
 								user.Job = User.UserRole.Student.ToString();
-								user.Address = student.parent.Address;
+								
 								user.phone = student.phoneNumber;
 								if (student.parent != null)
 								{
 									user.LName = student.parent.FName;
+									user.Address = student.parent.Address;
 								}
 								else
+								{
+									user.Address = student.Address;
 									user.LName = student.LName;
+								}
 								//else
 								//	user.Address = student.;
 								user.subjectsCount = student.EnrolledSubjects != null ? student.EnrolledSubjects.Count() : 0;
