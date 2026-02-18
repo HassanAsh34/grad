@@ -688,6 +688,7 @@ namespace grad.Services
 								user.FName = "Admin";
 								user.pfpURL = admin.ProfilePicture == null ? string.Empty : admin.ProfilePicture;
 								user.Status = adminview ? admin.status : null;
+								user.phone = admin.phoneNumber;
 								found = true;
 							}
 							break;

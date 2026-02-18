@@ -7,7 +7,7 @@ namespace grad.DTO
 		public Guid? SubjectId { get; set; }
 
 		[Required]
-		[RegularExpression("^[A-Za-z0-9]+(?: ?[A-Za-z0-9]+)*$", ErrorMessage = "Invalid Subject Name")]
+		[RegularExpression("^[A-Za-z0-9ء-ي]+(?: ?[A-Za-z0-9ء-ي]+)*$", ErrorMessage = "Invalid Subject Name")]
 		public string SubjectName { get; set; }
 
 		public int? studentsCount { get; set; } = 0;

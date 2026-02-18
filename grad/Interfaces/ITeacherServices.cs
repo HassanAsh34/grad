@@ -10,6 +10,8 @@ namespace grad.Interfaces
 
 		public Task<ResultDTO> ViewSubject(Guid sid, CancellationToken cancellationToken = default);
 
+		public Task<ResultDTO> ViewStudent(ProfileDTO profile, CancellationToken cancellationToken = default);
+
 		public Task<ResultDTO> EditLesson(EditLessonDTO lesson, CancellationToken cancellationToken = default);
 
 		public Task<ResultDTO> DeleteLesson(Guid sid, Guid lid, CancellationToken cancellationToken = default);

@@ -13,11 +13,14 @@ namespace grad.Services
 
 		private readonly IRepository _repository;
 
-		public TeacherServices(ISubjectServices subjectServices,IRepository repository,ILessonServices lessonServices)
+		private readonly IUserServices _userServices;
+
+		public TeacherServices(ISubjectServices subjectServices,IRepository repository,ILessonServices lessonServices,IUserServices userServices)
 		{
 			_subjectServices = subjectServices ?? throw new ArgumentNullException(nameof(subjectServices));
 			_repository = repository ?? throw new ArgumentNullException(nameof(repository));
 			_lessonServices = lessonServices ?? throw new ArgumentNullException(nameof(lessonServices));
+			_userServices = userServices ?? throw new ArgumentNullException(nameof(userServices));
 		}
 
 		public async Task<ResultDTO> ShowStudents(Guid Sid, CancellationToken cancellation)
@@ -72,6 +75,11 @@ namespace grad.Services
 				};
 			}
 
+		}
+
+		public async Task<ResultDTO> ViewStudent(ProfileDTO profile,CancellationToken cancellationToken)
+		{
+			return await _userServices.ViewProfile(profile, cancellationToken: cancellationToken);
 		}
 
 		public async Task<ResultDTO> AddLesson(LessonDTO lesson,CancellationToken cancellationToken)

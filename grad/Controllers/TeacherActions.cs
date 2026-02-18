@@ -96,6 +96,28 @@ namespace grad.Controllers
 				return StatusCode(StatusCodes.Status400BadRequest, new { message = "You still have not been verified yet" });
 		}
 
+		[HttpGet("Get-Student/{sid}")]
+		public async Task<IActionResult> getStudent(string sid, CancellationToken cancellationToken)
+		{
+			string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
+			{
+				return Unauthorized();
+			}
+			if (Guid.TryParse(sid, out Guid Id))
+			{
+				ProfileDTO profile = new ProfileDTO
+				{
+					Id = Id,
+					Role = "Student"
+				};
+				ResultDTO res = await _teacherServices.ViewStudent(profile, cancellationToken);
+				return StatusCode(res.StatusCode, new { res.Message, res.result });
+			}
+			else
+				return BadRequest(new { message = "invalid student id" });
+		}
+
 
 		[HttpGet("Home-Screen")]
 		public async Task<IActionResult> viewSubject(CancellationToken cancellationToken)
