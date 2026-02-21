@@ -62,7 +62,7 @@ namespace grad.Services
 					case Teacher t:
 						Claims.AddRange(new List<Claim>{
 							new Claim(JwtRegisteredClaimNames.GivenName, $"{t.FName} {t.LName}"),
-							new Claim("SubjectID", t.SubjectFK.ToString())
+							//new Claim("SubjectID", t.SubjectFK.ToString())
 						});
 					deafult:
 						Claims.Add(new Claim(JwtRegisteredClaimNames.GivenName, "User"));

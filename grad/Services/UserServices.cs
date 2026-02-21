@@ -759,8 +759,9 @@ namespace grad.Services
 							}
 							break;
 						case User.UserRole.Teacher:
-							Teacher teacher = await _repository.GetEntityAsync<Teacher>(t => t.Id == user.Id,include: q=>q.Include(t=>t.Subject), cancellationToken: cancellationToken);
-							if(teacher != null)
+							//Teacher teacher = await _repository.GetEntityAsync<Teacher>(t => t.Id == user.Id,include: q=>q.Include(t=>t.AssignedSubjects), cancellationToken: cancellationToken);
+							Teacher teacher = await _repository.GetEntityAsync<Teacher>(t => t.Id == user.Id, cancellationToken: cancellationToken);
+							if (teacher != null)
 							{
 								user.Id = teacher.Id;
 								user.Email = teacher.EmailorUserName;
@@ -772,16 +773,7 @@ namespace grad.Services
 								user.pfpURL = teacher.ProfilePicture;
 								user.phone = teacher.phoneNumber;
 								user.Status = adminview ? teacher.status : null;
-								if(teacher.Subject != null) 
-								{
-									user.Job = $"{teacher.Subject.Name} Teacher";
-									user.Teaches = teacher.Subject.Name;
-								}
-								else
-								{
-									user.Job = "Teacher";
-									user.Teaches = string.Empty;
-								}
+								user.Job = "Teacher";
 								found = true;
 							}
 							break;

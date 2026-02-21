@@ -55,7 +55,7 @@ namespace grad.Services
 						};
 					else
 					{
-						return await _subjectServices.ViewSubjectsAsync(guids: guids, disability, Enrolled, cancellationToken: cancellationToken);
+						return await _subjectServices.ViewSubjectsAsync(guids: guids, disability: disability, cancellationToken: cancellationToken,enrolled: Enrolled);
 					}
 				}
 				else
@@ -205,7 +205,7 @@ namespace grad.Services
 			}
 		}
 
-		public async Task<ResultDTO> viewLesson(LessonDTO lessonDTO, CancellationToken cancellationToken)
+		public async Task<ResultDTO> viewLesson(LessonContentDTO lessonDTO, CancellationToken cancellationToken)
 		{
 			//return null;
 			return	await _lessonServices.viewLesson(lessonDTO, cancellationToken);

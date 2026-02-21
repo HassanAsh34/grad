@@ -2,7 +2,7 @@
 using MongoDB.Bson.Serialization.Attributes;
 namespace grad.Model
 {
-	public class Lesson
+	public class Video
 	{
 		[BsonId]
 		public Guid Id { get; private set; } = Guid.NewGuid();

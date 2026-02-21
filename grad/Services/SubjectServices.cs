@@ -93,10 +93,21 @@ namespace grad.Services
 			throw new NotImplementedException();
 		}
 
-		public async Task<ResultDTO> ViewSubjectsAsync(List<Guid> guids,int disability = -1,bool enrolled = false,CancellationToken cancellationToken = default)
+		public async Task<ResultDTO> ViewSubjectsAsync(Guid ?Tid,List<Guid> guids,int disability = -1,bool enrolled = false,CancellationToken cancellationToken = default)
 		{
 			IEnumerable<Subject> subjects = new List<Subject>();
-			if (guids != null)
+			if(Tid != null)
+			{
+				IEnumerable<AssignedSubject> assignedsubjects = await _repository.GetEntitiesAsync<AssignedSubject>(a => a.TeacherId == Tid, q => q.Include(a => a.Subject), cancellationToken: cancellationToken);
+				if(assignedsubjects.Count() == 0)
+					return new ResultDTO
+					{
+						StatusCode = StatusCodes.Status404NotFound,
+						Message = "You Are not assigned to any subjects at the moment"
+					};
+				subjects = assignedsubjects.Select(a => a.Subject);
+			}
+			else if (guids != null)
 			{
 				if(enrolled)
 					subjects = await _repository.GetEntitiesAsync<Subject>(s => guids.Contains(s.Id), cancellationToken: cancellationToken);
@@ -125,14 +136,14 @@ namespace grad.Services
 
 		public async Task<ResultDTO> ViewSubjectAsync(Guid sid,bool all,CancellationToken cancellationToken)
 		{
-			Subject? res = await _repository.GetEntityAsync<Subject>(s =>s.Id == sid , q => q.Include(s => s.Teachers).Include(s => s.Students), cancellationToken: cancellationToken);
+			Subject? res = await _repository.GetEntityAsync<Subject>(s =>s.Id == sid , q => q.Include(s => s.AssignedSubjects).Include(s => s.Students), cancellationToken: cancellationToken);
 			if (res != null)
 			{
 				//var lessonRef = _firestoreDb._Db.Collection("Subjects").Document(res.Id).Collection("Lessons");
 				SubjectContent subjectContent = await _subjects.Find(s => s.Id == res.Id).FirstOrDefaultAsync();
 				Console.WriteLine(subjectContent);
 				int lessonsCount = subjectContent.Lessons != null ? subjectContent.Lessons.Count():0;
-				int levelsCount = subjectContent.Levels != null ? subjectContent.Levels.Count() : 0;
+				//int levelsCount = subjectContent.Levels != null ? subjectContent.Levels.Count() : 0;
 
 				//int lessonsCount = (await lessonRef.GetSnapshotAsync(cancellationToken)).Count;
 				SubjectDTO subjectDTO = new SubjectDTO
@@ -141,7 +152,7 @@ namespace grad.Services
 					SubjectName = res.Name,
 					deaf_mute = res.deaf_mute,
 					studentsCount =all ? res.Students != null ? res.Students.Count() : 0 :0,
-					teachersCount =all ? res.Teachers != null ? res.Teachers.Count() : 0 :0,
+					teachersCount =all ? res.AssignedSubjects != null ? res.AssignedSubjects.Count() : 0 :0,
 					lessonsCount = lessonsCount,
 					levelsCount =all ?  lessonsCount : 0
 				};
@@ -168,13 +179,13 @@ namespace grad.Services
 			throw new NotImplementedException();
 		}
 
-		public async Task<ResultDTO> AddLesson(LessonDTO lessonDTO, CancellationToken cancellationToken)
+		public async Task<ResultDTO> AddLesson(AddLessonDTO lessonDTO, CancellationToken cancellationToken)
 		{
 			ResultDTO result = await _lessonServices.AddLesson(lessonDTO, cancellationToken);
 			
 			if(result.StatusCode == StatusCodes.Status201Created)
 			{
-				Subject subject = await _repository.GetEntityAsync<Subject>(s => s.Id == lessonDTO.subjectID, cancellationToken: cancellationToken);
+				Subject subject = await _repository.GetEntityAsync<Subject>(s => s.Id == lessonDTO.SubjectId, cancellationToken: cancellationToken);
 				if(subject != null)
 				{
 					subject.LessonCount += 1;

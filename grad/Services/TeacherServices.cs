@@ -1,4 +1,5 @@
-﻿using grad.DTO;
+﻿using System.Threading;
+using grad.DTO;
 using grad.Interfaces;
 using grad.Model;
 using Microsoft.EntityFrameworkCore;
@@ -23,21 +24,22 @@ namespace grad.Services
 			_userServices = userServices ?? throw new ArgumentNullException(nameof(userServices));
 		}
 
-		public async Task<ResultDTO> ShowStudents(Guid Sid, CancellationToken cancellation)
+		public async Task<ResultDTO> ShowStudents(TeacherSubjectDTO teacherSubject, CancellationToken cancellationToken)
 		{
-			if (!await _subjectServices.IsSubjectExist(subjectId: Sid))
+			AssignedSubject assignedSubject = await _repository.GetEntityAsync<AssignedSubject>(a => a.SubjectId == teacherSubject.SubjectId && a.TeacherId == teacherSubject.TeacherId, cancellationToken: cancellationToken);
+			if (assignedSubject == null)
 				return new ResultDTO
 				{
-					StatusCode = StatusCodes.Status500InternalServerError,
-					Message = "Failed to get Students"
+					StatusCode = StatusCodes.Status404NotFound,
+					Message = "Subject wasnt found"
 				};
 			else 
 			{
-				var students = await _repository
+				IEnumerable<Enrollement> students = await _repository
 					.GetEntitiesAsync<Enrollement>(
-						e => e.SUBFK == Sid,
+						e => e.SUBFK == assignedSubject.SubjectId,
 						q => q.Include(e=>e.Student).Include(e=>e.Student.parent),
-						cancellationToken: cancellation
+						cancellationToken: cancellationToken
 					);
 				var result = students.Select(e => new LISTStudentDTO
 				{
@@ -82,35 +84,98 @@ namespace grad.Services
 			return await _userServices.ViewProfile(profile, cancellationToken: cancellationToken);
 		}
 
-		public async Task<ResultDTO> AddLesson(LessonDTO lesson,CancellationToken cancellationToken)
+		public async Task<ResultDTO> ViewSubjects(Guid teacherId, CancellationToken cancellationToken)
 		{
-			return await _subjectServices.AddLesson(lesson, cancellationToken);
+			return await _subjectServices.ViewSubjectsAsync(Tid: teacherId, cancellationToken: cancellationToken);	
+		} //done
+
+		public async Task<ResultDTO> ViewSubject(TeacherSubjectDTO teacherSubject,CancellationToken cancellationToken)
+		{
+			AssignedSubject assignedSubject = await _repository.GetEntityAsync<AssignedSubject>(a => a.SubjectId == teacherSubject.SubjectId && a.TeacherId == teacherSubject.TeacherId, cancellationToken: cancellationToken);
+			if(assignedSubject == null)
+				return new ResultDTO
+				{
+					StatusCode = StatusCodes.Status404NotFound,
+					Message = "Subject wasnt found"
+				};
+			else
+				return await _subjectServices.ViewSubjectAsync(assignedSubject.SubjectId, cancellationToken: cancellationToken);
 		}
 
-		public async Task<ResultDTO> ViewSubject(Guid sid,CancellationToken cancellationToken)
+		public async Task<ResultDTO> ViewLessons(TeacherSubjectDTO teacherSubject, CancellationToken cancellationToken)
 		{
-			return await _subjectServices.ViewSubjectAsync(sid,cancellationToken: cancellationToken);
+			AssignedSubject assignedSubject = await _repository.GetEntityAsync<AssignedSubject>(a => a.SubjectId == teacherSubject.SubjectId && a.TeacherId == teacherSubject.TeacherId, cancellationToken: cancellationToken);
+			if (assignedSubject == null)
+				return new ResultDTO
+				{
+					StatusCode = StatusCodes.Status404NotFound,
+					Message = "Subject wasnt found"
+				};
+			else
+				return await _lessonServices.ViewLessons(assignedSubject.SubjectId, cancellationToken);
 		}
 
-		public async Task<ResultDTO> ViewLessons(Guid sid, CancellationToken cancellation)
+		public async Task<ResultDTO> ViewLesson(LessonContentDTO lessonContent, CancellationToken cancellationToken)
 		{
-			return await _lessonServices.ViewLessons(sid, cancellation);
+			//AssignedSubject assignedSubject = await _repository.GetEntityAsync<AssignedSubject>(a => a.SubjectId == teacherSubject.SubjectId && a.TeacherId == teacherSubject.TeacherId, cancellationToken: cancellationToken);
+			//if (assignedSubject == null)
+			//	return new ResultDTO
+			//	{
+			//		StatusCode = StatusCodes.Status404NotFound,
+			//		Message = "Subject wasnt found"
+			//	};
+			//else
+			//return await _lessonServices.viewLesson(new LessonContentDTO { Id = lessonId,SubjectId = teacherSubject.SubjectId}, cancellationToken);
+			return await _lessonServices.viewLesson(lessonContent, cancellationToken);
+		}
+		
+		public async Task<ResultDTO> UploadVideo(VideoDTO video, CancellationToken cancellationToken)
+		{
+			return await _lessonServices.UploadVideo(video, cancellationToken);
 		}
 
-		public async Task<ResultDTO> EditLesson(EditLessonDTO lesson, CancellationToken cancellationToken) 
+		public async Task<ResultDTO> AddLesson(AddLessonDTO lesson, CancellationToken cancellationToken)
 		{
-			return await _lessonServices.editLesson(lesson, cancellationToken); 
+			AssignedSubject assigned = await _repository.GetEntityAsync<AssignedSubject>(a => a.SubjectId == lesson.SubjectId && a.TeacherId == lesson.UId,cancellationToken: cancellationToken);
+			if (assigned != null)
+			{
+				lesson.SubjectId = assigned.SubjectId;
+				return await _subjectServices.AddLesson(lesson, cancellationToken);
+			}
+			else
+				return new ResultDTO
+				{
+					Message = "Subject not found",
+					StatusCode = StatusCodes.Status400BadRequest
+				};
 		}
 
-		public async Task<ResultDTO> DeleteLesson(Guid sid,Guid lid,CancellationToken cancellationToken)
-		{
-			return await _lessonServices.DeleteLesson(sid, lid, cancellationToken);
-		}
 
-		public async Task<ResultDTO> addWords(AddVocabDTO vocabDTO, CancellationToken cancellationToken)
-		{
-			return await _subjectServices.addwords(vocabDTO, cancellationToken);
-		}
+		//public async Task<ResultDTO> EditLesson(EditLessonDTO lesson, CancellationToken cancellationToken) 
+		//{
+		//	return await _lessonServices.editLesson(lesson, cancellationToken); 
+		//}
+
+		//public async Task<ResultDTO> DeleteLesson(Guid sid,Guid lid,CancellationToken cancellationToken)
+		//{
+		//	return await _lessonServices.DeleteLesson(sid, lid, cancellationToken);
+		//}
+
+		//public async Task<ResultDTO> addWords(TeacherSubjectDTO teacherSubject,AddVocabDTO vocabDTO, CancellationToken cancellationToken)
+		//{
+		//	AssignedSubject assignedSubject = await _repository.GetEntityAsync<AssignedSubject>(a => a.SubjectId == teacherSubject.SubjectId && a.TeacherId == teacherSubject.TeacherId, cancellationToken: cancellationToken);
+		//	if (assignedSubject == null)
+		//		return new ResultDTO
+		//		{
+		//			StatusCode = StatusCodes.Status404NotFound,
+		//			Message = "Subject wasnt found"
+		//		};
+		//	else
+		//	{
+		//		vocabDTO.sid = assignedSubject.SubjectId;
+		//		return await _subjectServices.addwords(vocabDTO, cancellationToken);
+		//	}
+		//}
 
 	}
 }

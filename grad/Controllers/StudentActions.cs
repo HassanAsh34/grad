@@ -146,8 +146,8 @@ namespace grad.Controllers
 		}
 
 		//view lesson
-		[HttpGet("View-lesson/{sid}/{lid}")]
-		public async Task<IActionResult> viewLesson(string sid,string lid, CancellationToken cancellationToken)
+		[HttpGet("View-lesson")]
+		public async Task<IActionResult> viewLesson([FromBody]GetLessonDTO getLesson, CancellationToken cancellationToken)
 		{
 			string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
 			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
@@ -157,19 +157,19 @@ namespace grad.Controllers
 			string id = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 			if (Guid.TryParse(id, out Guid guid))
 			{
-				if(Guid.TryParse(sid, out Guid Gsid) && Guid.TryParse(lid, out Guid Glid))
+				if(Guid.TryParse(getLesson.Sid, out Guid Gsid) && Guid.TryParse(getLesson.Lid, out Guid Glid))
 				{
-					LessonDTO lessonDTO = new LessonDTO
+					LessonContentDTO lessonDTO = new LessonContentDTO
 					{
 						Id = Glid,
-						subjectID = Gsid
+						SubjectId = Gsid
 					};
 					ResultDTO result = await _studentServices.viewLesson(lessonDTO, cancellationToken);
-					if(result.StatusCode == 200 && result.result is LessonDTO lesson)
-					{
-						lesson.videoUrl = $"{Request.Scheme}://{Request.Host}/{lesson.VideoPath}";
-						Console.WriteLine(lesson.videoUrl);
-					}
+					//if(result.StatusCode == 200 && result.result is VideoDTO lesson)
+					//{
+					//	//lesson.videoUrl = $"{Request.Scheme}://{Request.Host}/{lesson.VideoPath}";
+					//	//Console.WriteLine(lesson.videoUrl);
+					//}
 					return StatusCode(result.StatusCode, new { message = result.Message, result = result.result });
 				}
 				else

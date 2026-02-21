@@ -215,7 +215,7 @@ namespace grad.Services
 			return await _subjectServices.ViewSubjectAsync(sid,cancellationToken: cancellation);
 		}
 
-		public async Task<ResultDTO> AssignTeacherToSubject(AssignTeacherDTO assignTeacherDTO, CancellationToken cancellationToken)
+		public async Task<ResultDTO> AssignTeacherToSubject(TeacherSubjectDTO assignTeacherDTO, CancellationToken cancellationToken)
 		{
 			Teacher teacher = await _repository.GetEntityAsync<Teacher>(t => t.Id == assignTeacherDTO.TeacherId, cancellationToken: cancellationToken);
 			if(!await _subjectServices.IsSubjectExist(subjectId: assignTeacherDTO.SubjectId, cancellationToken: cancellationToken))
@@ -240,7 +240,12 @@ namespace grad.Services
 				{
 					teacher.status = User.Status.Active;
 				}
-				teacher.SubjectFK = assignTeacherDTO.SubjectId;
+				AssignedSubject assignedSubject = new AssignedSubject
+				{
+					SubjectId = assignTeacherDTO.SubjectId,
+					TeacherId = assignTeacherDTO.TeacherId
+				};
+				_repository.CreateEntityAsync<AssignedSubject>(assignedSubject, cancellationToken: cancellationToken);
 				_repository.UpdateEntityAsync<Teacher>(teacher, cancellationToken: cancellationToken);
 				int res = await _uowServices.SaveChangesAsync();
 				return new ResultDTO

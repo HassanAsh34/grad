@@ -25,7 +25,7 @@ namespace grad.Interfaces
 
 		public Task<ResultDTO> UpdateSubject(Guid sid, CancellationToken cancellationToken = default);
 
-		public Task<ResultDTO> AssignTeacherToSubject(AssignTeacherDTO assignTeacherDTO, CancellationToken cancellationToken = default);
+		public Task<ResultDTO> AssignTeacherToSubject(TeacherSubjectDTO assignTeacherDTO, CancellationToken cancellationToken = default);
 
 	}
 }

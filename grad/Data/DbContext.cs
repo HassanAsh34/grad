@@ -22,6 +22,8 @@ namespace grad.Data
 
 		public DbSet<Enrollement> Enrollents { get; set; }
 
+		public DbSet<AssignedSubject> AssignedSubjects { get; set; }
+
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
 			base.OnModelCreating(modelBuilder);
@@ -36,7 +38,13 @@ namespace grad.Data
 			
 			//modelBuilder.Entity<Subject>().HasAlternateKey(s => s.Name);
 
-			modelBuilder.Entity<Subject>().HasMany(s => s.Teachers).WithOne(t => t.Subject).HasForeignKey(t => t.SubjectFK).OnDelete(DeleteBehavior.SetNull);
+			//modelBuilder.Entity<Subject>().HasMany(s => s.Teachers).WithOne(t => t.Subject).HasForeignKey(t => t.SubjectFK).OnDelete(DeleteBehavior.SetNull);
+
+			modelBuilder.Entity<AssignedSubject>().HasAlternateKey(a => new { a.TeacherId, a.SubjectId });
+
+			modelBuilder.Entity<Teacher>().HasMany(a => a.AssignedSubjects).WithOne(t => t.Teacher).HasForeignKey(a=>a.TeacherId).OnDelete(DeleteBehavior.Cascade);
+
+			modelBuilder.Entity<Subject>().HasMany(s => s.AssignedSubjects).WithOne(a => a.Subject).HasForeignKey(a => a.SubjectId).OnDelete(DeleteBehavior.Cascade);
 
 			modelBuilder.Entity<Enrollement>().HasAlternateKey(es => new { es.STUFK, es.SUBFK });
 

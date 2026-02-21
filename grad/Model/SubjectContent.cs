@@ -9,9 +9,11 @@ namespace grad.Model
 
 		public Vocabulary ?Dictionary { get; set; }
 
-		public List<Level>? Levels { get; set; } = new();
+		//public List<Exercise>? Levels { get; set; } = new();
 
-		public List<Lesson> Lessons { get; set; } = new(); //SHORTENED WAY FOR new List<Lesson>()
+		public List<LessonContent> Lessons { get; set; } = new();//SHORTENED WAY FOR new List<Lesson>()
+
+		public List<Exercise> Quizzes { get; set; } = new();
 
 	}
 }

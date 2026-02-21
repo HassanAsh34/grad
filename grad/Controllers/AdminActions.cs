@@ -247,7 +247,7 @@ namespace grad.Controllers
 
 
 		[HttpPatch("Approve-teacher")]
-		public async Task<IActionResult> ApproveTeacher(AssignTeacherDTO teacherDTO, CancellationToken cancellationToken)
+		public async Task<IActionResult> ApproveTeacher(TeacherSubjectDTO teacherDTO, CancellationToken cancellationToken)
 		{
 			string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
 			if (!await _tokenServices.IsTokenBlacklisted(accessToken))

@@ -13,11 +13,11 @@
 		public DateOnly BirthDate { get; set; }
 		public int age { get; set; }
 
-		public string ?SubjectName { get; set; }
+		//public string ?SubjectName { get; set; }
 
-		public Guid ?SubjectFK { get; set; }
+		public ICollection<AssignedSubject> AssignedSubjects { get; set; } = new List<AssignedSubject>();
 
-		public Subject ?Subject { get; set; }
+		//public Subject ?Subject { get; set; }
 		//public IEnumerable<Class> Classes { get; set; }
 	}
 }

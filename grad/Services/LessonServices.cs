@@ -21,42 +21,18 @@ namespace grad.Services
 			_cloudinaryServices = cloudinaryServices ?? throw new ArgumentNullException(nameof(cloudinaryServices));
 		}
 
-		public async Task<ResultDTO> AddLesson(LessonDTO lessonDTO, CancellationToken cancellationToken)
+		public async Task<ResultDTO> AddLesson(AddLessonDTO lessonDTO, CancellationToken cancellationToken)
 		{
-			var filter = Builders<SubjectContent>.Filter.And(Builders<SubjectContent>.Filter.Eq(s => s.Id, lessonDTO.subjectID), Builders<SubjectContent>.Filter.Not(
+			var filter = Builders<SubjectContent>.Filter.And(Builders<SubjectContent>.Filter.Eq(s => s.Id, lessonDTO.SubjectId), Builders<SubjectContent>.Filter.Not(
 				Builders<SubjectContent>.Filter.ElemMatch(s => s.Lessons, l => l.Title == lessonDTO.Title)));
-			Lesson lesson = new Lesson
+			LessonContent lesson = new LessonContent
 			{
-				Description = lessonDTO.Description,
-				Title = lessonDTO.Title,
+				Title = lessonDTO.Title
 			};
-			string directory = $"subjects/{lessonDTO.subjectID}/lessons";
-			if (lessonDTO.VideoFile.Length > 0 && lessonDTO.VideoFile != null)
-			{
-				lesson.VideoPath = await _cloudinaryServices.UploadVideoAsync(lessonDTO.VideoFile, directory, $"{lesson.Id}", cancellationToken);
-			}
-			else
-			{
-				return new ResultDTO
-				{
-					Message = "failed to uploud video, please try again",
-					StatusCode = StatusCodes.Status400BadRequest
-				};
-			}
-			if (lesson.VideoPath.IsNullOrEmpty())
-			{
-				return new ResultDTO
-				{
-					Message = "failed to uploud video, please try again",
-					StatusCode = StatusCodes.Status400BadRequest
-				};
-			}
 			var update = Builders<SubjectContent>.Update.Push(s => s.Lessons, lesson);
 			var res = await _subjects.UpdateOneAsync(filter, update);
 			if (res.ModifiedCount == 0)
 			{
-				directory = $"uploads/{directory}/{lesson.Id}";
-				await _cloudinaryServices.DeleteAsync(directory);
 				return new ResultDTO
 				{
 					Message = "Lesson already exists or subject not found",
@@ -72,6 +48,246 @@ namespace grad.Services
 				};
 			}
 		}
+
+		public async Task<ResultDTO> UploadVideo(VideoDTO videoDTO, CancellationToken cancellationToken)
+		{
+			var filter = Builders<SubjectContent>.Filter.And(Builders<SubjectContent>.Filter.Eq(s => s.Id, videoDTO.subjectID), Builders<SubjectContent>.Filter.ElemMatch(s => s.Lessons, l => l.Id == videoDTO.LId));
+			SubjectContent subjectContent = await _subjects.Find(filter).FirstOrDefaultAsync();
+			if (subjectContent == null || subjectContent.Lessons.Count == 0)
+			{
+				return new ResultDTO
+				{
+					Message = "Lesson not found",
+					StatusCode = StatusCodes.Status404NotFound
+				};
+			}
+			else
+			{
+				LessonContent lessonContent = subjectContent.Lessons.FirstOrDefault(l => l.Id == videoDTO.LId);
+				if (lessonContent == null)
+				{
+					return new ResultDTO
+					{
+						Message = "Lesson not found",
+						StatusCode = StatusCodes.Status404NotFound
+					};
+				}
+				else
+				{
+					if (videoDTO.VideoFile != null)
+					{
+						Video lesson = new Video
+						{
+							Description = videoDTO.Description,
+							Title = videoDTO.Title
+						};
+						string directory = $"subjects/{subjectContent.Id}/lessonContent/{lessonContent.Id}/Videos/";
+						string videoUrl = await _cloudinaryServices.UploadVideoAsync(videoDTO.VideoFile, directory, $"{lesson.Id}.mp4", cancellationToken);
+						if (!videoUrl.IsNullOrEmpty())
+						{
+							lesson.VideoPath = videoUrl;
+							lessonContent.Videos.Add(lesson);
+						}
+						else
+						{
+							return new ResultDTO
+							{
+								Message = $"Failed to upload video",
+								StatusCode = StatusCodes.Status400BadRequest
+							};
+						}
+						var update = Builders<SubjectContent>.Update.Set("Lessons.$.Lessons",lessonContent.Videos);
+						var result = await _subjects.UpdateOneAsync(filter, update, cancellationToken: cancellationToken);
+						if (result.ModifiedCount == 0)
+						{
+							return new ResultDTO { Message = "Something went wrong while updating the lesson with videos", StatusCode = StatusCodes.Status500InternalServerError };
+						}
+						else
+						{
+							return new ResultDTO
+							{
+								Message = "Video uploaded and lesson updated successfully",
+								StatusCode = StatusCodes.Status200OK
+							};
+						}
+					}
+					else
+					{
+						return new ResultDTO
+						{
+							Message = "Failed To upload, please try again",
+							StatusCode = StatusCodes.Status400BadRequest
+						};
+					}
+				}
+			}
+		}
+
+		public async Task<ResultDTO> DeleteVideo(VideoDTO videoDTO, CancellationToken cancellationToken)
+		{
+			var filter = Builders<SubjectContent>.Filter.And(Builders<SubjectContent>.Filter.Eq(s => s.Id, videoDTO.subjectID), Builders<SubjectContent>.Filter.ElemMatch(s => s.Lessons, l => l.Id == videoDTO.LId));
+			SubjectContent subjectContent = await _subjects.Find(filter).FirstOrDefaultAsync();
+			if (subjectContent == null || subjectContent.Lessons.Count == 0)
+			{
+				return new ResultDTO
+				{
+					Message = "Lesson not found",
+					StatusCode = StatusCodes.Status404NotFound
+				};
+			}
+			else
+			{
+				LessonContent lessonContent = subjectContent.Lessons.FirstOrDefault(l => l.Id == videoDTO.LId);
+				if (lessonContent == null)
+				{
+					return new ResultDTO
+					{
+						Message = "Lesson not found",
+						StatusCode = StatusCodes.Status404NotFound
+					};
+				}
+				else
+				{
+					Video lesson = lessonContent.Videos.FirstOrDefault(l => l.Id == videoDTO.VId);
+					if (lesson == null)
+					{
+						return new ResultDTO
+						{
+							Message = "Video not found",
+							StatusCode = StatusCodes.Status404NotFound
+						};
+					}
+					else
+					{
+						string directory = $"subjects/{subjectContent.Id}/lessonContent/{lessonContent.Id}/Videos/{lesson.Id}";
+						bool videoDeleted = await _cloudinaryServices.DeleteAsync(directory, true);
+						if (!videoDeleted)
+						{
+							return new ResultDTO { Message = "Failed to delete video from cloud storage", StatusCode = StatusCodes.Status500InternalServerError };
+						}
+						else
+						{
+							lessonContent.Videos.Remove(lesson);
+							var update = Builders<SubjectContent>.Update.Set("Lessons.$.Lessons", lessonContent.Videos);
+							var result = await _subjects.UpdateOneAsync(filter, update, cancellationToken: cancellationToken);
+							if (result.ModifiedCount == 0)
+							{
+								return new ResultDTO { Message = "Something went wrong", StatusCode = StatusCodes.Status500InternalServerError };
+							}
+							else
+							{
+								return new ResultDTO { Message = "Video deleted successfully", StatusCode = StatusCodes.Status200OK };
+							}
+						}
+					}
+				}
+			}
+		}
+
+		public async Task<ResultDTO> DeleteLesson(LessonContentDTO lessonContent, CancellationToken cancellationToken)
+		{
+			var filter = Builders<SubjectContent>.Filter.And(Builders<SubjectContent>.Filter.Eq(s => s.Id, lessonContent.SubjectId), Builders<SubjectContent>.Filter.ElemMatch(s => s.Lessons, l => l.Id == lessonContent.Id));
+			SubjectContent subjectContent = await _subjects.Find(filter).FirstOrDefaultAsync();
+			if (subjectContent == null || subjectContent.Lessons.Count == 0)
+			{
+				return new ResultDTO
+				{
+					Message = "Lesson not found",
+					StatusCode = StatusCodes.Status404NotFound
+				};
+			}
+			else
+			{
+				LessonContent l = subjectContent.Lessons.FirstOrDefault(l => l.Id == lessonContent.Id);
+				foreach (Video lesson in l.Videos)
+				{
+					string directory = $"subjects/{subjectContent.Id}/lessonContent/{l.Id}/Videos/{lesson.Id}";
+					bool videoDeleted = await _cloudinaryServices.DeleteAsync(directory, true);
+					if (!videoDeleted)
+					{
+						return new ResultDTO { Message = "Failed to delete videos from cloud storage", StatusCode = StatusCodes.Status500InternalServerError };
+					}
+					else
+					{
+						continue;
+					}
+				}
+				var result = await _subjects.DeleteOneAsync(filter, cancellationToken);
+				if (result.DeletedCount == 0)
+				{
+					return new ResultDTO { Message = "Something went wrong", StatusCode = StatusCodes.Status500InternalServerError };
+				}
+				else
+				{
+					return new ResultDTO { Message = "Video deleted successfully", StatusCode = StatusCodes.Status200OK };
+				}
+			}
+		}
+
+
+		//public async Task<ResultDTO> updateVideo(VideoDTO videoDTO, CancellationToken cancellationToken)	
+
+		//public async Task<ResultDTO> UploadVideos(UploadVideoDTO addLessonDTO, CancellationToken cancellationToken)
+		//{
+		//	var filter = Builders<SubjectContent>.Filter.And(Builders<SubjectContent>.Filter.Eq(s => s.Id, addLessonDTO.SubjectID), Builders<SubjectContent>.Filter.ElemMatch(s => s.Lessons, l => l.Id == addLessonDTO.Cid));
+		//	SubjectContent subjectContent = await _subjects.Find(filter).FirstOrDefaultAsync();
+		//	if (subjectContent == null || subjectContent.Lessons.Count == 0)
+		//	{
+		//		return new ResultDTO
+		//		{
+		//			Message = "Lesson not found",
+		//			StatusCode = StatusCodes.Status404NotFound
+		//		};
+		//	}
+		//	else
+		//	{
+		//		LessonContent lessonContent = subjectContent.Lessons.FirstOrDefault(l => l.Id == addLessonDTO.Cid);
+		//		if(lessonContent == null)
+		//		{
+		//			return new ResultDTO
+		//			{
+		//				Message = "Lesson not found",
+		//				StatusCode = StatusCodes.Status404NotFound
+		//			};
+		//		}
+		//		if (addLessonDTO.VideoFiles.Count == addLessonDTO.lesson.Count )
+		//		{
+		//			for(int i = 0; i < addLessonDTO.VideoFiles.Count; i++)
+		//			{
+		//				Lesson lesson = new Lesson
+		//				{
+		//					Description = lessonContent.Lessons[i].Description,
+		//					Title = lessonContent.Lessons[i].Title
+		//				};
+		//				string directory = $"subjects/{addLessonDTO.SubjectID}/lessonContent/{lessonContent.Id}/Videos/";
+		//				string videoUrl = await _cloudinaryServices.UploadVideoAsync(addLessonDTO.VideoFiles[i], directory, $"{lesson.Id}.mp4", cancellationToken);
+		//				if (!videoUrl.IsNullOrEmpty())
+		//				{
+		//					lesson.VideoPath = videoUrl;
+		//					lessonContent.Lessons.Add(lesson);
+		//				}
+		//				else
+		//				{
+		//					return new ResultDTO
+		//					{
+		//						Message = $"Failed to upload video: {videoFile.FileName}",
+		//						StatusCode = StatusCodes.Status400BadRequest
+		//					};
+		//				}
+		//			}
+		//			var update = Builders<SubjectContent>.Update.Set("Lessons.$.Lessons", lesson.Lessons);
+		//			var result = await _subjects.UpdateOneAsync(filter, update, cancellationToken: cancellationToken);
+		//			if (result.ModifiedCount == 0)
+		//			{
+		//				return new ResultDTO { Message = "Something went wrong while updating the lesson with videos", StatusCode = StatusCodes.Status500InternalServerError };
+		//			}
+		//			else
+		//			{
+		//				return new ResultDTO
+		//				{
+		//					Message = "Videos uploaded and lesson updated successfully",
+
+
 
 		//public async Task<ResultDTO> AddLesson(LessonDTO lessonDTO, CancellationToken cancellationToken)
 		//{
@@ -160,32 +376,31 @@ namespace grad.Services
 				};
 			else
 			{
-				List<Lesson> lessons = subjectContent.Lessons;
-				List<LessonDTO> lessonDTOs = new List<LessonDTO>();
+				List<LessonContent> lessons = subjectContent.Lessons;
+				List<LessonContentDTO> lessonContentDTOs = new List<LessonContentDTO>();
 				lessons.ForEach(l =>
 				{
-					lessonDTOs.Add(new LessonDTO
+					lessonContentDTOs.Add(new LessonContentDTO
 					{
-						Description = l.Description,
 						Id = l.Id,
-						ReleaseDate = l.ReleaseDate,
+						SubjectId = subjectContent.Id,
 						Title = l.Title,
-						videoUrl = l.VideoPath
+						VideosCount = l.Videos.Count
 					});
 				});
 
 				return new ResultDTO
 				{
-					Message = $"{lessonDTOs.Count} lessons were found",
-					result = lessonDTOs,
+					Message = $"{lessonContentDTOs.Count} lessons were found",
+					result = lessonContentDTOs,
 					StatusCode = StatusCodes.Status200OK
 				};
 			}
 		}
 
-		public async Task<ResultDTO> viewLesson(LessonDTO lessonDTO, CancellationToken cancellationToken)
+		public async Task<ResultDTO> viewLesson(LessonContentDTO lessonContentDTO, CancellationToken cancellationToken)
 		{
-			var filter = Builders<SubjectContent>.Filter.And(Builders<SubjectContent>.Filter.Eq(s => s.Id, lessonDTO.subjectID), Builders<SubjectContent>.Filter.ElemMatch(s => s.Lessons, l => l.Id == lessonDTO.Id));
+			var filter = Builders<SubjectContent>.Filter.And(Builders<SubjectContent>.Filter.Eq(s => s.Id, lessonContentDTO.SubjectId), Builders<SubjectContent>.Filter.ElemMatch(s => s.Lessons, l => l.Id == lessonContentDTO.Id));
 			SubjectContent subjectContent = await _subjects.Find(filter).FirstOrDefaultAsync();
 			if (subjectContent == null || subjectContent.Lessons.Count == 0)
 			{
@@ -197,86 +412,99 @@ namespace grad.Services
 			}
 			else
 			{
-				Lesson lesson = subjectContent.Lessons.FirstOrDefault(l => l.Id == lessonDTO.Id);
-				lessonDTO.Description = lesson.Description;
-				lessonDTO.ReleaseDate = lesson.ReleaseDate;
-				lessonDTO.Title = lesson.Title;
-				lessonDTO.VideoPath = lesson.VideoPath;
+				LessonContent lesson = subjectContent.Lessons.FirstOrDefault(l => l.Id == lessonContentDTO.Id);
+				lessonContentDTO.Title = lesson.Title;
+				lessonContentDTO.VideosCount = lesson.Videos.Count;
+				if(lesson.Exercises != null)
+					lessonContentDTO.Exercises = lesson.Exercises;
+				foreach (Video l in lesson.Videos)
+				{
+					lessonContentDTO.Videos.Add(new VideoDTO
+					{
+						VId = l.Id,
+						LId = lesson.Id,
+						subjectID = subjectContent.Id,
+						Description = l.Description,
+						ReleaseDate = l.ReleaseDate,
+						Title = l.Title,
+						videoUrl = l.VideoPath
+					});
+				}
 				return new ResultDTO
 				{
 					Message = "Lesson found",
-					result = lessonDTO,
+					result = lessonContentDTO,
 					StatusCode = StatusCodes.Status200OK
 				};
 			}
 		}
 
-		public async Task<ResultDTO> editLesson(EditLessonDTO lessonDTO, CancellationToken cancellationToken)
-		{
-			var filter = Builders<SubjectContent>.Filter.And(Builders<SubjectContent>.Filter.Eq(s => s.Id, lessonDTO.subjectID), Builders<SubjectContent>.Filter.ElemMatch(s => s.Lessons, l => l.Id == lessonDTO.Id));
-			SubjectContent subjectContent = await _subjects.Find(filter).FirstOrDefaultAsync();
-			var updates  = new List<UpdateDefinition<SubjectContent>>();
-			if (!lessonDTO.Description.IsNullOrEmpty())
-				updates.Add(
-					Builders<SubjectContent>.Update.Set("Lessons.$.Description", lessonDTO.Description)
-				);
-			if (!lessonDTO.Title.IsNullOrEmpty())
-				updates.Add(
-					Builders<SubjectContent>.Update.Set("Lessons.$.Title", lessonDTO.Title)
-				);
-			if (!updates.Any())
-				return new ResultDTO
-				{
-					Message = "Nothing to update",
-					StatusCode = StatusCodes.Status400BadRequest
-				};
-			var update = Builders<SubjectContent>.Update.Combine(updates);
+		//public async Task<ResultDTO> editLesson(EditLessonDTO lessonDTO, CancellationToken cancellationToken)
+		//{
+		//	var filter = Builders<SubjectContent>.Filter.And(Builders<SubjectContent>.Filter.Eq(s => s.Id, lessonDTO.subjectID), Builders<SubjectContent>.Filter.ElemMatch(s => s.Lessons, l => l.Id == lessonDTO.Id));
+		//	SubjectContent subjectContent = await _subjects.Find(filter).FirstOrDefaultAsync();
+		//	var updates  = new List<UpdateDefinition<SubjectContent>>();
+		//	if (!lessonDTO.Description.IsNullOrEmpty())
+		//		updates.Add(
+		//			Builders<SubjectContent>.Update.Set("Lessons.$.Description", lessonDTO.Description)
+		//		);
+		//	if (!lessonDTO.Title.IsNullOrEmpty())
+		//		updates.Add(
+		//			Builders<SubjectContent>.Update.Set("Lessons.$.Title", lessonDTO.Title)
+		//		);
+		//	if (!updates.Any())
+		//		return new ResultDTO
+		//		{
+		//			Message = "Nothing to update",
+		//			StatusCode = StatusCodes.Status400BadRequest
+		//		};
+		//	var update = Builders<SubjectContent>.Update.Combine(updates);
 
-			var result = await _subjects.UpdateOneAsync(
-				filter,
-				update,
-				cancellationToken: cancellationToken
-			);
+		//	var result = await _subjects.UpdateOneAsync(
+		//		filter,
+		//		update,
+		//		cancellationToken: cancellationToken
+		//	);
 
-			if (result.MatchedCount == 0)
-			{
-				return new ResultDTO
-				{
-					Message = "Lesson not found",
-					StatusCode = StatusCodes.Status404NotFound
-				};
-			}
+		//	if (result.MatchedCount == 0)
+		//	{
+		//		return new ResultDTO
+		//		{
+		//			Message = "Lesson not found",
+		//			StatusCode = StatusCodes.Status404NotFound
+		//		};
+		//	}
 
-			return new ResultDTO
-			{
-				Message = "Lesson updated successfully",
-				StatusCode = StatusCodes.Status200OK
-			};
-		}
+		//	return new ResultDTO
+		//	{
+		//		Message = "Lesson updated successfully",
+		//		StatusCode = StatusCodes.Status200OK
+		//	};
+		//}
 
-		public async Task<ResultDTO> DeleteLesson(Guid sid, Guid lid, CancellationToken cancellationToken)
-		{
-			var filter = Builders<SubjectContent>.Filter.And(Builders<SubjectContent>.Filter.Eq(s => s.Id, sid), Builders<SubjectContent>.Filter.ElemMatch(s => s.Lessons, l => l.Id == lid));
-			var lesson = await _subjects.Find(filter).FirstOrDefaultAsync();
-			if (lesson == null)
-			{ 
-				return new ResultDTO { Message = "Lesson not found", StatusCode = StatusCodes.Status404NotFound };
-			}
-			else
-			{
-				string directory = $"uploads/subjects/{sid}/lessons/{lesson.Lessons.FirstOrDefault(l => l.Id == lid).Id}";
-				bool videoDeleted = await _cloudinaryServices.DeleteAsync(directory,true);
-				if (!videoDeleted) 
-				{ 
-					return new ResultDTO { Message = "Failed to delete video from cloud storage", StatusCode = StatusCodes.Status500InternalServerError }; 
-				}
-				var update = Builders<SubjectContent>.Update.PullFilter(s => s.Lessons, l => l.Id == lid);
-				var result = await _subjects.UpdateOneAsync(filter, update, cancellationToken: cancellationToken); if (result.ModifiedCount == 0) { return new ResultDTO { Message = "Something went wrong", StatusCode = StatusCodes.Status500InternalServerError }; }
-				else
-				{
-					return new ResultDTO { Message = "Lesson deleted successfully", StatusCode = StatusCodes.Status200OK };
-				}
-			}
-		}
+		//public async Task<ResultDTO> DeleteLesson(Guid sid, Guid lid, CancellationToken cancellationToken)
+		//{
+		//	var filter = Builders<SubjectContent>.Filter.And(Builders<SubjectContent>.Filter.Eq(s => s.Id, sid), Builders<SubjectContent>.Filter.ElemMatch(s => s.Lessons, l => l.Id == lid));
+		//	var lesson = await _subjects.Find(filter).FirstOrDefaultAsync();
+		//	if (lesson == null)
+		//	{ 
+		//		return new ResultDTO { Message = "Lesson not found", StatusCode = StatusCodes.Status404NotFound };
+		//	}
+		//	else
+		//	{
+		//		string directory = $"uploads/subjects/{sid}/lessons/{lesson.Lessons.FirstOrDefault(l => l.Id == lid).Id}";
+		//		bool videoDeleted = await _cloudinaryServices.DeleteAsync(directory,true);
+		//		if (!videoDeleted) 
+		//		{ 
+		//			return new ResultDTO { Message = "Failed to delete video from cloud storage", StatusCode = StatusCodes.Status500InternalServerError }; 
+		//		}
+		//		var update = Builders<SubjectContent>.Update.PullFilter(s => s.Lessons, l => l.Id == lid);
+		//		var result = await _subjects.UpdateOneAsync(filter, update, cancellationToken: cancellationToken); if (result.ModifiedCount == 0) { return new ResultDTO { Message = "Something went wrong", StatusCode = StatusCodes.Status500InternalServerError }; }
+		//		else
+		//		{
+		//			return new ResultDTO { Message = "Lesson deleted successfully", StatusCode = StatusCodes.Status200OK };
+		//		}
+		//	}
+		//}
 	}
 }	

@@ -11,6 +11,6 @@ namespace grad.Interfaces
 
 		public Task<ResultDTO> viewLessons(EnrollSubjectDTO enrollSubject, CancellationToken cancellationToken = default);
 
-		public Task<ResultDTO> viewLesson(LessonDTO lessonDTO, CancellationToken cancellationToken = default);
+		public Task<ResultDTO> viewLesson(LessonContentDTO lessonDTO, CancellationToken cancellationToken = default);
 	}
 }
