@@ -1,6 +1,6 @@
-@grad_HostAddress = http://localhost:5133
+@Grad_Structured_HostAddress = http://localhost:5208
 
-GET {{grad_HostAddress}}/weatherforecast/
+GET {{Grad_Structured_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###
