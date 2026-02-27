@@ -1,15 +1,15 @@
-﻿using Grad_Structured.Application.Users.Interfaces;
-using Grad_Structured.Application.Common.Interfaces;
-using Grad_Structured.Application.Common.DTOs;
-using Grad_Structured.Domain.Model;
-using Grad_Structured.Application.admin.Interfaces;
-using Grad_Structured.Domain.Enums;
-using Grad_Structured.Application.teacher.DTOs;
-using Grad_Structured.Application.subject.Interfaces;
+﻿using grad.Application.Users.Interfaces;
+using grad.Application.Common.Interfaces;
+using grad.Application.Common.DTOs;
+using grad.Domain.Model;
+using grad.Application.admin.Interfaces;
+using grad.Domain.Enums;
+using grad.Application.teacher.DTOs;
+using grad.Application.subject.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using Grad_Structured.Application.subject.DTOs;
+using grad.Application.subject.DTOs;
 
-namespace Grad_Structured.Application.admin.Services
+namespace grad.Application.admin.Services
 {
 	public class AdminServices : IAdminServices
 	{
@@ -216,14 +216,26 @@ namespace Grad_Structured.Application.admin.Services
 					SubjectId = assignTeacherDTO.SubjectId,
 					TeacherId = assignTeacherDTO.TeacherId
 				};
-				_repository.CreateEntityAsync<AssignedSubject>(assignedSubject, cancellationToken: cancellationToken);
-				_repository.UpdateEntityAsync<Teacher>(teacher, cancellationToken: cancellationToken);
-				int res = await _uowServices.SaveChangesAsync();
-				return new ResultDTO
+				AssignedSubject assigned = await _repository.GetEntityAsync<AssignedSubject>(a => a.SubjectId == assignedSubject.SubjectId && a.TeacherId == assignedSubject.TeacherId,cancellationToken: cancellationToken);
+				if(assigned != null)
 				{
-					Message = res != 0 ? "Teacher assigned to subject successfully" : "Failed to assign teacher to subject",
-					StatusCode = res != 0 ? StatusCodes.Status200OK : StatusCodes.Status500InternalServerError
-				};
+					return new ResultDTO
+					{
+						Message = "Teacher is already assigned to that subject",
+						StatusCode = StatusCodes.Status409Conflict
+					};
+				}
+				else
+				{
+					_repository.CreateEntityAsync<AssignedSubject>(assignedSubject, cancellationToken: cancellationToken);
+					_repository.UpdateEntityAsync<Teacher>(teacher, cancellationToken: cancellationToken);
+					int res = await _uowServices.SaveChangesAsync();
+					return new ResultDTO
+					{
+						Message = res != 0 ? "Teacher assigned to subject successfully" : "Failed to assign teacher to subject",
+						StatusCode = res != 0 ? StatusCodes.Status200OK : StatusCodes.Status500InternalServerError
+					};
+				}
 			}
 		}
 

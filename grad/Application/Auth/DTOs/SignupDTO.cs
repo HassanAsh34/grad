@@ -2,7 +2,7 @@
 using System.Text.Json.Serialization;
 //using Google.Type;
 
-namespace Grad_Structured.Application.Auth.DTOs
+namespace grad.Application.Auth.DTOs
 {
 	public class SignupDTO //finish the rest of validation
 	{

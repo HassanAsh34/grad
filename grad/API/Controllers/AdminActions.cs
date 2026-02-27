@@ -1,12 +1,12 @@
-﻿using Grad_Structured.Application.teacher.DTOs;
-using Grad_Structured.Application.admin.Interfaces;
-using Grad_Structured.Application.Common.DTOs;
+﻿using grad.Application.teacher.DTOs;
+using grad.Application.admin.Interfaces;
+using grad.Application.Common.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Grad_Structured.Application.subject.DTOs;
-using Grad_Structured.Application.Common.Interfaces;
+using grad.Application.subject.DTOs;
+using grad.Application.Common.Interfaces;
 
-namespace Grad_Structured.API.Controllers
+namespace grad.API.Controllers
 {
 	[ApiController]
 	[Route("/Admin")]

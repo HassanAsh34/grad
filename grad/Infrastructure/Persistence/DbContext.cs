@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Grad_Structured.Domain.Model;
-namespace Grad_Structured.Infrastructure.Persistence
+using grad.Domain.Model;
+namespace grad.Infrastructure.Persistence
 {
 	public class Db_Context : DbContext
 	{

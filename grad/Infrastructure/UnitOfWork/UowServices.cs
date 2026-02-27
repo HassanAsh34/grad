@@ -1,7 +1,7 @@
-﻿using Grad_Structured.Application.Common.Interfaces;
-using Grad_Structured.Infrastructure.Persistence;
+﻿using grad.Application.Common.Interfaces;
+using grad.Infrastructure.Persistence;
 
-namespace Grad_Structured.Infrastructure.UnitOfWork
+namespace grad.Infrastructure.UnitOfWork
 {
 	public class UowServices : IUowServices
 	{

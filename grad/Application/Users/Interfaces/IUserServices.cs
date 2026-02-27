@@ -1,8 +1,8 @@
 ﻿using System.Threading;
-using Grad_Structured.Application.Common.DTOs;
-using Grad_Structured.Application.Users.DTOs;
+using grad.Application.Common.DTOs;
+using grad.Application.Users.DTOs;
 
-namespace Grad_Structured.Application.Users.Interfaces
+namespace grad.Application.Users.Interfaces
 {
 	public interface IUserServices
 	{

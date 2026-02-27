@@ -2,7 +2,7 @@
 using System.Text.Json.Serialization;
 //using grad.Model;
 
-namespace Grad_Structured.Application.Users.DTOs
+namespace grad.Application.Users.DTOs
 {
 	public class EditProfileDTO
 	{

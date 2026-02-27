@@ -1,14 +1,14 @@
-﻿using Grad_Structured.Application.Auth.Interfaces;
-using Grad_Structured.Application.Common.Interfaces;
-using Grad_Structured.Application.parent.Interfaces;
-using Grad_Structured.Application.Users.Interfaces;
-using Grad_Structured.Application.Common.DTOs;
-using Grad_Structured.Domain.Model;
+﻿using grad.Application.Auth.Interfaces;
+using grad.Application.Common.Interfaces;
+using grad.Application.parent.Interfaces;
+using grad.Application.Users.Interfaces;
+using grad.Application.Common.DTOs;
+using grad.Domain.Model;
 using Grpc.Core;
 using Microsoft.IdentityModel.Tokens;
-using Grad_Structured.Application.parent.DTOs;
+using grad.Application.parent.DTOs;
 
-namespace Grad_Structured.Application.parent.Services
+namespace grad.Application.parent.Services
 {
 	public class ParentServices : IParentServices
 	{

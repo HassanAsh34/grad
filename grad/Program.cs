@@ -1,29 +1,29 @@
 using System.Security.Claims;
 using System.Text;
-using global::Grad_Structured.Infrastructure.Repository;
-using Grad_Structured.Application.admin.Interfaces;
-using Grad_Structured.Application.admin.Services;
-using Grad_Structured.Application.Auth.Interfaces;
-using Grad_Structured.Application.Auth.Services;
-using Grad_Structured.Application.Common.Interfaces;
-using Grad_Structured.Application.lesson.Interfaces;
-using Grad_Structured.Application.lesson.Services;
-using Grad_Structured.Application.parent.Interfaces;
-using Grad_Structured.Application.parent.Services;
-using Grad_Structured.Application.student.Interfaces;
-using Grad_Structured.Application.student.Services;
-using Grad_Structured.Application.subject.Interfaces;
-using Grad_Structured.Application.subject.Services;
-using Grad_Structured.Application.teacher.Interfaces;
-using Grad_Structured.Application.teacher.Services;
-using Grad_Structured.Application.Users.Interfaces;
-using Grad_Structured.Application.Users.Services;
-using Grad_Structured.Infrastructure.Cache;
-using Grad_Structured.Infrastructure.EmailServices;
-using Grad_Structured.Infrastructure.FilesServices;
-using Grad_Structured.Infrastructure.Persistence;
-using Grad_Structured.Infrastructure.Persistence.Configurations;
-using Grad_Structured.Infrastructure.UnitOfWork;
+using global::grad.Infrastructure.Repository;
+using grad.Application.admin.Interfaces;
+using grad.Application.admin.Services;
+using grad.Application.Auth.Interfaces;
+using grad.Application.Auth.Services;
+using grad.Application.Common.Interfaces;
+using grad.Application.lesson.Interfaces;
+using grad.Application.lesson.Services;
+using grad.Application.parent.Interfaces;
+using grad.Application.parent.Services;
+using grad.Application.student.Interfaces;
+using grad.Application.student.Services;
+using grad.Application.subject.Interfaces;
+using grad.Application.subject.Services;
+using grad.Application.teacher.Interfaces;
+using grad.Application.teacher.Services;
+using grad.Application.Users.Interfaces;
+using grad.Application.Users.Services;
+using grad.Infrastructure.Cache;
+using grad.Infrastructure.EmailServices;
+using grad.Infrastructure.FilesServices;
+using grad.Infrastructure.Persistence;
+using grad.Infrastructure.Persistence.Configurations;
+using grad.Infrastructure.UnitOfWork;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
@@ -36,7 +36,7 @@ using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Driver;
 using StackExchange.Redis;
 
-namespace Grad_Structured
+namespace grad
 {
 	public class Program
 	{

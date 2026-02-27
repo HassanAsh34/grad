@@ -1,9 +1,9 @@
 ﻿using Microsoft.Extensions.Options;
 using MongoDB.Driver;
-using Grad_Structured.Domain.Model;
-using Grad_Structured.Infrastructure.Persistence.Configurations;
+using grad.Domain.Model;
+using grad.Infrastructure.Persistence.Configurations;
 
-namespace Grad_Structured.Infrastructure.Persistence
+namespace grad.Infrastructure.Persistence
 {
 	public class MongoDBContext
 	{

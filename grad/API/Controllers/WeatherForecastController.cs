@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace Grad_Structured.API.Controllers
+namespace grad.API.Controllers
 {
     [ApiController]
     [Route("[controller]")]

@@ -1,9 +1,9 @@
 ﻿using System.Text.Json.Serialization;
-using Grad_Structured.Domain.Enums;
-using Grad_Structured.Domain.Model;
+using grad.Domain.Enums;
+using grad.Domain.Model;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
-namespace Grad_Structured.Application.Common.DTOs
+namespace grad.Application.Common.DTOs
 {
 	public class ProfileDTO
 	{

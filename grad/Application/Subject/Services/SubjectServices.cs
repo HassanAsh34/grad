@@ -1,15 +1,15 @@
-﻿using Grad_Structured.Application.Common.DTOs;
-using Grad_Structured.Application.Common.Interfaces;
-using Grad_Structured.Application.subject.DTOs;
-using Grad_Structured.Application.subject.Interfaces;
-using Grad_Structured.Application.lesson.Interfaces;
-using Grad_Structured.Infrastructure.Persistence;
-using Grad_Structured.Domain.Model;
+﻿using grad.Application.Common.DTOs;
+using grad.Application.Common.Interfaces;
+using grad.Application.subject.DTOs;
+using grad.Application.subject.Interfaces;
+using grad.Application.lesson.Interfaces;
+using grad.Infrastructure.Persistence;
+using grad.Domain.Model;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
 
-namespace Grad_Structured.Application.subject.Services
+namespace grad.Application.subject.Services
 {
 	public class SubjectServices : ISubjectServices
 	{
@@ -50,6 +50,7 @@ namespace Grad_Structured.Application.subject.Services
 					{
 						Id = sub.Id
 					};
+
 					try 
 					{
 						await _subjects.InsertOneAsync(subjectContent);

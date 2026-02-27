@@ -1,6 +1,6 @@
 ﻿//using Google.Cloud.Firestore;
 
-namespace Grad_Structured.Application.Auth.DTOs
+namespace grad.Application.Auth.DTOs
 {
 	public class AccessTokenDto
 	{

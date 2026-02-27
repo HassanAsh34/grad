@@ -1,7 +1,7 @@
-﻿using Grad_Structured.Application.Common.DTOs;
-using Grad_Structured.Application.subject.DTOs;
+﻿using grad.Application.Common.DTOs;
+using grad.Application.subject.DTOs;
 
-namespace Grad_Structured.Application.subject.Interfaces
+namespace grad.Application.subject.Interfaces
 {
 	public interface ISubjectServices
 	{

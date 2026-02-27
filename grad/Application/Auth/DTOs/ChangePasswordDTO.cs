@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
-namespace Grad_Structured.Application.Auth.DTOs
+namespace grad.Application.Auth.DTOs
 {
 	public class ChangePasswordDTO
 	{

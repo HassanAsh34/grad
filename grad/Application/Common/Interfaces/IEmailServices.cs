@@ -1,4 +1,4 @@
-﻿namespace Grad_Structured.Application.Common.Interfaces
+﻿namespace grad.Application.Common.Interfaces
 {
 	public interface IEmailServices
 	{

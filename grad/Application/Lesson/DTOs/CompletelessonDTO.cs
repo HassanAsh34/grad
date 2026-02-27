@@ -1,4 +1,4 @@
-﻿namespace Grad_Structured.Application.Lesson.DTOs
+﻿namespace grad.Application.Lesson.DTOs
 {
 	public class CompletelessonDTO
 	{

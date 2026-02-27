@@ -1,4 +1,4 @@
-﻿namespace Grad_Structured.Domain.Model
+﻿namespace grad.Domain.Model
 {
 	public class Teacher : User  //further improvements can be done like adding  resume, degrees, experience etc.
 	{

@@ -1,10 +1,10 @@
 ﻿using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
-using Grad_Structured.Infrastructure.Persistence.Configurations;
-using Grad_Structured.Application.Common.Interfaces;
+using grad.Infrastructure.Persistence.Configurations;
+using grad.Application.Common.Interfaces;
 using Microsoft.Extensions.Options;
 
-namespace Grad_Structured.Infrastructure.FilesServices
+namespace grad.Infrastructure.FilesServices
 {
 	public class CloudinaryServices : ICloudinaryServices
 	{
@@ -95,14 +95,28 @@ namespace Grad_Structured.Infrastructure.FilesServices
 			}
 		}
 
-		public async Task<bool> DeleteAsync(string directory, bool video = false)
+		public async Task<bool> DeleteAsync(string directory, bool video = false,bool folder = false)
 		{
-			var deletionParams = new DeletionParams(directory)
+			//DeletionResult res = null;
+			//DeletionResult res = null;
+			string res = string.Empty;
+			if(folder)
 			{
-				ResourceType = video ? ResourceType.Video : ResourceType.Image
-			};
-			var res = await  _cloudinary.DestroyAsync(deletionParams);
-			if (res.Result == "ok")
+				string folderPrefix = directory.EndsWith('/') ? directory : directory+"/";
+				await _cloudinary.DeleteResourcesAsync(new DelResParams
+				{
+					Prefix = folderPrefix,
+					ResourceType = video ? ResourceType.Video : ResourceType.Image
+				});
+				var folderResult = await _cloudinary.DeleteFolderAsync(directory);
+				res = "ok";
+			}
+			else
+			{
+				var deletionResult = await _cloudinary.DestroyAsync(new DeletionParams(directory) { ResourceType = video ? ResourceType.Video : ResourceType.Image });
+				res = deletionResult.Result;
+			}
+			if (res == "ok")
 				return true;
 			else
 				return false;

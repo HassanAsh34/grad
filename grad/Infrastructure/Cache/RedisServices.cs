@@ -1,13 +1,13 @@
 ﻿using System.Net;
 using BCrypt.Net;
-using Grad_Structured.Application.Common.Interfaces;
+using grad.Application.Common.Interfaces;
 using Microsoft.EntityFrameworkCore.Storage;
 using StackExchange.Redis;
 using StackExchange.Redis.Maintenance;
 using StackExchange.Redis.Profiling;
 using static System.Net.WebRequestMethods;
 
-namespace Grad_Structured.Infrastructure.Cache
+namespace grad.Infrastructure.Cache
 {
 	public class RedisServices : IRedisServices
 	{

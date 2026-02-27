@@ -1,8 +1,8 @@
-﻿using Grad_Structured.Application.Common.Interfaces;
-using Grad_Structured.Domain.Enums;
-using Grad_Structured.Domain.Model;
+﻿using grad.Application.Common.Interfaces;
+using grad.Domain.Enums;
+using grad.Domain.Model;
 
-namespace Grad_Structured.Infrastructure.Persistence
+namespace grad.Infrastructure.Persistence
 {
 	public static class DataSeeder
 	{

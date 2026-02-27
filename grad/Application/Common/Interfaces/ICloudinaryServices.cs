@@ -1,6 +1,6 @@
 ﻿using CloudinaryDotNet.Actions;
 
-namespace Grad_Structured.Application.Common.Interfaces
+namespace grad.Application.Common.Interfaces
 {
 	public interface ICloudinaryServices
 	{
@@ -10,6 +10,8 @@ namespace Grad_Structured.Application.Common.Interfaces
 
 		public Task<string> UploadVideoAsync(IFormFile file,string folder,string publicId, CancellationToken cancellationToken = default);
 
-		public Task<bool> DeleteAsync(string directory, bool video = false);
+		//public Task<bool> DeleteAsync(string directory, bool video = false);
+
+		public Task<bool> DeleteAsync(string directory, bool video = false, bool folder = false);
 	}
 }

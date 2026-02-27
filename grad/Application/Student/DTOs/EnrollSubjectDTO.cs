@@ -1,4 +1,4 @@
-﻿namespace Grad_Structured.Application.student.DTOs
+﻿namespace grad.Application.student.DTOs
 {
 	public class EnrollSubjectDTO
 	{

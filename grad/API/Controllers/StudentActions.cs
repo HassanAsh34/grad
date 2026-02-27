@@ -1,12 +1,12 @@
-﻿using Grad_Structured.Application.Common.Interfaces;
-using Grad_Structured.Application.Common.DTOs;
-using Grad_Structured.Application.student.DTOs;
-using Grad_Structured.Application.student.Interfaces;
-using Grad_Structured.Application.lesson.DTOs;
+﻿using grad.Application.Common.Interfaces;
+using grad.Application.Common.DTOs;
+using grad.Application.student.DTOs;
+using grad.Application.student.Interfaces;
+using grad.Application.lesson.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
-using Grad_Structured.Application.Lesson.DTOs;
+using grad.Application.Lesson.DTOs;
 
 
 namespace grad.Controllers

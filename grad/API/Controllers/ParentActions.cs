@@ -1,12 +1,12 @@
-﻿using Grad_Structured.Application.Common.DTOs;
-using Grad_Structured.Application.parent.DTOs;
-using Grad_Structured.Application.parent.Interfaces;
-using Grad_Structured.Application.Common.Interfaces;
+﻿using grad.Application.Common.DTOs;
+using grad.Application.parent.DTOs;
+using grad.Application.parent.Interfaces;
+using grad.Application.Common.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 
-namespace Grad_Structured.API.Controllers
+namespace grad.API.Controllers
 {
 	[ApiController]
 	[Route("/Parent")]

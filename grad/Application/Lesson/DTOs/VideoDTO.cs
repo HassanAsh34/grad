@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
-namespace Grad_Structured.Application.lesson.DTOs
+namespace grad.Application.lesson.DTOs
 { 
 	public class VideoDTO
 	{

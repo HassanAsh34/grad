@@ -1,4 +1,4 @@
-﻿namespace Grad_Structured.Infrastructure.Persistence.Configurations
+﻿namespace grad.Infrastructure.Persistence.Configurations
 {
 	public class MongoDBSettings
 	{

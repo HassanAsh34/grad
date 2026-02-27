@@ -1,11 +1,11 @@
 ﻿//v3
 using System.Linq.Expressions;
-using Grad_Structured.Infrastructure.Persistence;
-using Grad_Structured.Application.Common.Interfaces;
+using grad.Infrastructure.Persistence;
+using grad.Application.Common.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace Grad_Structured.Infrastructure.Repository
+namespace grad.Infrastructure.Repository
 {
 	public class Repository : IRepository
 	{
@@ -87,9 +87,14 @@ namespace Grad_Structured.Infrastructure.Repository
 			_context.Set<TEntity>().Update(entity);
 		}
 
-		public void DeleteEntityAsync<TEntity>(TEntity entity, CancellationToken cancellationToken = default) where TEntity : class
+		public async void DeleteEntityAsync<TEntity>(TEntity entity=null, CancellationToken cancellationToken = default) where TEntity : class
 		{
 			_context.Set<TEntity>().Remove(entity);
+		}
+		
+		public async Task<int> DleteEntitiesAsync<TEntity>(Expression<Func<TEntity, bool>>? filter, CancellationToken cancellationToken = default) where TEntity : class
+		{
+			return	await _context.Set<TEntity>().Where(filter).ExecuteDeleteAsync();	
 		}
 	}
 }

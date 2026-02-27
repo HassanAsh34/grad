@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using MongoDB.Driver;
 
-namespace Grad_Structured.Domain.Model
+namespace grad.Domain.Model
 {
 	public class Question
 	{

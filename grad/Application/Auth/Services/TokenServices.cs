@@ -1,14 +1,14 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
-using Grad_Structured.Application.Auth.DTOs;
-using Grad_Structured.Domain.Model;
-using Grad_Structured.Application.Common.Interfaces;
+using grad.Application.Auth.DTOs;
+using grad.Domain.Model;
+using grad.Application.Common.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
 
-namespace Grad_Structured.Application.Auth.Services
+namespace grad.Application.Auth.Services
 {
 	public class TokenServices : ITokenServices
 	{

@@ -1,6 +1,6 @@
-﻿using Grad_Structured.Domain.Enums;
+﻿using grad.Domain.Enums;
 
-namespace Grad_Structured.Domain.Model
+namespace grad.Domain.Model
 {
 	public class Exercise
 	{

@@ -1,16 +1,17 @@
-﻿using Grad_Structured.Application.Common.DTOs;
-using Grad_Structured.Application.lesson.DTOs;
-using Grad_Structured.Application.lesson.Interfaces;
-using Grad_Structured.Domain.Model;
-using Grad_Structured.Application.teacher.DTOs;
-using Grad_Structured.Application.teacher.Interfaces;
-using Grad_Structured.Application.Common.Interfaces;
-using Grad_Structured.Application.subject.Interfaces;
+﻿using grad.Application.Common.DTOs;
+using grad.Application.lesson.DTOs;
+using grad.Application.lesson.Interfaces;
+using grad.Domain.Model;
+using grad.Application.teacher.DTOs;
+using grad.Application.teacher.Interfaces;
+using grad.Application.Common.Interfaces;
+using grad.Application.subject.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using Grad_Structured.Application.Users.Interfaces;
-using Grad_Structured.Application.subject.DTOs;
+using grad.Application.Users.Interfaces;
+using grad.Application.subject.DTOs;
+using grad.Application.Lesson.DTOs;
 
-namespace Grad_Structured.Application.teacher.Services
+namespace grad.Application.teacher.Services
 {
 	public class TeacherServices : ITeacherServices
 	{
@@ -157,15 +158,37 @@ namespace Grad_Structured.Application.teacher.Services
 		}
 
 
-		//public async Task<ResultDTO> EditLesson(EditLessonDTO lesson, CancellationToken cancellationToken) 
-		//{
-		//	return await _lessonServices.editLesson(lesson, cancellationToken); 
-		//}
+		public async Task<ResultDTO> EditLesson(EditLessonDTO lesson, CancellationToken cancellationToken)
+		{
+			AssignedSubject assigned = await _repository.GetEntityAsync<AssignedSubject>(a => a.SubjectId == lesson.SubjectId && a.TeacherId == lesson.UId, cancellationToken: cancellationToken);
+			if (assigned != null)
+			{
+				lesson.SubjectId = assigned.SubjectId;
+				return await _lessonServices.editLesson(lesson, cancellationToken);
+			}
+			else
+				return new ResultDTO
+				{
+					Message = "Subject not found",
+					StatusCode = StatusCodes.Status400BadRequest
+				};
+		}
 
-		//public async Task<ResultDTO> DeleteLesson(Guid sid,Guid lid,CancellationToken cancellationToken)
-		//{
-		//	return await _lessonServices.DeleteLesson(sid, lid, cancellationToken);
-		//}
+		public async Task<ResultDTO> DeleteLesson(DeleteLessonDTO lesson, CancellationToken cancellationToken)
+		{
+			AssignedSubject assigned = await _repository.GetEntityAsync<AssignedSubject>(a => a.SubjectId == lesson.SubjectId && a.TeacherId == lesson.UId, cancellationToken: cancellationToken);
+			if (assigned != null)
+			{
+				lesson.SubjectId = assigned.SubjectId;
+				return await _lessonServices.DeleteLesson(lesson, cancellationToken);
+			}
+			else
+				return new ResultDTO
+				{
+					Message = "Subject not found",
+					StatusCode = StatusCodes.Status400BadRequest
+				};
+		}
 
 		public async Task<ResultDTO> addWords(AddVocabDTO vocabDTO, CancellationToken cancellationToken)
 		{

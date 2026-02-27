@@ -1,11 +1,11 @@
 ﻿using System.Net.Mail;
-using Grad_Structured.Application.Common.Interfaces;
-using Grad_Structured.Infrastructure.Persistence.Configurations;
+using grad.Application.Common.Interfaces;
+using grad.Infrastructure.Persistence.Configurations;
 using MailKit.Net.Smtp;
 using Microsoft.Extensions.Options;
 using MimeKit;
 
-namespace Grad_Structured.Infrastructure.EmailServices
+namespace grad.Infrastructure.EmailServices
 {
 	public class EmailService : IEmailServices
 	{

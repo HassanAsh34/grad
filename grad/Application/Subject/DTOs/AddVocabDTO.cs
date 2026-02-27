@@ -1,4 +1,4 @@
-﻿namespace Grad_Structured.Application.subject.DTOs
+﻿namespace grad.Application.subject.DTOs
 {	
 	public class AddVocabDTO
 	{

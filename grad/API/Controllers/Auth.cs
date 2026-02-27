@@ -1,12 +1,12 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using Grad_Structured.Application.Auth.DTOs;
-using Grad_Structured.Application.Auth.Interfaces;
-using Grad_Structured.Application.Common.DTOs;
-using Grad_Structured.Application.Common.Interfaces;
-using Grad_Structured.Domain.Model;
+using grad.Application.Auth.DTOs;
+using grad.Application.Auth.Interfaces;
+using grad.Application.Common.DTOs;
+using grad.Application.Common.Interfaces;
+using grad.Domain.Model;
 
-//using Grad_Structured.Application.Users.Interfaces;
+//using grad.Application.Users.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;

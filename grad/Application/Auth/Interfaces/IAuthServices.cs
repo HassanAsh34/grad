@@ -1,12 +1,11 @@
-﻿
-using Grad_Structured.Domain.Model;
-using Grad_Structured.Application.Auth.DTOs;
-using Grad_Structured.Application.Common.DTOs;
-using Grad_Structured.Application.parent.DTOs;
+﻿using grad.Domain.Model;
+using grad.Application.Auth.DTOs;
+using grad.Application.Common.DTOs;
+using grad.Application.parent.DTOs;
 
 
 
-namespace Grad_Structured.Application.Auth.Interfaces
+namespace grad.Application.Auth.Interfaces
 {
 	public interface IAuthServices
 	{

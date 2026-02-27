@@ -1,11 +1,11 @@
 ﻿using System.Text.Json.Serialization;
-using Grad_Structured.Domain.Model;
+using grad.Domain.Model;
 using MongoDB.Bson.Serialization.Attributes;
 using Newtonsoft.Json;
 
 using JsonIgnoreAttribute = System.Text.Json.Serialization.JsonIgnoreAttribute;
 
-namespace Grad_Structured.Application.lesson.DTOs
+namespace grad.Application.lesson.DTOs
 {
 	public class LessonContentDTO
 	{

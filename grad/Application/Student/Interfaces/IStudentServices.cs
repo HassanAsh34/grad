@@ -1,8 +1,8 @@
-﻿using Grad_Structured.Application.Common.DTOs;
-using Grad_Structured.Application.lesson.DTOs;
-using Grad_Structured.Application.Lesson.DTOs;
-using Grad_Structured.Application.student.DTOs;
-namespace Grad_Structured.Application.student.Interfaces
+﻿using grad.Application.Common.DTOs;
+using grad.Application.lesson.DTOs;
+using grad.Application.Lesson.DTOs;
+using grad.Application.student.DTOs;
+namespace grad.Application.student.Interfaces
 {
 	public interface IStudentServices
 	{

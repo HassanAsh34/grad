@@ -1,4 +1,4 @@
-﻿namespace Grad_Structured.Application.teacher.DTOs
+﻿namespace grad.Application.teacher.DTOs
 {
 	public class TeacherSubjectDTO
 	{

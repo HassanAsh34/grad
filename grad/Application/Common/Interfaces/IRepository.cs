@@ -2,7 +2,7 @@
 using System.Linq.Expressions;
 using System.Threading;
 
-namespace Grad_Structured.Application.Common.Interfaces
+namespace grad.Application.Common.Interfaces
 {
 	public interface IRepository
 	{
@@ -28,10 +28,17 @@ namespace Grad_Structured.Application.Common.Interfaces
 			CancellationToken cancellationToken = default
 		) where TEntity : class;
 
+		//public void DeleteEntityAsync<TEntity>(
+		//	TEntity entity,
+		//	CancellationToken cancellationToken = default
+		//) where TEntity : class;
 		public void DeleteEntityAsync<TEntity>(
-			TEntity entity,
-			CancellationToken cancellationToken = default
-		) where TEntity : class;
+			TEntity entity = null,
+			CancellationToken cancellationToken = default) where TEntity : class;
+
+		public Task<int> DleteEntitiesAsync<TEntity>(
+			Expression<Func<TEntity, bool>>? filter,
+			CancellationToken cancellationToken = default) where TEntity : class;
 	}
 }
 

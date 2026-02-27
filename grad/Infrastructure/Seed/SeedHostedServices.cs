@@ -1,5 +1,5 @@
-﻿using Grad_Structured.Application.Common.Interfaces;
-using Grad_Structured.Infrastructure.Persistence;
+﻿using grad.Application.Common.Interfaces;
+using grad.Infrastructure.Persistence;
 using Microsoft.Extensions.Hosting;
 
 public class SeedHostedService : IHostedService

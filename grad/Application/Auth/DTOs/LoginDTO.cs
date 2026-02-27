@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 using Newtonsoft.Json.Serialization;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
-namespace Grad_Structured.Application.Auth.DTOs
+namespace grad.Application.Auth.DTOs
 {
 	public class LoginDTO
 	{

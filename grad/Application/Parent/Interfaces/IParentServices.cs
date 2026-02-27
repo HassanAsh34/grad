@@ -1,7 +1,7 @@
-﻿using Grad_Structured.Application.Common.DTOs;
-using Grad_Structured.Application.parent.DTOs;
+﻿using grad.Application.Common.DTOs;
+using grad.Application.parent.DTOs;
 
-namespace Grad_Structured.Application.parent.Interfaces
+namespace grad.Application.parent.Interfaces
 {
 	public interface IParentServices
 	{

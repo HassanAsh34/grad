@@ -1,4 +1,4 @@
-namespace Grad_Structured
+namespace grad
 {
     public class WeatherForecast
     {

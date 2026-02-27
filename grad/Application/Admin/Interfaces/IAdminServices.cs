@@ -1,8 +1,8 @@
-﻿using Grad_Structured.Application.Common.DTOs;
-using Grad_Structured.Application.subject.DTOs;
-using Grad_Structured.Application.teacher.DTOs;
+﻿using grad.Application.Common.DTOs;
+using grad.Application.subject.DTOs;
+using grad.Application.teacher.DTOs;
 
-namespace Grad_Structured.Application.admin.Interfaces
+namespace grad.Application.admin.Interfaces
 {
 	public interface IAdminServices
 	{

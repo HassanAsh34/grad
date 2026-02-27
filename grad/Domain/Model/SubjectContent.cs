@@ -1,6 +1,6 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
-namespace Grad_Structured.Domain.Model
+namespace grad.Domain.Model
 {
 	public class SubjectContent
 	{

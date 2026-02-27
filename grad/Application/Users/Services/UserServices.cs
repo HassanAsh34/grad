@@ -1,14 +1,14 @@
 ﻿//using grad.Repositories;
-using Grad_Structured.Application.Users.DTOs;
-using Grad_Structured.Application.Users.Interfaces;
-using Grad_Structured.Domain.Model;
-using Grad_Structured.Application.Common.DTOs;
-using Grad_Structured.Domain.Enums;
+using grad.Application.Users.DTOs;
+using grad.Application.Users.Interfaces;
+using grad.Domain.Model;
+using grad.Application.Common.DTOs;
+using grad.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
-using Grad_Structured.Application.Common.Interfaces;
+using grad.Application.Common.Interfaces;
 //remove comment from email sending parts after testing
 
-namespace Grad_Structured.Application.Users.Services
+namespace grad.Application.Users.Services
 {
 	public class UserServices : IUserServices
 	{

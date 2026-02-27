@@ -1,8 +1,8 @@
-﻿using Grad_Structured.Application.Common.DTOs;
-using Grad_Structured.Application.lesson.DTOs;
-using Grad_Structured.Application.Lesson.DTOs;
+﻿using grad.Application.Common.DTOs;
+using grad.Application.lesson.DTOs;
+using grad.Application.Lesson.DTOs;
 
-namespace Grad_Structured.Application.lesson.Interfaces
+namespace grad.Application.lesson.Interfaces
 {
 	public interface ILessonServices
 	{
@@ -24,9 +24,11 @@ namespace Grad_Structured.Application.lesson.Interfaces
 
 		public Task<ResultDTO> completeLesson(CompletelessonDTO Completelesson, CancellationToken cancellationToken);
 
+		public Task<ResultDTO> DeleteLesson(DeleteLessonDTO deleteLesson, CancellationToken cancellationToken);
+
 		//public Task<ResultDTO> viewLesson(VideoDTO lessonDTO, CancellationToken cancellationToken);
 
-		//public Task<ResultDTO> editLesson(EditLessonDTO lessonDTO, CancellationToken cancellationToken);
+		public Task<ResultDTO> editLesson(EditLessonDTO lessonDTO, CancellationToken cancellationToken);
 		//public Task<ResultDTO> DeleteLesson(Guid sid, Guid lid, CancellationToken cancellationToken);
 	}
 }

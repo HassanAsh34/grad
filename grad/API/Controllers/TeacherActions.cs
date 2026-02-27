@@ -1,12 +1,13 @@
-﻿using Grad_Structured.Application.Common.DTOs;
+﻿using grad.Application.Common.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Grad_Structured.Application.teacher.Interfaces;
-using Grad_Structured.Application.teacher.DTOs;
-using Grad_Structured.Application.Common.Interfaces;
-using Grad_Structured.Application.subject.Interfaces;
-using Grad_Structured.Application.lesson.DTOs;
-using Grad_Structured.Application.subject.DTOs;
+using grad.Application.teacher.Interfaces;
+using grad.Application.teacher.DTOs;
+using grad.Application.Common.Interfaces;
+using grad.Application.subject.Interfaces;
+using grad.Application.lesson.DTOs;
+using grad.Application.subject.DTOs;
+using grad.Application.Lesson.DTOs;
 
 namespace grad.Controllers
 {
@@ -234,34 +235,43 @@ namespace grad.Controllers
 				return Unauthorized();
 		}
 
-		//[HttpPatch("Edit-Lesson/{lid}")]
-		//public async Task<IActionResult> editLisson(string lid,[FromBody] EditLessonDTO lessonDTO,CancellationToken cancellationToken)
-		//{
-		//	string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
-		//	if (!await _tokenServices.IsTokenBlacklisted(accessToken))
-		//	{
-		//		return Unauthorized();
-		//	}
-		//	string sid = User.FindFirst("SubjectID")?.Value;
-		//	if (Guid.TryParse(sid, out Guid Id))
-		//	{
-		//		lessonDTO.subjectID = Id;
-		//		if (Guid.TryParse(lid, out Guid lguid))
-		//		{
-		//			lessonDTO.Id = lguid;
-		//		}
-		//		else
-		//			return BadRequest(new { message = "invalid lesson id" });
-		//		//if(ModelState.IsValid == false)
-		//		//{
-		//		//	return BadRequest(new {ModelState});
-		//		//}
-		//		ResultDTO res = await _teacherServices.EditLesson(lessonDTO, cancellationToken);
-		//		return StatusCode(res.StatusCode, new { res.Message, res.result });
-		//	}
-		//	else
-		//		return StatusCode(StatusCodes.Status400BadRequest, new { message = "You still have not been verified yet" });
-		//}
+		[HttpPatch("Edit-Lesson")]
+		public async Task<IActionResult> editLisson([FromBody] EditLessonDTO lessonDTO, CancellationToken cancellationToken)
+		{
+			string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
+			string uid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
+			{
+				return Unauthorized();
+			}
+			if (Guid.TryParse(uid, out Guid Id))
+			{
+				lessonDTO.UId = Id;
+				ResultDTO res = await _teacherServices.EditLesson(lessonDTO, cancellationToken);
+				return StatusCode(res.StatusCode, new { res.Message, res.result });
+			}
+			else
+				return Unauthorized();
+		}
+
+		[HttpDelete("Remove-Lesson")]
+		public async Task<IActionResult> removeLesson([FromBody] DeleteLessonDTO lessonDTO, CancellationToken cancellationToken)
+		{
+			string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
+			string uid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
+			{
+				return Unauthorized();
+			}
+			if (Guid.TryParse(uid, out Guid Id))
+			{
+				lessonDTO.UId = Id;
+				ResultDTO res = await _teacherServices.DeleteLesson(lessonDTO, cancellationToken);
+				return StatusCode(res.StatusCode, new { res.Message, res.result });
+			}
+			else
+				return Unauthorized();
+		}
 
 		//[HttpDelete("Remove-Lesson/{lid}")]
 		//public async Task<IActionResult> removeLesson(string lid, CancellationToken cancellationToken)

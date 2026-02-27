@@ -1,4 +1,4 @@
-﻿namespace Grad_Structured.Application.Common.DTOs
+﻿namespace grad.Application.Common.DTOs
 {
 	public class ResultDTO
 	{

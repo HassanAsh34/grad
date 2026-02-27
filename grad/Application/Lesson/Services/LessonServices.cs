@@ -1,17 +1,18 @@
-﻿using Grad_Structured.Application.Common.DTOs;
-using Grad_Structured.Application.Common.Interfaces;
-using Grad_Structured.Application.lesson.DTOs;
-using Grad_Structured.Application.lesson.Interfaces;
-using Grad_Structured.Application.Lesson.DTOs;
-using Grad_Structured.Application.subject.Interfaces;
-using Grad_Structured.Domain.Model;
-using Grad_Structured.Infrastructure.Persistence;
-using Grad_Structured.Infrastructure.Repository;
+﻿using grad.Application.Lesson.DTOs;
+using grad.Application.Common.DTOs;
+using grad.Application.Common.Interfaces;
+using grad.Application.lesson.DTOs;
+using grad.Application.lesson.Interfaces;
+using grad.Application.Lesson.DTOs;
+using grad.Application.subject.Interfaces;
+using grad.Domain.Model;
+using grad.Infrastructure.Persistence;
+using grad.Infrastructure.Repository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
 
-namespace Grad_Structured.Application.lesson.Services
+namespace grad.Application.lesson.Services
 {
 	public class LessonServices : ILessonServices
 	{
@@ -514,72 +515,82 @@ namespace Grad_Structured.Application.lesson.Services
 			}
 		}
 
-		//public async Task<ResultDTO> editLesson(EditLessonDTO lessonDTO, CancellationToken cancellationToken)
-		//{
-		//	var filter = Builders<SubjectContent>.Filter.And(Builders<SubjectContent>.Filter.Eq(s => s.Id, lessonDTO.subjectID), Builders<SubjectContent>.Filter.ElemMatch(s => s.Lessons, l => l.Id == lessonDTO.Id));
-		//	SubjectContent subjectContent = await _subjects.Find(filter).FirstOrDefaultAsync();
-		//	var updates  = new List<UpdateDefinition<SubjectContent>>();
-		//	if (!lessonDTO.Description.IsNullOrEmpty())
-		//		updates.Add(
-		//			Builders<SubjectContent>.Update.Set("Lessons.$.Description", lessonDTO.Description)
-		//		);
-		//	if (!lessonDTO.Title.IsNullOrEmpty())
-		//		updates.Add(
-		//			Builders<SubjectContent>.Update.Set("Lessons.$.Title", lessonDTO.Title)
-		//		);
-		//	if (!updates.Any())
-		//		return new ResultDTO
-		//		{
-		//			Message = "Nothing to update",
-		//			StatusCode = StatusCodes.Status400BadRequest
-		//		};
-		//	var update = Builders<SubjectContent>.Update.Combine(updates);
+		public async Task<ResultDTO> editLesson(EditLessonDTO lessonDTO, CancellationToken cancellationToken)
+		{
+			var filter = Builders<SubjectContent>.Filter.And(Builders<SubjectContent>.Filter.Eq(s => s.Id, lessonDTO.SubjectId), Builders<SubjectContent>.Filter.ElemMatch(s => s.Lessons, l => l.Id == lessonDTO.Lid));
+			SubjectContent subjectContent = await _subjects.Find(filter).FirstOrDefaultAsync();
+			var updates = new List<UpdateDefinition<SubjectContent>>();
+			if (!lessonDTO.Title.IsNullOrEmpty())
+				updates.Add(
+					Builders<SubjectContent>.Update.Set("Lessons.$.Title", lessonDTO.Title)
+				);
+			if (!updates.Any())
+				return new ResultDTO
+				{
+					Message = "Nothing to update",
+					StatusCode = StatusCodes.Status400BadRequest
+				};
+			var update = Builders<SubjectContent>.Update.Combine(updates);
 
-		//	var result = await _subjects.UpdateOneAsync(
-		//		filter,
-		//		update,
-		//		cancellationToken: cancellationToken
-		//	);
+			var result = await _subjects.UpdateOneAsync(
+				filter,
+				update,
+				cancellationToken: cancellationToken
+			);
 
-		//	if (result.MatchedCount == 0)
-		//	{
-		//		return new ResultDTO
-		//		{
-		//			Message = "Lesson not found",
-		//			StatusCode = StatusCodes.Status404NotFound
-		//		};
-		//	}
+			if (result.MatchedCount == 0)
+			{
+				return new ResultDTO
+				{
+					Message = "Lesson not found",
+					StatusCode = StatusCodes.Status404NotFound
+				};
+			}
 
-		//	return new ResultDTO
-		//	{
-		//		Message = "Lesson updated successfully",
-		//		StatusCode = StatusCodes.Status200OK
-		//	};
-		//}
+			return new ResultDTO
+			{
+				Message = "Lesson updated successfully",
+				StatusCode = StatusCodes.Status200OK
+			};
+		}
 
-		//public async Task<ResultDTO> DeleteLesson(Guid sid, Guid lid, CancellationToken cancellationToken)
-		//{
-		//	var filter = Builders<SubjectContent>.Filter.And(Builders<SubjectContent>.Filter.Eq(s => s.Id, sid), Builders<SubjectContent>.Filter.ElemMatch(s => s.Lessons, l => l.Id == lid));
-		//	var lesson = await _subjects.Find(filter).FirstOrDefaultAsync();
-		//	if (lesson == null)
-		//	{ 
-		//		return new ResultDTO { Message = "Lesson not found", StatusCode = StatusCodes.Status404NotFound };
-		//	}
-		//	else
-		//	{
-		//		string directory = $"uploads/subjects/{sid}/lessons/{lesson.Lessons.FirstOrDefault(l => l.Id == lid).Id}";
-		//		bool videoDeleted = await _cloudinaryServices.DeleteAsync(directory,true);
-		//		if (!videoDeleted) 
-		//		{ 
-		//			return new ResultDTO { Message = "Failed to delete video from cloud storage", StatusCode = StatusCodes.Status500InternalServerError }; 
-		//		}
-		//		var update = Builders<SubjectContent>.Update.PullFilter(s => s.Lessons, l => l.Id == lid);
-		//		var result = await _subjects.UpdateOneAsync(filter, update, cancellationToken: cancellationToken); if (result.ModifiedCount == 0) { return new ResultDTO { Message = "Something went wrong", StatusCode = StatusCodes.Status500InternalServerError }; }
-		//		else
-		//		{
-		//			return new ResultDTO { Message = "Lesson deleted successfully", StatusCode = StatusCodes.Status200OK };
-		//		}
-		//	}
-		//}
+		public async Task<ResultDTO> DeleteLesson(DeleteLessonDTO deleteLesson, CancellationToken cancellationToken)
+		{
+			var filter = Builders<SubjectContent>.Filter.And(Builders<SubjectContent>.Filter.Eq(s => s.Id, deleteLesson.SubjectId), Builders<SubjectContent>.Filter.ElemMatch(s => s.Lessons, l => l.Id == deleteLesson.Lid));
+			var lesson = await _subjects.Find(filter).FirstOrDefaultAsync();
+			if (lesson == null)
+			{
+				return new ResultDTO { Message = "Lesson not found", StatusCode = StatusCodes.Status404NotFound };
+			}
+			else
+			{
+				string directory = $"uploads/subjects/{deleteLesson.SubjectId}/lessonContent/{lesson.Lessons.FirstOrDefault(l => l.Id == deleteLesson.Lid).Id}";
+				bool videoDeleted = await _cloudinaryServices.DeleteAsync(directory, true,true);
+				if (!videoDeleted)
+				{
+					return new ResultDTO { Message = "Failed to delete video from cloud storage", StatusCode = StatusCodes.Status500InternalServerError };
+				}
+				var update = Builders<SubjectContent>.Update.PullFilter(s => s.Lessons, l => l.Id == deleteLesson.Lid);
+				var result = await _subjects.UpdateOneAsync(filter, update, cancellationToken: cancellationToken); 
+				if (result.ModifiedCount == 0) 
+				{ 
+					return new ResultDTO { Message = "Something went wrong", StatusCode = StatusCodes.Status500InternalServerError }; 
+				}
+				else
+				{
+					//IEnumerable<StudentProgress> studentProgresses = await _repository.GetEntitiesAsync<StudentProgress>(s => s.lid == deleteLesson.Lid, cancellationToken: cancellationToken);
+					//if (studentProgresses.Count() > 0)
+					//{
+					//	foreach (StudentProgress progress in studentProgresses)
+					//	{
+					//		_repository.DeleteEntityAsync(progress);
+					//	}
+					//	await _Uow.SaveChangesAsync();
+					//}
+					await _repository.DleteEntitiesAsync<StudentProgress>(filter: l=>l.Id == deleteLesson.Lid,cancellationToken: cancellationToken);
+					return new ResultDTO { Message = "Lesson deleted successfully", StatusCode = StatusCodes.Status200OK };
+				}
+			}
+		}
 	}
 }	

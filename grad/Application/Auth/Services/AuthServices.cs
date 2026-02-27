@@ -1,15 +1,15 @@
 ﻿using System.Security.Cryptography;
-using Grad_Structured.Application.Auth.DTOs;
-using Grad_Structured.Application.Auth.Interfaces;
-using Grad_Structured.Application.Common.DTOs;
-using Grad_Structured.Application.Common.Interfaces;
-using Grad_Structured.Application.parent.DTOs;
-using Grad_Structured.Domain.Enums;
-using Grad_Structured.Domain.Model;
+using grad.Application.Auth.DTOs;
+using grad.Application.Auth.Interfaces;
+using grad.Application.Common.DTOs;
+using grad.Application.Common.Interfaces;
+using grad.Application.parent.DTOs;
+using grad.Domain.Enums;
+using grad.Domain.Model;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
-namespace Grad_Structured.Application.Auth.Services
+namespace grad.Application.Auth.Services
 {
 	public class AuthServices : IAuthServices
 	{

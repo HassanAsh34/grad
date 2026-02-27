@@ -1,10 +1,11 @@
-﻿using Grad_Structured.Application.Common.DTOs;
-using Grad_Structured.Application.lesson.DTOs;
-using Grad_Structured.Application.teacher.DTOs;
-using Grad_Structured.Application.subject.DTOs;
+﻿using grad.Application.Common.DTOs;
+using grad.Application.lesson.DTOs;
+using grad.Application.teacher.DTOs;
+using grad.Application.subject.DTOs;
+using grad.Application.Lesson.DTOs;
 
 
-namespace Grad_Structured.Application.teacher.Interfaces
+namespace grad.Application.teacher.Interfaces
 {
 	public interface ITeacherServices
 	{
@@ -26,9 +27,9 @@ namespace Grad_Structured.Application.teacher.Interfaces
 
 		public Task<ResultDTO> ViewStudent(ProfileDTO profile, CancellationToken cancellationToken = default);
 
-		//public Task<ResultDTO> EditLesson(EditLessonDTO lesson, CancellationToken cancellationToken = default);
+		public Task<ResultDTO> EditLesson(EditLessonDTO lesson, CancellationToken cancellationToken = default);
 
-		//public Task<ResultDTO> DeleteLesson(Guid sid, Guid lid, CancellationToken cancellationToken = default);
+		public Task<ResultDTO> DeleteLesson(DeleteLessonDTO lessonDTO, CancellationToken cancellationToken = default);
 
 		//public Task<ResultDTO> addWords(TeacherSubjectDTO teacherSubject, AddVocabDTO vocabDTO, CancellationToken cancellationToken = default);
 

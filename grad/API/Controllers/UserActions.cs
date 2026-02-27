@@ -1,11 +1,11 @@
 ﻿using System.Security.Claims;
-using Grad_Structured.Application.Users.DTOs;
-using Grad_Structured.Application.Users.Interfaces;
+using grad.Application.Users.DTOs;
+using grad.Application.Users.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
-using Grad_Structured.Application.Common.DTOs;
-using Grad_Structured.Application.Common.Interfaces;
+using grad.Application.Common.DTOs;
+using grad.Application.Common.Interfaces;
 
 
 namespace grad.Controllers

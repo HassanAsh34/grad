@@ -1,19 +1,19 @@
-﻿using Grad_Structured.Application.Common.Interfaces;
-using Grad_Structured.Application.lesson.DTOs;
-using Grad_Structured.Application.lesson.Interfaces;
-using Grad_Structured.Application.subject.Interfaces;
-using Grad_Structured.Application.student.DTOs;
-using Grad_Structured.Application.student.Interfaces;
-using Grad_Structured.Domain.Enums;
-using Grad_Structured.Application.Common.DTOs;
+﻿using grad.Application.Common.Interfaces;
+using grad.Application.lesson.DTOs;
+using grad.Application.lesson.Interfaces;
+using grad.Application.subject.Interfaces;
+using grad.Application.student.DTOs;
+using grad.Application.student.Interfaces;
+using grad.Domain.Enums;
+using grad.Application.Common.DTOs;
 using Microsoft.EntityFrameworkCore;
 using MongoDB.Driver;
-using Grad_Structured.Domain.Model;
-using Grad_Structured.Infrastructure.Persistence;
-using Grad_Structured.Application.subject.DTOs;
-using Grad_Structured.Application.Lesson.DTOs;
+using grad.Domain.Model;
+using grad.Infrastructure.Persistence;
+using grad.Application.subject.DTOs;
+using grad.Application.Lesson.DTOs;
 
-namespace Grad_Structured.Application.student.Services
+namespace grad.Application.student.Services
 {
 	public class StudentServices : IStudentServices
 	{

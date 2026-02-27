@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
-namespace Grad_Structured.Application.parent.DTOs
+namespace grad.Application.parent.DTOs
 {
 	public class RegisterStudentDTO
 	{

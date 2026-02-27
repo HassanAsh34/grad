@@ -1,4 +1,4 @@
-﻿namespace Grad_Structured.Domain.Enums
+﻿namespace grad.Domain.Enums
 {
 	public enum Difficulty
 	{

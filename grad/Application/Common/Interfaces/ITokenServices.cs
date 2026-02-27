@@ -1,7 +1,7 @@
-﻿using Grad_Structured.Application.Auth.DTOs;
-using Grad_Structured.Domain.Model;
+﻿using grad.Application.Auth.DTOs;
+using grad.Domain.Model;
 
-namespace Grad_Structured.Application.Common.Interfaces
+namespace grad.Application.Common.Interfaces
 {
 	public interface ITokenServices
 	{
