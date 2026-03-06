@@ -1,8 +1,9 @@
 ﻿using grad.Application.Common.DTOs;
+using grad.Application.exercise.DTOs;
 using grad.Application.lesson.DTOs;
-using grad.Application.teacher.DTOs;
-using grad.Application.subject.DTOs;
 using grad.Application.Lesson.DTOs;
+using grad.Application.subject.DTOs;
+using grad.Application.teacher.DTOs;
 
 
 namespace grad.Application.teacher.Interfaces
@@ -33,6 +34,7 @@ namespace grad.Application.teacher.Interfaces
 
 		//public Task<ResultDTO> addWords(TeacherSubjectDTO teacherSubject, AddVocabDTO vocabDTO, CancellationToken cancellationToken = default);
 
+		public Task<ResultDTO> CreateExercise(CreateExerciseDTO createExerciseDTO, CancellationToken cancellationToken = default);
 
 		public Task<ResultDTO> addWords(AddVocabDTO vocabDTO, CancellationToken cancellationToken = default);
 	}

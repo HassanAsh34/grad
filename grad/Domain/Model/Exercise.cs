@@ -14,7 +14,7 @@ namespace grad.Domain.Model
 
 		public List<Question> questions { get; set; } = new List<Question>();
 
-		public int total_score => questions.Sum(q=>q.score);
+		public int total_score => questions?.Sum(q => q.score) ?? 0;
 
 		public int PassingGrade { get; set; }
 

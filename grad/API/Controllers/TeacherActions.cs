@@ -8,6 +8,8 @@ using grad.Application.subject.Interfaces;
 using grad.Application.lesson.DTOs;
 using grad.Application.subject.DTOs;
 using grad.Application.Lesson.DTOs;
+using grad.Application.exercise.DTOs;
+using Microsoft.IdentityModel.Tokens;
 
 namespace grad.Controllers
 {
@@ -334,6 +336,27 @@ namespace grad.Controllers
 			}
 			else
 				return Unauthorized();
+		}
+
+		[HttpPost("Create-Exercise")]
+		[Consumes("multipart/form-data")]
+		public async Task<IActionResult> CreateExercise([FromForm] CreateExerciseDTO createExercise ,CancellationToken cancellationToken)
+		{
+			string accessToken = User.FindFirst("accessToken")?.Value;
+			string Tid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+			if (Tid.IsNullOrEmpty())
+				return Unauthorized();
+			if (await _tokenServices.IsTokenBlacklisted(accessToken))
+				return Unauthorized();
+			if (Guid.TryParse(Tid, out Guid GTid))
+			{
+				createExercise.Tid = GTid;
+				ResultDTO res = await _teacherServices.CreateExercise(createExercise, cancellationToken);
+				return StatusCode(res.StatusCode, res.Message);
+			}
+			else
+				return Unauthorized();
+
 		}
 
 		//implement add exercises

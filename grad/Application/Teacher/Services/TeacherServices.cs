@@ -10,6 +10,9 @@ using Microsoft.EntityFrameworkCore;
 using grad.Application.Users.Interfaces;
 using grad.Application.subject.DTOs;
 using grad.Application.Lesson.DTOs;
+using grad.Application.exercise.DTOs;
+using Microsoft.Identity.Client;
+using grad.Application.exercise.Interfaces;
 
 namespace grad.Application.teacher.Services
 {
@@ -23,12 +26,15 @@ namespace grad.Application.teacher.Services
 
 		private readonly IUserServices _userServices;
 
-		public TeacherServices(ISubjectServices subjectServices,IRepository repository,ILessonServices lessonServices,IUserServices userServices)
+		private readonly IExerciseServices _exerciseServices;
+
+		public TeacherServices(ISubjectServices subjectServices,IRepository repository,ILessonServices lessonServices,IUserServices userServices,IExerciseServices exerciseServices)
 		{
 			_subjectServices = subjectServices ?? throw new ArgumentNullException(nameof(subjectServices));
 			_repository = repository ?? throw new ArgumentNullException(nameof(repository));
 			_lessonServices = lessonServices ?? throw new ArgumentNullException(nameof(lessonServices));
 			_userServices = userServices ?? throw new ArgumentNullException(nameof(userServices));
+			_exerciseServices = exerciseServices ?? throw new ArgumentNullException(nameof(exerciseServices));
 		}
 
 		public async Task<ResultDTO> ShowStudents(TeacherSubjectDTO teacherSubject, CancellationToken cancellationToken)
@@ -203,6 +209,22 @@ namespace grad.Application.teacher.Services
 			{
 				vocabDTO.sid = assignedSubject.SubjectId;
 				return await _subjectServices.addwords(vocabDTO, cancellationToken);
+			}
+		}
+
+		public async Task<ResultDTO> CreateExercise(CreateExerciseDTO createExerciseDTO, CancellationToken cancellationToken)
+		{
+			AssignedSubject assignedSubject = await _repository.GetEntityAsync<AssignedSubject>(a => a.SubjectId == createExerciseDTO.Sid && a.TeacherId == createExerciseDTO.Tid, cancellationToken: cancellationToken);
+			if (assignedSubject == null)
+				return new ResultDTO
+				{
+					StatusCode = StatusCodes.Status404NotFound,
+					Message = "Subject wasnt found"
+				};
+			else
+			{
+				createExerciseDTO.Sid = assignedSubject.SubjectId;
+				return await _exerciseServices.CreateExercise(createExerciseDTO, cancellationToken);
 			}
 		}
 

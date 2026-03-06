@@ -7,6 +7,8 @@ namespace grad.Application.exercise.DTOs
 	{
 		public Guid ?Lid { get; set; }
 
+		public Guid ?Tid { get; set; }
+
 		public Guid Sid { get; set; }
 
 
@@ -16,7 +18,7 @@ namespace grad.Application.exercise.DTOs
 
 		public List<QuestionDTO> questions { get; set; } 
 
-		public int total_score => questions.Sum(q=>q.score);
+		public int total_score => questions?.Sum(q => q.score) ?? 0;
 
 		public int PassingGradePercentage { get; set; }
 

@@ -6,6 +6,8 @@ using grad.Application.admin.Services;
 using grad.Application.Auth.Interfaces;
 using grad.Application.Auth.Services;
 using grad.Application.Common.Interfaces;
+using grad.Application.exercise.Interfaces;
+using grad.Application.exercise.Services;
 using grad.Application.lesson.Interfaces;
 using grad.Application.lesson.Services;
 using grad.Application.parent.Interfaces;
@@ -112,6 +114,7 @@ namespace grad
 			builder.Services.AddScoped<IStudentServices, StudentServices>();
 			builder.Services.AddScoped<ILessonServices, LessonServices>();
 			builder.Services.AddScoped<ICloudinaryServices, CloudinaryServices>();
+			builder.Services.AddScoped<IExerciseServices,ExerciseServices>();
 			builder.Services.AddHostedService<SeedHostedService>();
 
 			// ================= MongoDB =================
