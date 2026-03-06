@@ -14,7 +14,6 @@
   <ItemGroup>
     <Folder Include="Application\Admin\DTOs\" />
     <Folder Include="Application\Common\Services\" />
-    <Folder Include="Application\Exercise\" />
 	  <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
 	  <PackageReference Include="CloudinaryDotNet" Version="1.28.0" />
 	  <PackageReference Include="Google.Cloud.Firestore" Version="3.13.0" />

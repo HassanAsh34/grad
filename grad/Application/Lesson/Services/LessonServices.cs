@@ -427,11 +427,12 @@ namespace grad.Application.lesson.Services
 				LessonContent lesson = subjectContent.Lessons.FirstOrDefault(l => l.Id == lessonContentDTO.Id);
 				lessonContentDTO.Title = lesson.Title;
 				lessonContentDTO.VideosCount = lesson.Videos.Count;
-				if(lesson.Exercises != null)
-					lessonContentDTO.Exercises = lesson.Exercises;
+				if(lesson.Exercise != null)
+					lessonContentDTO.Exercises = lesson.Exercise;
+				List<VideoDTO> videoDTOs = new List<VideoDTO>();
 				foreach (Video l in lesson.Videos)
 				{
-					lessonContentDTO.Videos.Add(new VideoDTO
+					videoDTOs.Add(new VideoDTO
 					{
 						VId = l.Id,
 						LId = lesson.Id,
@@ -442,6 +443,7 @@ namespace grad.Application.lesson.Services
 						videoUrl = l.VideoPath
 					});
 				}
+				lessonContentDTO.Videos = videoDTOs;
 				return new ResultDTO
 				{
 					Message = "Lesson found",

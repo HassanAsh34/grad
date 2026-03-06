@@ -1,0 +1,41 @@
+@startuml
+' Grad project architecture PlantUML
+' Layers: API -> Application -> Domain + Infrastructure
+
+package "API (grad/API)" {
+  [Controllers\nAdminActions, Auth, ParentActions, StudentActions, TeacherActions, UserActions, WeatherForecastController]
+}
+package "Application (grad/Application)" {
+  [Services\nAuthServices, TeacherServices, StudentServices, SubjectServices, LessonServices, ParentServices, AdminServices, UserServices]
+  [DTOs \n(Various DTO classes)]
+  [Interfaces\n(IAuthServices, ITeacherServices, IStudentServices, ISubjectServices, ILessonServices, IUserServices, IAdminServices, IParentServices, IUowServices, IRepository)]
+}
+package "Domain (grad/Domain)" {
+  [Entities / Models\nUser, Teacher, Student, Parent, Admin, Subject, Lesson, Video, Vocabulary, RefreshToken, ...]
+  [Enums\nUserRole, Gender, Disability, Difficulty, Status]
+}
+package "Infrastructure (grad/Infrastructure)" {
+  [Repositories\nRepository.cs]
+  [UnitOfWork\nUowServices.cs]
+  [Persistence\nMongoDBContext.cs, DbContext.cs, Migrations]
+  [External Services\nEmailServices, CloudinaryServices, RedisServices, FilesServices]
+}
+
+' Dependencies
+[Controllers] --> [Services]
+[Services] --> [Interfaces]
+[Services] --> [Entities / Models]
+[Repositories] ..|> [Interfaces]
+[Repositories] --> [Persistence]
+[UnitOfWork] --> [Repositories]
+[External Services] --> [Persistence]
+[External Services] ..> [Services] : used by
+
+' Optional notes
+note bottom
+  - Layered (Clean/Onion) architecture
+  - Domain is independent; Application orchestrates use cases; Infrastructure implements
+    interfaces for persistence and external integrations; API holds controllers.
+end note
+
+@enduml

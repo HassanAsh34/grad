@@ -1,16 +1,18 @@
 ﻿using grad.Domain.Enums;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace grad.Domain.Model
 {
 	public class Exercise
 	{
-		public Guid Id { get; private set; } = Guid.NewGuid();
+		[BsonId]
+		public Guid Id { get; set; } = Guid.NewGuid();
 
 		public string Name { get; set; }
 
 		public int total_questions { get; set; } = 0;
 
-		public List<Question> questions { get; set; } 
+		public List<Question> questions { get; set; } = new List<Question>();
 
 		public int total_score => questions.Sum(q=>q.score);
 

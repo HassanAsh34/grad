@@ -11,7 +11,7 @@ namespace grad.Domain.Model
 
 		public List<Video> Videos { get; set; } = new();
 
-		public Exercise ?Exercises { get; set; } 
+		public Exercise? Exercise { get; set; }
 
 	}
 }

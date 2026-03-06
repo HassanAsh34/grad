@@ -288,6 +288,7 @@ namespace grad
 			app.UseAuthentication();
 			app.UseAuthorization();
 
+
 			// Move cancellation middleware to wrap controller execution (must be registered before MapControllers)
 			app.Use(async (context, next) =>
 			{
