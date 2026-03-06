@@ -190,7 +190,7 @@ namespace grad.Application.exercise.Services
 					string directoryPath = $"subjects/{exerciseDTO.Sid}/";
 					if (exerciseDTO.Lid != null)
 					{
-						directoryPath += $"lessonContent/{exerciseDTO.Lid}";
+						directoryPath += $"lessonContent/{exerciseDTO.Lid}/";
 					}
 					directoryPath += $"exercise/{exercise.Id}/";
 					foreach (var questionDTO in exerciseDTO.questions)
@@ -218,7 +218,7 @@ namespace grad.Application.exercise.Services
 							};
 							if (a.IMG != null)
 							{
-								answer.IMG = await _cloudinaryServices.UploadVideoAsync(a.IMG, directoryPath, $"{answer.Id}", cancellationToken);
+								answer.IMG = await _cloudinaryServices.UploadImageAsync(a.IMG, directoryPath, $"{answer.Id}", cancellationToken);
 								if (answer.IMG.IsNullOrEmpty())
 									failed = true;
 							}
@@ -236,7 +236,7 @@ namespace grad.Application.exercise.Services
 					if (exerciseDTO.Lid != null)
 					{
 						//lessonContent.Exercise = exercise;
-						var update = Builders<SubjectContent>.Update.Set("Lessons.$.Exercises", exercise);
+						var update = Builders<SubjectContent>.Update.Set("Lessons.$.Exercise", exercise);
 						var result = await _subjects.UpdateOneAsync(filter, update, cancellationToken: cancellationToken);
 						res = result.ModifiedCount;
 					}
@@ -248,6 +248,7 @@ namespace grad.Application.exercise.Services
 					}
 					if (res == 0)
 					{
+						
 						await _cloudinaryServices.DeleteAsync(directoryPath, false, true);
 						return new ResultDTO
 						{

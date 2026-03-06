@@ -346,7 +346,7 @@ namespace grad.Controllers
 			string Tid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
 			if (Tid.IsNullOrEmpty())
 				return Unauthorized();
-			if (await _tokenServices.IsTokenBlacklisted(accessToken))
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
 				return Unauthorized();
 			if (Guid.TryParse(Tid, out Guid GTid))
 			{
