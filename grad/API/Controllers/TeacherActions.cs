@@ -352,7 +352,7 @@ namespace grad.Controllers
 			{
 				createExercise.Tid = GTid;
 				ResultDTO res = await _teacherServices.CreateExercise(createExercise, cancellationToken);
-				return StatusCode(res.StatusCode, res.Message);
+				return StatusCode(res.StatusCode, new { message = res.Message });
 			}
 			else
 				return Unauthorized();
