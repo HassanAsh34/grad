@@ -4,6 +4,7 @@ namespace Grad.Application.ExerciseFeatures.DTOs
 {
 	public class QuestionDTO
 	{
+		public Guid Qid { get; set; }
 		public string question_type { get; set; }
 
 		public string ?prompt_text { get; set; }

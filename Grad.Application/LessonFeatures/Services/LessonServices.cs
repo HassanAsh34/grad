@@ -360,6 +360,7 @@ namespace grad.Application.LessonFeatures.Services
 
 						return new QuestionDTO
 						{
+							Qid = q.Qid,
 							Answers = q.Answers
 								.Select(a => new AnswerDTO
 								{
