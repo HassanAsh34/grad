@@ -1,4 +1,7 @@
-﻿using Grad.Application.Common.DTOs;
+﻿using System.Reflection.Emit;
+using System.Security.Cryptography;
+using System.Threading;
+using Grad.Application.Common.DTOs;
 using Grad.Application.ExerciseFeatures.DTOs;
 using Grad.Application.ExerciseFeatures.Interfaces;
 using Grad.Application.LessonFeatures.DTOs;
@@ -95,7 +98,7 @@ namespace Grad.Application.TeacherFeatures.Services
 					Message = "Subject wasnt found"
 				};
 			else
-				return await _lessonServices.ViewLessons(teacherSubject.SubjectId, cancellationToken);
+				return await _lessonServices.ViewLessons(teacherSubject.SubjectId,cancellation: cancellationToken);
 		}
 
 		public async Task<ResultDTO> ViewLesson(LessonContentDTO lessonContent, CancellationToken cancellationToken)
@@ -109,7 +112,7 @@ namespace Grad.Application.TeacherFeatures.Services
 			//	};
 			//else
 			//return await _lessonServices.viewLesson(new LessonContentDTO { Id = lessonId,SubjectId = teacherSubject.SubjectId}, cancellationToken);
-			return await _lessonServices.viewLesson(lessonContent, cancellationToken);
+			return await _lessonServices.viewLesson(lessonContent,true,cancellationToken);
 		}
 		
 		public async Task<ResultDTO> UploadVideo(VideoDTO video, CancellationToken cancellationToken)
@@ -168,7 +171,7 @@ namespace Grad.Application.TeacherFeatures.Services
 			}
 		}
 
-		public async Task<ResultDTO> CreateExercise(CreateExerciseDTO createExerciseDTO, CancellationToken cancellationToken)
+		public async Task<ResultDTO> CreateExercise(CreateLevelDTO createExerciseDTO, CancellationToken cancellationToken)
 		{
 			if (!await _teacherRepository.CanAccess(createExerciseDTO.Tid, createExerciseDTO.Sid,cancellationToken))
 				return new ResultDTO
@@ -182,5 +185,46 @@ namespace Grad.Application.TeacherFeatures.Services
 			}
 		}
 
+		public async Task<ResultDTO> GetQuizes(TeacherSubjectDTO teacherSubject, CancellationToken cancellationToken)
+		{
+			if (!await _teacherRepository.CanAccess(teacherSubject.TeacherId, teacherSubject.SubjectId, cancellationToken))
+				return new ResultDTO
+				{
+					StatusCode = 400,
+					Message = "Subject wasnt found"
+				};
+			else
+			{
+				return await _exerciseServices.GetQuizes(teacherSubject.SubjectId, cancellationToken);
+			}
+		}
+
+		public async Task<ResultDTO> ViewLevel(LevelDTO level,Guid Tid,CancellationToken CT)
+		{
+			if (!await _teacherRepository.CanAccess(Tid, level.Sid, CT))
+				return new ResultDTO
+				{
+					StatusCode = 400,
+					Message = "Subject wasnt found"
+				};
+			else
+			{
+				return await _exerciseServices.viewLevel(level,true,CT);
+			}
+		}
+
+		public async Task<ResultDTO> EditLevel(EditLevelDTO editLevel,CancellationToken CT)
+		{
+			if (!await _teacherRepository.CanAccess(editLevel.Tid, editLevel.Sid, CT))
+				return new ResultDTO
+				{
+					StatusCode = 400,
+					Message = "Subject wasnt found"
+				};
+			else
+			{
+				return await _exerciseServices.EditLevel(editLevel, CT);
+			}
+		}
 	}
 }

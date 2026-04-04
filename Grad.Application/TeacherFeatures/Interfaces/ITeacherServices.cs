@@ -33,8 +33,14 @@ namespace Grad.Application.TeacherFeatures.Interfaces
 
 		//public Task<ResultDTO> addWords(TeacherSubjectDTO teacherSubject, AddVocabDTO vocabDTO, CancellationToken cancellationToken = default);
 
-		public Task<ResultDTO> CreateExercise(CreateExerciseDTO createExerciseDTO, CancellationToken cancellationToken = default);
+		public Task<ResultDTO> CreateExercise(CreateLevelDTO createExerciseDTO, CancellationToken cancellationToken = default);
 
 		public Task<ResultDTO> addWords(AddVocabDTO vocabDTO, CancellationToken cancellationToken = default);
+
+		public Task<ResultDTO> GetQuizes(TeacherSubjectDTO teacherSubject, CancellationToken cancellationToken = default);
+
+		public Task<ResultDTO> ViewLevel(LevelDTO level, Guid Tid, CancellationToken CT = default );
+
+		public Task<ResultDTO> EditLevel(EditLevelDTO editLevel, CancellationToken CT = default);
 	}
 }

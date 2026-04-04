@@ -26,6 +26,8 @@ namespace  Grad.Infrastructure.Persistence
 
 		public DbSet<StudentProgress> studentProgresses { get; set; }
 
+		public DbSet<Submission> submissions { get; set; }
+
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
 			base.OnModelCreating(modelBuilder);
@@ -71,8 +73,9 @@ namespace  Grad.Infrastructure.Persistence
 				.HasForeignKey<RefreshToken>(t=>t.CreatedById)
 				.OnDelete(DeleteBehavior.Cascade);
 
+			modelBuilder.Entity<Submission>().HasOne(s=>s.Student).WithMany(s=>s.Submissions).HasForeignKey(s=>s.SubmittedBy).OnDelete(DeleteBehavior.Cascade);
 
-
+			modelBuilder.Entity<Submission>().HasOne(s => s.Subject).WithMany(s => s.Submissions).HasForeignKey(s => s.SubjectFK).OnDelete(DeleteBehavior.SetNull);
 		}
 	}
 }

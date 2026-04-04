@@ -18,7 +18,7 @@
 
 		public ReletationShip reletationShip { get; set; }
 
-		public IEnumerable<Student> students { get; set; } 
+		public List<Student> students { get; set; } = new(); 
 
 		public enum ReletationShip
 		{

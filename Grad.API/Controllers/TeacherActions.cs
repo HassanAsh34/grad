@@ -1,15 +1,16 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Grad.Application.TeacherFeatures.Interfaces;
-using Grad.Application.TeacherFeatures.DTOs;
-using Grad.Application.Common.Interfaces;
+﻿using System.Security.Cryptography;
 using Grad.Application.Common.DTOs;
-using Grad.Application.SubjectFeatures.Interfaces;
-using Grad.Application.SubjectFeatures.DTOs;
-using Grad.Application.LessonFeatures.DTOs;
+using Grad.Application.Common.Interfaces;
 using Grad.Application.ExerciseFeatures.DTOs;
-using Microsoft.IdentityModel.Tokens;
+using Grad.Application.LessonFeatures.DTOs;
+using Grad.Application.SubjectFeatures.DTOs;
+using Grad.Application.SubjectFeatures.Interfaces;
+using Grad.Application.TeacherFeatures.DTOs;
+using Grad.Application.TeacherFeatures.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Grad.API.Controllers
 {
@@ -340,7 +341,7 @@ namespace Grad.API.Controllers
 
 		[HttpPost("Create-Exercise")]
 		[Consumes("multipart/form-data")]
-		public async Task<IActionResult> CreateExercise([FromForm] CreateExerciseDTO createExercise ,CancellationToken cancellationToken)
+		public async Task<IActionResult> CreateExercise([FromForm] CreateLevelDTO createExercise ,CancellationToken cancellationToken)
 		{
 			string accessToken = User.FindFirst("accessToken")?.Value;
 			string Tid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
@@ -352,6 +353,99 @@ namespace Grad.API.Controllers
 			{
 				createExercise.Tid = GTid;
 				ResultDTO res = await _teacherServices.CreateExercise(createExercise, cancellationToken);
+				return StatusCode(res.StatusCode, new { message = res.Message });
+			}
+			else
+				return Unauthorized();
+
+		}
+
+		[HttpGet("List-Quizes/{sid}")]
+		public async Task<IActionResult> ListQuizes(string sid, CancellationToken cancellationToken)
+		{
+			string accessToken = User.FindFirst("accessToken")?.Value;
+			string Tid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+			if (string.IsNullOrEmpty(Tid))
+				return Unauthorized();
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
+				return Unauthorized();
+			if (Guid.TryParse(Tid, out Guid GTid))
+			{
+				if (Guid.TryParse(sid, out Guid Id))
+				{
+					ResultDTO res = await _teacherServices.GetQuizes(new TeacherSubjectDTO { SubjectId = Id,TeacherId = GTid}, cancellationToken);
+					return StatusCode(res.StatusCode, new { message = res.Message, result = res.result });
+				}
+				else
+					return StatusCode(StatusCodes.Status400BadRequest, new { message = "Invalid subject ID" });
+			}
+			else
+				return Unauthorized();
+
+		}
+
+		[HttpGet("subjects/{sid}/lessons/{lid}/levels/{levelId}")]
+		public async Task<IActionResult> viewLessonLevel(Guid sid, Guid lid, Guid levelId, CancellationToken cancellationToken)
+		{
+			string accessToken = User.FindFirst("accessToken")?.Value;
+			string Tid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+			if (string.IsNullOrEmpty(Tid))
+				return Unauthorized();
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
+				return Unauthorized();
+			if (Guid.TryParse(Tid, out Guid GTid))
+			{
+				LevelDTO levelDTO = new LevelDTO
+				{
+					ID = levelId,
+					Sid = sid,
+					Lid = lid
+				};
+				ResultDTO result = await _teacherServices.ViewLevel(levelDTO, GTid, cancellationToken);
+				return StatusCode(result.StatusCode,new {message = result.Message, result = result.result});
+			}
+			else
+				return Unauthorized();
+		}
+
+
+		[HttpGet("subjects/{sid}/levels/{levelId}")]
+		public async Task<IActionResult> ViewQuiz(Guid sid,Guid levelId,CancellationToken cancellationToken)
+		{
+			string accessToken = User.FindFirst("accessToken")?.Value;
+			string Tid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+			if (string.IsNullOrEmpty(Tid))
+				return Unauthorized();
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
+				return Unauthorized();
+			if (Guid.TryParse(Tid, out Guid GTid))
+			{
+				LevelDTO levelDTO = new LevelDTO
+				{
+					ID = levelId,
+					Sid = sid
+				};
+				ResultDTO result = await _teacherServices.ViewLevel(levelDTO, GTid, cancellationToken);
+				return StatusCode(result.StatusCode, new { message = result.Message, result = result.result });
+			}
+			else
+				return Unauthorized();
+		}
+
+		[HttpPatch("Edit-Level")]
+		[Consumes("multipart/form-data")]
+		public async Task<IActionResult> EditExercise([FromForm] EditLevelDTO editLevelDTO, CancellationToken cancellationToken)
+		{
+			string accessToken = User.FindFirst("accessToken")?.Value;
+			string Tid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+			if (string.IsNullOrEmpty(Tid))
+				return Unauthorized();
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
+				return Unauthorized();
+			if (Guid.TryParse(Tid, out Guid GTid))
+			{
+				editLevelDTO.Tid = GTid;
+				ResultDTO res = await _teacherServices.EditLevel(editLevelDTO, cancellationToken);
 				return StatusCode(res.StatusCode, new { message = res.Message });
 			}
 			else

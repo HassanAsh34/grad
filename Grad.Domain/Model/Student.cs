@@ -26,8 +26,9 @@ namespace Grad.Domain.Model
 
 		//public string classroomId { get; set; } //cfk
 
-		public IEnumerable<Enrollement> EnrolledSubjects { get; set; }
+		public List<Enrollement> EnrolledSubjects { get; set; } = new();
 
+		public List<Submission> Submissions { get; set; } = new();
 		public Parent parent { get; set; }
 	}
 }

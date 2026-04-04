@@ -11,7 +11,7 @@
 
 		public List<LessonContent> Lessons { get; set; } = new();//SHORTENED WAY FOR new List<Lesson>()
 
-		public List<Exercise> Quizzes { get; set; } = new();
+		public List<Level> Quizzes { get; set; } = new();
 
 	}
 }

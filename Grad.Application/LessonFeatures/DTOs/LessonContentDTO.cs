@@ -17,6 +17,6 @@ namespace Grad.Application.LessonFeatures.DTOs
 
 		public List<VideoDTO> Videos { get; set; } = new();
 
-		public ExerciseDTO? Exercises { get; set; }
+		public LevelDTO? Levels { get; set; }
 	}
 }

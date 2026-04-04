@@ -1,5 +1,6 @@
 ﻿using Grad.Application.Common.DTOs;
 using Grad.Application.LessonFeatures.DTOs;
+using Grad.Domain.Model;
 
 
 namespace Grad.Application.LessonFeatures.Interfaces
@@ -15,9 +16,9 @@ namespace Grad.Application.LessonFeatures.Interfaces
 
 		public Task<ResultDTO> DeleteVideo(VideoDTO videoDTO, CancellationToken cancellationToken = default);
 
-		public Task<ResultDTO> ViewLessons(Guid sid, CancellationToken cancellation = default);
+		public Task<ResultDTO> ViewLessons(Guid sid,CancellationToken cancellation = default);
 
-		public Task<ResultDTO> viewLesson(LessonContentDTO lessonContentDTO, CancellationToken cancellationToken = default);
+		public Task<ResultDTO> viewLesson(LessonContentDTO lessonContentDTO,bool teacher = false, CancellationToken cancellationToken = default);
 
 		public Task<ResultDTO> DeleteLesson(DeleteLessonDTO deleteLesson, CancellationToken cancellationToken = default);
 

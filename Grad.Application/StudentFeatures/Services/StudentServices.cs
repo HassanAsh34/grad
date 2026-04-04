@@ -148,7 +148,7 @@ namespace Grad.Application.StudentFeatures.Services
 		public async Task<ResultDTO> viewLesson(LessonContentDTO lessonDTO, CancellationToken cancellationToken)
 		{
 			//return null;
-			return	await _lessonServices.viewLesson(lessonDTO, cancellationToken);
+			return	await _lessonServices.viewLesson(lessonDTO,cancellationToken: cancellationToken);
 		}
 
 		public async Task<ResultDTO> completeLesson(CompletelessonDTO completelesson, CancellationToken cancellationToken)

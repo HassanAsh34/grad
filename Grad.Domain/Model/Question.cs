@@ -2,8 +2,6 @@
 {
 	public class Question
 	{
-		public string question_type { get; set; }
-
 		public Guid Qid { get; set; } = Guid.NewGuid();
 
 		public string ?prompt_text { get; set; }

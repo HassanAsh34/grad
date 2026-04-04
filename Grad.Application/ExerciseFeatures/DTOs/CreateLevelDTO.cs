@@ -3,7 +3,7 @@ using Grad.Domain.Enums;
 
 namespace Grad.Application.ExerciseFeatures.DTOs
 {
-	public class CreateExerciseDTO
+	public class CreateLevelDTO
 	{
 		public Guid ?Lid { get; set; }
 
@@ -16,9 +16,9 @@ namespace Grad.Application.ExerciseFeatures.DTOs
 		[MinLength(3, ErrorMessage = "the Title must be at least 3 characters long")]
 		public string Name { get; set; }
 
-		public List<QuestionDTO> questions { get; set; } 
+		public List<ExerciseDTO> ExerciseDTOs { get; set; } 
 
-		public int total_score => questions?.Sum(q => q.score) ?? 0;
+		public int total_score => ExerciseDTOs?.Sum(q => q.total_score) ?? 0;
 
 		public int PassingGradePercentage { get; set; }
 

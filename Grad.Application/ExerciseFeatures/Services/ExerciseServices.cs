@@ -1,9 +1,12 @@
+using System.Reflection.Emit;
 using Grad.Application.Common.DTOs;
 using Grad.Application.Common.Interfaces;
 using Grad.Application.ExerciseFeatures.DTOs;
 using Grad.Application.ExerciseFeatures.Interfaces;
-using Grad.Domain.Model;
 using Grad.Application.SubjectFeatures.Interfaces;
+using Grad.Domain.Enums;
+using Grad.Domain.Model;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Grad.Application.ExerciseFeatures.Services
 {
@@ -13,17 +16,17 @@ namespace Grad.Application.ExerciseFeatures.Services
 		private readonly IExerciseRepository _exerciseRepository;
 		private readonly ISubjectRepository _subjectRepository;
 
-		public ExerciseServices(ICloudinaryServices cloudinaryServices,ISubjectRepository subjectRepository,IExerciseRepository exerciseRepository)
+		public ExerciseServices(ICloudinaryServices cloudinaryServices, ISubjectRepository subjectRepository, IExerciseRepository exerciseRepository)
 		{
 			_cloudinaryServices = cloudinaryServices ?? throw new ArgumentNullException(nameof(cloudinaryServices));
-			_exerciseRepository = exerciseRepository ?? throw new ArgumentNullException( nameof(exerciseRepository));
-			_subjectRepository =  subjectRepository ?? throw new ArgumentNullException(nameof(subjectRepository));
+			_exerciseRepository = exerciseRepository ?? throw new ArgumentNullException(nameof(exerciseRepository));
+			_subjectRepository = subjectRepository ?? throw new ArgumentNullException(nameof(subjectRepository));
 		}
 
-		public async Task<ResultDTO> CreateExercise(CreateExerciseDTO exerciseDTO, CancellationToken cancellationToken) //not tested yet
+		public async Task<ResultDTO> CreateExercise(CreateLevelDTO levelDTO, CancellationToken cancellationToken) //not tested yet
 		{
 			// Validate the exercise data
-			if (exerciseDTO == null)
+			if (levelDTO == null)
 			{
 				return new ResultDTO
 				{
@@ -33,7 +36,7 @@ namespace Grad.Application.ExerciseFeatures.Services
 			}
 			else
 			{
-				if (exerciseDTO.questions == null || !exerciseDTO.questions.Any())
+				if (levelDTO.ExerciseDTOs == null || !levelDTO.ExerciseDTOs.Any())
 				{
 					return new ResultDTO
 					{
@@ -44,7 +47,7 @@ namespace Grad.Application.ExerciseFeatures.Services
 				// Map ExerciseDTO to Exercise domain model
 				else
 				{
-					SubjectContent subjectContent = await _subjectRepository.GetSubjectContentAsync(exerciseDTO.Sid, cancellationToken);
+					SubjectContent subjectContent = await _subjectRepository.GetSubjectContentAsync(levelDTO.Sid, cancellationToken);
 					if (subjectContent == null)
 					{
 						return new ResultDTO
@@ -53,75 +56,116 @@ namespace Grad.Application.ExerciseFeatures.Services
 							StatusCode = 400
 						};
 					}
-					LessonContent lesson = subjectContent.Lessons.FirstOrDefault(l => l.Id == exerciseDTO.Lid);
-					Exercise exercise = new Exercise
+					LessonContent lesson = subjectContent.Lessons.FirstOrDefault(l => l.Id == levelDTO.Lid);
+					Level level = new Level
 					{
-						//Id = exerciseDTO.Id,
-						Name = exerciseDTO.Name,
-						total_questions = exerciseDTO.questions.Count,
-						PassingGrade = (exerciseDTO.PassingGradePercentage / 100) * exerciseDTO.total_score,
-						questions = new List<Question>(),
-						levelDifficulty = exerciseDTO.levelDifficulty
+						Name = levelDTO.Name,
+						PassingPercentage = levelDTO.PassingGradePercentage,
+						levelDifficulty = levelDTO.levelDifficulty
 					};
+
 					string directoryPath = $"subjects/{subjectContent.Id}/";
 					if (lesson != null)
 					{
 						directoryPath += $"lessonContent/{lesson.Id}/";
 					}
-					directoryPath += $"exercise/{exercise.Id}/";
-					foreach (var questionDTO in exerciseDTO.questions)
+					directoryPath += $"exercise/{level.ID}/";
+					foreach (var exerciseDTO in levelDTO.ExerciseDTOs)
 					{
 						//List<IFormFile> files = new List<IFormFile>();
 						//List<string> publicIds = new List<string>();
-						bool failed = false;
-						Question question = new Question
+
+						if (exerciseDTO != null && exerciseDTO.questions.Any())
 						{
-							question_type = questionDTO.question_type,
-							prompt_text = questionDTO.prompt_text
-						};
-						if (questionDTO.prompt_image != null)
-						{
-							// Save the image to a location and get the path
-							question.prompt_image = await _cloudinaryServices.UploadImageAsync(questionDTO.prompt_image,directoryPath, $"{question.Qid}", cancellationToken);
-							if (string.IsNullOrEmpty(question.prompt_image))
-								failed = true;
-						}
-						foreach (AnswerDTO a in questionDTO.Answers)
-						{
-							Answer answer = new Answer
+							Exercise exercise = new Exercise
 							{
-								answer = a.answer
+								Name = exerciseDTO.Name,
+								Type = exerciseDTO.Type,
+								//total_questions = exerciseDTO.total_questions
 							};
-							if (a.IMG != null)
+							foreach (var questionDTO in exerciseDTO.questions)
 							{
-								answer.IMG = await _cloudinaryServices.UploadImageAsync(a.IMG, directoryPath, $"{answer.Id}", cancellationToken);
-								if (string.IsNullOrEmpty(answer.IMG))
-									failed = true;
+								bool failed = false;
+								Question question = new Question
+								{
+									prompt_text = questionDTO.prompt_text,
+									score = questionDTO.score
+
+								};
+								if (questionDTO.prompt_image != null)
+								{
+									// Save the image to a location and get the path
+									question.prompt_image = await _cloudinaryServices.UploadImageAsync(questionDTO.prompt_image, directoryPath, $"{question.Qid}", cancellationToken);
+									if (string.IsNullOrEmpty(question.prompt_image))
+										failed = true;
+								}
+								switch (exercise.Type)
+								{
+									case ExerciseType.MCQ:
+										foreach (AnswerDTO ans in questionDTO.Answers)
+										{
+											Answer answer = new Answer
+											{
+												answer = ans.answer
+											};
+											if (ans.IMG != null)
+											{
+												answer.IMG = await _cloudinaryServices.UploadImageAsync(ans.IMG, directoryPath, $"{answer.Id}", cancellationToken);
+												if (string.IsNullOrEmpty(answer.IMG))
+													failed = true;
+											}
+											if (ans.isCorrect)
+												question.CorrectAnswer = answer;
+											else
+												question.Answers.Add(answer);
+										}
+										if (!failed)
+										{
+											exercise.questions.Add(question);
+										}
+										break;
+									case ExerciseType.Matching:
+										if (questionDTO.Answer is AnswerDTO a && a != null)
+										{
+											Answer answer = new Answer
+											{
+												answer = a.answer
+											};
+											if (a.IMG != null)
+											{
+												answer.IMG = await _cloudinaryServices.UploadImageAsync(a.IMG, directoryPath, $"{answer.Id}", cancellationToken);
+												if (string.IsNullOrEmpty(answer.IMG))
+													failed = true;
+											}
+											question.CorrectAnswer = answer;
+											if (!failed)
+											{
+												exercise.questions.Add(question);
+											}
+										}
+										break;
+									default:
+										break;
+								}
 							}
-							if (a.isCorrect)
-								question.CorrectAnswer = answer;
-							else
-								question.Answers.Add(answer);
-						}
-						if (!failed)
-						{
-							exercise.questions.Add(question);
+							level.Exercise.Add(exercise);
 						}
 					}
+
 					long res = 0;
 					if (lesson != null)
 					{
 						//lessonContent.Exercise = exercise;
-						lesson.Exercise = exercise;
+						lesson.Level = level;
 						res = await _exerciseRepository.addExerciseToLesson(subjectContent.Id, lesson, cancellationToken);
 					}
 					else
 					{
-						res = await _exerciseRepository.addQuizToSubject(subjectContent.Id, exercise, cancellationToken);	
+						res = await _exerciseRepository.addQuizToSubject(subjectContent.Id, level, cancellationToken);
 					}
 					if (res == 0)
 					{
-						
+
 						await _cloudinaryServices.DeleteAsync(directoryPath, false, true);
 						return new ResultDTO
 						{
@@ -139,6 +183,412 @@ namespace Grad.Application.ExerciseFeatures.Services
 					}
 				}
 			}
+		}
+
+		public async Task<ResultDTO> GetQuizes(Guid sid, CancellationToken CT)
+		{
+			List<Level> levels = await _exerciseRepository.viewLevels(sid, CT);
+			List<LevelDTO> levelDTOs = new List<LevelDTO>();
+			if (levels == null)
+				return new ResultDTO
+				{
+					Message = "No quizes were found",
+					StatusCode = 404
+				};
+			foreach (Level level in levels)
+			{
+				levelDTOs.Add(
+					new LevelDTO
+					{
+						ID = level.ID,
+						Sid = sid,
+						Name = level.Name,
+						levelDifficulty = level.levelDifficulty,
+						PassingPercentage = level.PassingPercentage,
+					});
+			}
+			return new ResultDTO
+			{
+				Message = $"{levelDTOs.Count} Quizes were found",
+				StatusCode = 200,
+				result = levelDTOs
+			};
+		}
+
+		public async Task<ResultDTO> viewLevel(LevelDTO levelDTO, bool teacher, CancellationToken CT)
+		{
+			Level level = await _exerciseRepository.GetLevel(levelDTO.Sid, levelDTO.Lid, levelDTO.ID, CT);
+			if (level == null)
+				return new ResultDTO
+				{
+					Message = "Level wasnt found",
+					StatusCode = 404
+				};
+			List<ExerciseDTO> exerciseDTOs = new List<ExerciseDTO>();
+			foreach (Exercise exercise in level.Exercise)
+			{
+				ExerciseDTO exerciseDTO = new ExerciseDTO
+				{
+					Id = exercise.Id,
+					Name = exercise.Name,
+					Type = exercise.Type,
+				};
+				List<QuestionDTO> questionDTOs = new List<QuestionDTO>();
+				switch (exercise.Type)
+				{
+					case ExerciseType.Matching:
+						List<AnswerDTO> answerDTOs = new List<AnswerDTO>();
+						foreach (Question question in exercise.questions)
+						{
+							QuestionDTO questionDTO = new QuestionDTO
+							{
+								Qid = question.Qid,
+								prompt_text = question.prompt_text,
+								imgPath = question.prompt_image,
+								score = question.score
+							};
+							if (teacher)
+							{
+								questionDTO.Answer = new AnswerDTO
+								{
+									Id = question.CorrectAnswer.Id,
+									imgPath = question.CorrectAnswer.IMG,
+									answer = question.CorrectAnswer.answer
+								};
+							}
+							else
+							{
+								answerDTOs.Add(
+									new AnswerDTO
+									{
+										Id = question.CorrectAnswer.Id,
+										imgPath = question.CorrectAnswer.IMG,
+										answer = question.CorrectAnswer.answer
+									});
+							}
+							questionDTOs.Add(questionDTO);
+						}
+						exerciseDTO.questions = questionDTOs;
+						exerciseDTO.answers = answerDTOs;
+						break;
+					case ExerciseType.MCQ:
+						foreach (Question question in exercise.questions)
+						{
+							QuestionDTO questionDTO = new QuestionDTO
+							{
+								Qid = question.Qid,
+								prompt_text = question.prompt_text,
+								imgPath = question.prompt_image,
+								score = question.score
+							};
+							List<AnswerDTO> answers = new List<AnswerDTO>();
+							if (teacher)
+							{
+								questionDTO.Answer = new AnswerDTO
+								{
+									Id = question.CorrectAnswer.Id,
+									imgPath = question.CorrectAnswer.IMG,
+									answer = question.CorrectAnswer.answer
+								};
+							}
+							else
+							{
+								question.Answers.Add(question.CorrectAnswer);
+							}
+							foreach (Answer answer in question.Answers)
+							{
+								answers.Add(new AnswerDTO
+								{
+									Id = answer.Id,
+									imgPath = answer.IMG,
+									answer = answer.answer
+								});
+							}
+							questionDTO.Answers = answers;
+							questionDTOs.Add(questionDTO);
+						}
+						exerciseDTO.questions = questionDTOs;
+						break;
+				}
+				exerciseDTOs.Add(exerciseDTO);
+			}
+			levelDTO.Exercise = exerciseDTOs;
+			return new ResultDTO
+			{
+				Message = $"{levelDTO.Exercise.Count()} Exercises were found",
+				result = levelDTO,
+				StatusCode = 200
+			};
+		}
+
+		public async Task<ResultDTO> EditLevel(EditLevelDTO editLevel, CancellationToken cancellationToken)
+		{
+			Level level = await _exerciseRepository.GetLevel(editLevel.Sid, editLevel.Lid, editLevel.Id, cancellationToken);
+			if (level == null)
+				return new ResultDTO
+				{
+					Message = "Level wasnt found",
+					StatusCode = 404
+				};
+			level.Name = editLevel.Name == null ? level.Name : editLevel.Name;
+			level.levelDifficulty = editLevel.levelDifficulty == null ? level.levelDifficulty : editLevel.levelDifficulty.Value;
+			level.PassingPercentage = editLevel.PassingPercentage == -1 ? level.PassingPercentage : editLevel.PassingPercentage;
+			string directoryPath = $"subjects/{editLevel.Sid}/";
+			if (editLevel.Lid != null)
+			{
+				directoryPath += $"lessonContent/{editLevel.Lid}/";
+			}
+			directoryPath += $"exercise/{level.ID}/";
+			if (editLevel.ExerciseDTOs != null && editLevel.ExerciseDTOs.Count > 0)
+			{
+				foreach(ExerciseDTO exerciseDTO in editLevel.ExerciseDTOs)
+				{
+					Exercise exercise = level.Exercise.FirstOrDefault(e => e.Id == exerciseDTO.Id);
+					if (exercise != null)
+					{
+						level.Exercise.Remove(exercise);
+						exercise = await editExercise(exerciseDTO, exercise, directoryPath, cancellationToken);
+					}
+					else
+					{
+						exercise = await editExercise(exerciseDTO, null, directoryPath, cancellationToken);
+					}
+					if (exercise != null)
+						level.Exercise.Add(exercise);
+					else
+					{
+						Console.WriteLine($"failed to update or add exercise {exerciseDTO.Id}");
+						continue;
+					}
+				}
+			}
+			int res = await _exerciseRepository.editLevel(editLevel.Sid,editLevel.Lid,level, cancellationToken);
+			if (res == 0)
+			{
+				return new ResultDTO
+				{
+					Message = "Something went wrong",
+					StatusCode = 500
+				};
+			}
+			else
+			{
+				return new ResultDTO
+				{
+					Message = "Level was updated successfully",
+					StatusCode = 200
+				};
+			}
+		}
+
+		private async Task<Exercise> editExercise(ExerciseDTO exerciseDTO,Exercise ?exercise, string directory, CancellationToken cancellationToken)
+		{
+			string directoryPath = directory;
+			Exercise Nexercise = null;
+			if (exercise != null)
+			{
+				Nexercise = exercise;
+				Nexercise.Name = exerciseDTO.Name != null ? exerciseDTO.Name : exercise.Name;
+				Nexercise.Type = exerciseDTO.Type != 0 ? exerciseDTO.Type : exercise.Type;
+			}
+			else
+			{
+				Nexercise = new Exercise
+				{
+					Name = exerciseDTO.Name,
+					Type = exerciseDTO.Type,
+					//total_questions = exerciseDTOs.
+				};
+				if (Nexercise.Type == 0)
+				{
+					Console.WriteLine($"{exerciseDTO.Name} has invalid type");
+					return null;
+				}
+			}
+			foreach (QuestionDTO questionDTO in exerciseDTO.questions)
+			{
+				Question question = exercise.questions.FirstOrDefault(q => q.Qid == questionDTO.Qid);
+				if (question == null)
+				{
+					question = await editQuestion(questionDTO, null, directoryPath, cancellationToken);
+				}
+				else
+				{
+					exercise.questions.Remove(question);
+					question = await editQuestion(questionDTO, question, directoryPath, cancellationToken);
+				}
+				if (question != null)
+				{
+					exercise.questions.Add(question);
+				}
+				else
+				{
+					Console.WriteLine($"failed to update or add question {questionDTO.Qid}");
+					continue;
+				}
+			}
+			return exercise;
+		}
+
+
+		private async Task<Question> editQuestion(QuestionDTO questionDTO, Question? question, string directory, CancellationToken cancellation)
+		{
+			Question Nquestion = null;
+			if (question != null)
+				Nquestion = question;
+			if (Nquestion == null)
+			{
+				Nquestion = new Question();
+			}
+			Nquestion.prompt_text = questionDTO.prompt_text != null ? question.prompt_text : questionDTO.prompt_text;
+			if (questionDTO.prompt_image != null)
+			{
+				Nquestion.prompt_image = await _cloudinaryServices.UploadImageAsync(questionDTO.prompt_image, directory, questionDTO.Qid.ToString(), cancellation);
+				if (Nquestion.prompt_image.IsNullOrEmpty())
+				{
+					Console.WriteLine($"failed to update question {questionDTO.Qid}");
+				}
+				else
+				{
+					if (question != null && question.prompt_image != null)
+					{
+						string directorypath = directory + $"{question.Qid}";
+						if (await _cloudinaryServices.DeleteAsync(directorypath))
+							Console.WriteLine($"deleted image with id {question.Qid}");
+					}
+					Nquestion.prompt_image = Nquestion.prompt_image;
+				}
+			}
+			if (question == null)
+			{
+				List<Answer> answers = new List<Answer>();
+				foreach (AnswerDTO answerDTO in questionDTO.Answers)
+				{
+					Answer answer = await editAnswer(answerDTO, null, directory, cancellation);
+					if (answer != null)
+						Nquestion.Answers.Add(answer);
+					else
+					{
+						if (!Nquestion.prompt_image.IsNullOrEmpty())
+						{
+							if (await _cloudinaryServices.DeleteAsync(directory + $"{Nquestion.Qid}"))
+								Console.WriteLine($"deleted image with id {Nquestion.Qid}");
+						}
+						Console.WriteLine($"failed to add question {Nquestion.Qid}");
+						return null;
+					}
+				}
+			}
+			else
+			{
+				if (questionDTO.Answer != null)
+				{
+					AnswerDTO answerDTO = questionDTO.Answer;
+					if (answerDTO.Id != null)
+					{
+						if (question.CorrectAnswer.Id != answerDTO.Id)
+						{
+							Answer answer1 = question.Answers.FirstOrDefault(a => a.Id == answerDTO.Id);
+							if (answer1 != null)
+							{
+								question.Answers.Remove(answer1);
+								question.Answers.Add(question.CorrectAnswer);
+								question.CorrectAnswer = answer1;
+							}
+						}
+					}
+					Answer answer = await editAnswer(questionDTO.Answer, question.CorrectAnswer, directory, cancellation);
+					if (answer != null)
+						Nquestion.CorrectAnswer = answer;
+					else
+					{
+						if (!Nquestion.prompt_image.IsNullOrEmpty())
+						{
+							if (await _cloudinaryServices.DeleteAsync(directory + $"{Nquestion.Qid}"))
+								Console.WriteLine($"deleted image with id {Nquestion.Qid}");
+						}
+						Console.WriteLine($"failed to update question {Nquestion.Qid}");
+						return null;
+					}
+				}
+				if (questionDTO.Answers != null && questionDTO.Answers.Count() > 0)
+				{
+					foreach (AnswerDTO answerDTO in questionDTO.Answers)
+					{
+						Answer answer = question.Answers.FirstOrDefault(a => a.Id == answerDTO.Id);
+						if (answer != null)
+						{
+							question.Answers.Remove(answer);
+							answer = await editAnswer(answerDTO, answer, directory, cancellation);
+							if (answer != null)
+								question.Answers.Add(answer);
+							else
+							{
+								if (!Nquestion.prompt_image.IsNullOrEmpty())
+								{
+									if (await _cloudinaryServices.DeleteAsync(directory + $"{Nquestion.Qid}"))
+										Console.WriteLine($"deleted image with id {Nquestion.Qid}");
+								}
+								Console.WriteLine($"failed to update question {Nquestion.Qid}");
+								return null;
+							}
+						}
+						else
+						{
+							answer = await editAnswer(answerDTO, null, directory, cancellation);
+							if (answer != null)
+								question.Answers.Add(answer);
+							else
+							{
+								if (!Nquestion.prompt_image.IsNullOrEmpty())
+								{
+									if (await _cloudinaryServices.DeleteAsync(directory + $"{Nquestion.Qid}"))
+										Console.WriteLine($"deleted image with id {Nquestion.Qid}");
+								}
+								Console.WriteLine($"failed to update question {Nquestion.Qid}");
+								return null;
+							}
+						}
+					}
+				}
+
+			}
+			return Nquestion;
+		}
+
+		private async Task<Answer> editAnswer(AnswerDTO answerDTO, Answer? answer, string directory, CancellationToken cancellation)
+		{
+			Answer Nanswer = null;
+			if (answer != null)
+				Nanswer = answer;
+			if (Nanswer == null)
+			{
+				Nanswer = new Answer();
+			}
+			if (answerDTO.IMG != null)
+			{
+				Nanswer.IMG = await _cloudinaryServices.UploadImageAsync(answerDTO.IMG, directory, answerDTO.Id.ToString(), cancellation);
+				if (Nanswer.IMG.IsNullOrEmpty())
+				{
+					Console.WriteLine($"failed to update answer {answerDTO.Id}");
+					return null;
+				}
+				else
+				{
+					if (answer != null && answer.IMG != null)
+					{
+						string directorypath = directory + $"{answer.Id}";
+						if (await _cloudinaryServices.DeleteAsync(directorypath))
+							Console.WriteLine($"deleted image with id {answer.Id}");
+					}
+					Nanswer.IMG = Nanswer.IMG;
+				}
+			}
+			if (answerDTO.answer != null)
+			{
+				Nanswer.answer = Nanswer.answer;
+			}
+			return Nanswer;
 		}
 	}
 }

@@ -4,6 +4,7 @@ using Grad.Application.ExerciseFeatures.DTOs;
 using Grad.Application.LessonFeatures.DTOs;
 using Grad.Application.LessonFeatures.Interfaces;
 using Grad.Application.SubjectFeatures.Interfaces;
+using Grad.Domain.Enums;
 using Grad.Domain.Model;
 
 namespace grad.Application.LessonFeatures.Services
@@ -332,7 +333,7 @@ namespace grad.Application.LessonFeatures.Services
 		}
 
 
-		public async Task<ResultDTO> viewLesson(LessonContentDTO lessonContentDTO, CancellationToken cancellationToken)
+		public async Task<ResultDTO> viewLesson(LessonContentDTO lessonContentDTO,bool teacher,CancellationToken cancellationToken)
 		{
 
 			LessonContent lesson = await _lessonRepository.viewLesson(lessonContentDTO.SubjectId, lessonContentDTO.Id, cancellationToken);
@@ -346,33 +347,83 @@ namespace grad.Application.LessonFeatures.Services
 			}
 			lessonContentDTO.Title = lesson.Title;
 			lessonContentDTO.VideosCount = lesson.Videos.Count;
-			if (lesson.Exercise != null)
-				lessonContentDTO.Exercises = new ExerciseDTO
+			if (lesson.Level != null)
+			{
+				lessonContentDTO.Levels = new LevelDTO
 				{
-					Id = lesson.Exercise.Id,
-					levelDifficulty = lesson.Exercise.levelDifficulty,
-					Name = lesson.Exercise.Name,
-					PassingGrade = lesson.Exercise.PassingGrade,
-					questions = lesson.Exercise.questions.Select(q =>
-					{
-						// Add correct answer
-						q.Answers.Add(q.CorrectAnswer);
-
-						return new QuestionDTO
-						{
-							Qid = q.Qid,
-							Answers = q.Answers
-								.Select(a => new AnswerDTO
-								{
-									Id = a.Id,
-									answer = a.answer,
-									imgPath = a.IMG
-								})
-								.ToList()
-						};
-					}).ToList(),
+					ID = lesson.Level.ID,
+					levelDifficulty = lesson.Level.levelDifficulty,
+					Name = lesson.Level.Name,
+					Lid = lesson.Id,
+					Sid = lessonContentDTO.SubjectId
 				};
-			List <VideoDTO> videoDTOs = new List<VideoDTO>();
+					//PassingPercentage = teacher ? lesson.Level.PassingPercentage : 0,
+
+					//Exercise = teacher
+					//	? lesson.Level.Exercise.Select(e =>
+					//	{
+					//		ExerciseDTO exerciseDTO = new ExerciseDTO
+					//		{
+					//			Id = e.Id,
+					//			Name = e.Name,
+					//			Type = e.Type,
+					//			total_questions = e.total_questions,
+					//		};
+
+					//		switch (e.Type)
+					//		{
+					//			case ExerciseType.MCQ:
+
+					//				exerciseDTO.questions = e.questions.Select(q =>
+					//				{
+					//					var answers = q.Answers.ToList();
+
+					//					// add correct answer if not already included
+					//					if (!answers.Any(a => a.Id == q.CorrectAnswer.Id))
+					//						answers.Add(q.CorrectAnswer);
+
+					//					return new QuestionDTO
+					//					{
+					//						Qid = q.Qid,
+					//						Answers = answers.Select(a => new AnswerDTO
+					//						{
+					//							Id = a.Id,
+					//							answer = a.answer,
+					//							imgPath = a.IMG,
+					//							isCorrect = a.Id == q.CorrectAnswer.Id
+					//						}).ToList()
+					//					};
+					//				}).ToList();
+
+					//				break;
+
+					//			case ExerciseType.Matching:
+
+					//				exerciseDTO.questions = e.questions.Select(q =>
+					//				{
+					//					return new QuestionDTO
+					//					{
+					//						Qid = q.Qid,
+					//						Answer = new AnswerDTO
+					//						{
+					//							Id = q.CorrectAnswer.Id,
+					//							answer = q.CorrectAnswer.answer,
+					//							imgPath = q.CorrectAnswer.IMG,
+					//							isCorrect = true
+					//						}
+					//					};
+					//				}).ToList();
+
+					//				break;
+					//		}
+
+					//		return exerciseDTO;
+
+					//	}).ToList()
+					//	: new List<ExerciseDTO>()
+				//};
+			}
+			List<VideoDTO> videoDTOs = new List<VideoDTO>();
 			foreach (Video l in lesson.Videos)
 			{
 				videoDTOs.Add(new VideoDTO

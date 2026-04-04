@@ -9,7 +9,7 @@
 
 		public List<Video> Videos { get; set; } = new();
 
-		public Exercise? Exercise { get; set; }
+		public Level? Level { get; set; }
 
 	}
 }

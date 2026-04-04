@@ -14,6 +14,8 @@ using Grad.Application.StudentFeatures.Interfaces;
 using Grad.Application.StudentFeatures.Services;
 using Grad.Application.SubjectFeatures.Interfaces;
 using Grad.Application.SubjectFeatures.Services;
+using Grad.Application.SubmissionFeatures.Interfaces;
+using Grad.Application.SubmissionFeatures.Services;
 using Grad.Application.TeacherFeatures.Interfaces;
 using Grad.Application.TeacherFeatures.Services;
 using Grad.Application.Users.Interfaces;
@@ -219,6 +221,7 @@ namespace Grad.API
 			builder.Services.AddScoped<IlessonRepository, lessonRepository>();
 			builder.Services.AddScoped<IExerciseRepository, ExerciseRepository>();
 			builder.Services.AddScoped<IAuthRepository, AuthRepository>();
+			builder.Services.AddScoped<ISubmissionRepository, SubmissionRepository>();
 
 			// 4. Setup Services (Application layer)
 			builder.Services.AddScoped<IUserServices, UserServices>();
@@ -229,6 +232,7 @@ namespace Grad.API
 			builder.Services.AddScoped<IStudentServices, StudentServices>();
 			builder.Services.AddScoped<IAdminServices, AdminServices>();
 			builder.Services.AddScoped<IAuthServices, AuthServices>();
+			builder.Services.AddScoped<ISubmissionServices, SubmissionServices>();
 
 
 

@@ -6,6 +6,13 @@ namespace Grad.Application.ExerciseFeatures.Interfaces
 {
 	public interface IExerciseServices
 	{
-		public Task<ResultDTO> CreateExercise(CreateExerciseDTO exerciseDTO, CancellationToken cancellationToken = default);
+		public Task<ResultDTO> CreateExercise(CreateLevelDTO exerciseDTO, CancellationToken cancellationToken = default);
+
+		public Task<ResultDTO> GetQuizes(Guid sid, CancellationToken CT = default);
+
+		public Task<ResultDTO> viewLevel(LevelDTO levelDTO, bool teacher, CancellationToken CT = default);
+
+		public Task<ResultDTO> EditLevel(EditLevelDTO editLevel, CancellationToken cancellationToken = default);
+
 	}
 }

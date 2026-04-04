@@ -52,6 +52,15 @@ namespace  Grad.Infrastructure.Persistence
 				});
 			}
 
+			if (!BsonClassMap.IsClassMapRegistered(typeof(Level)))
+			{
+				BsonClassMap.RegisterClassMap<Level>(cm =>
+				{
+					cm.AutoMap();
+					cm.MapIdMember(l => l.ID);
+				});
+			}
+
 			if (!BsonClassMap.IsClassMapRegistered(typeof(Question)))
 			{
 				BsonClassMap.RegisterClassMap<Question>(cm =>
