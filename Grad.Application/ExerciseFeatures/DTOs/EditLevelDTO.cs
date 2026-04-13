@@ -24,6 +24,9 @@ namespace Grad.Application.ExerciseFeatures.DTOs
 
 		public List<ExerciseDTO> ExerciseDTOs { get; set; }
 
+
+		//public List<Guid> removedExercises
+
 		public int total_score => ExerciseDTOs?.Sum(q => q.total_score) ?? 0;
 
 		public int PassingPercentage { get; set; } = -1;

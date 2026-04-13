@@ -24,13 +24,17 @@ namespace grad.Application.LessonFeatures.Services
 			//_Uow = uow ?? throw new ArgumentNullException(nameof(uow));
 		}
 
-		public async Task<ResultDTO> AddLesson(AddLessonDTO lessonDTO, CancellationToken cancellationToken)
+		public async Task<ResultDTO> AddLesson(AddLessonDTO lessonDTO, CancellationToken cancellationToken) // fix the rest of perquisites 
 		{
-			LessonContent lesson = new LessonContent
+			LessonContent Nlesson = new LessonContent
 			{
-				Title = lessonDTO.Title
+				Title = lessonDTO.Title,
+				Perquisite = lessonDTO.Perquisite,
+				PerquisiteType = lessonDTO.PerquisiteType,
+				Next = null,
 			};
-			int res = await _lessonRepository.addLesson(lesson, lessonDTO.SubjectId, lesson.Id, cancellationToken);
+
+			int res = await _lessonRepository.addLesson(Nlesson, lessonDTO.SubjectId, Nlesson.Id, cancellationToken);
 			if (res == 0)
 			{
 				return new ResultDTO
@@ -39,26 +43,26 @@ namespace grad.Application.LessonFeatures.Services
 					StatusCode = 409
 				};
 			}
+			
+			res = await UpdatePerquisite(lessonDTO.SubjectId,false,Nlesson, cancellationToken);
+
+			if (res == 0)
+			{
+				await _lessonRepository.DeleteLesson(lessonDTO.SubjectId, Nlesson, cancellationToken);
+				return new ResultDTO
+				{
+					Message = $"Perquisite {Nlesson.Perquisite.ToString()} not found, lesson was not added",
+					StatusCode = 404
+				};
+			}
 			else
 			{
-				bool update = await _subjectServices.updateCountAsync(lessonDTO.SubjectId, cancellationToken);
-				if (update)
+				await _subjectServices.updateCountAsync(lessonDTO.SubjectId, cancellationToken);
+				return new ResultDTO
 				{
-					return new ResultDTO
-					{
-						Message = "lesson was added successfully",
-						StatusCode = 201
-					};
-				}
-				else
-				{
-					await _lessonRepository.DeleteLesson(lessonDTO.SubjectId, lesson, cancellationToken);
-					return new ResultDTO
-					{
-						StatusCode = 500,
-						Message = "failed to add lesson"
-					};
-				}
+					Message = "Lesson was added successfully",
+					StatusCode = 201
+				};
 			}
 		}
 
@@ -125,7 +129,7 @@ namespace grad.Application.LessonFeatures.Services
 			}
 		}
 
-		public async Task<ResultDTO> DeleteVideo(VideoDTO videoDTO, CancellationToken cancellationToken)
+		public async Task<ResultDTO> DeleteVideo(VideoDTO videoDTO, CancellationToken cancellationToken)// delete need to be updated to handle the next
 		{
 			
 			if (videoDTO == null)
@@ -302,17 +306,13 @@ namespace grad.Application.LessonFeatures.Services
 		//}
 
 
-		public async Task<ResultDTO> ViewLessons(Guid sid, CancellationToken cancellation)
+		public async Task<List<LessonContentDTO>> ViewLessons(Guid sid, CancellationToken cancellation)
 		{
 			//sid = sid.Trim();
 
 			IEnumerable<LessonContent> lessons = await _lessonRepository.viewLessons(sid, cancellation);
 			if (lessons == null || lessons.Count() == 0)
-				return new ResultDTO
-				{
-					Message = "No lessons were found",
-					StatusCode = 204
-				};
+				return null;
 			List<LessonContentDTO> lessonContentDTOs = new List<LessonContentDTO>();
 			foreach (LessonContent l in lessons)
 			{
@@ -321,15 +321,13 @@ namespace grad.Application.LessonFeatures.Services
 					Id = l.Id,
 					SubjectId = sid,
 					Title = l.Title,
-					VideosCount = l.Videos.Count
+					VideosCount = l.Videos.Count,
+					NextType = l.NextType,
+					Nlid = l.Next,
+					locked = l.Perquisite != null ? true : false
 				});
 			}
-			return new ResultDTO
-			{
-				Message = $"{lessonContentDTOs.Count} lessons were found",
-				result = lessonContentDTOs,
-				StatusCode = 200
-			};
+			return lessonContentDTOs;	
 		}
 
 
@@ -357,71 +355,6 @@ namespace grad.Application.LessonFeatures.Services
 					Lid = lesson.Id,
 					Sid = lessonContentDTO.SubjectId
 				};
-					//PassingPercentage = teacher ? lesson.Level.PassingPercentage : 0,
-
-					//Exercise = teacher
-					//	? lesson.Level.Exercise.Select(e =>
-					//	{
-					//		ExerciseDTO exerciseDTO = new ExerciseDTO
-					//		{
-					//			Id = e.Id,
-					//			Name = e.Name,
-					//			Type = e.Type,
-					//			total_questions = e.total_questions,
-					//		};
-
-					//		switch (e.Type)
-					//		{
-					//			case ExerciseType.MCQ:
-
-					//				exerciseDTO.questions = e.questions.Select(q =>
-					//				{
-					//					var answers = q.Answers.ToList();
-
-					//					// add correct answer if not already included
-					//					if (!answers.Any(a => a.Id == q.CorrectAnswer.Id))
-					//						answers.Add(q.CorrectAnswer);
-
-					//					return new QuestionDTO
-					//					{
-					//						Qid = q.Qid,
-					//						Answers = answers.Select(a => new AnswerDTO
-					//						{
-					//							Id = a.Id,
-					//							answer = a.answer,
-					//							imgPath = a.IMG,
-					//							isCorrect = a.Id == q.CorrectAnswer.Id
-					//						}).ToList()
-					//					};
-					//				}).ToList();
-
-					//				break;
-
-					//			case ExerciseType.Matching:
-
-					//				exerciseDTO.questions = e.questions.Select(q =>
-					//				{
-					//					return new QuestionDTO
-					//					{
-					//						Qid = q.Qid,
-					//						Answer = new AnswerDTO
-					//						{
-					//							Id = q.CorrectAnswer.Id,
-					//							answer = q.CorrectAnswer.answer,
-					//							imgPath = q.CorrectAnswer.IMG,
-					//							isCorrect = true
-					//						}
-					//					};
-					//				}).ToList();
-
-					//				break;
-					//		}
-
-					//		return exerciseDTO;
-
-					//	}).ToList()
-					//	: new List<ExerciseDTO>()
-				//};
 			}
 			List<VideoDTO> videoDTOs = new List<VideoDTO>();
 			foreach (Video l in lesson.Videos)
@@ -446,7 +379,7 @@ namespace grad.Application.LessonFeatures.Services
 			};
 		}
 
-		public async Task<ResultDTO> editLesson(EditLessonDTO lessonDTO, CancellationToken cancellationToken)
+		public async Task<ResultDTO> editLesson(EditLessonDTO lessonDTO, CancellationToken cancellationToken) // needs to be updated
 		{
 			LessonContent lesson = await _lessonRepository.viewLesson(lessonDTO.SubjectId, lessonDTO.Lid, cancellationToken);
 			if (lesson == null)
@@ -481,13 +414,18 @@ namespace grad.Application.LessonFeatures.Services
 			}
 			else
 			{
+				int result = await UpdatePerquisite(deleteLesson.SubjectId, true, lesson, cancellationToken);
+				if(result == 0)
+				{
+					return new ResultDTO { Message = "Failed to update perquisites, lesson was not deleted", StatusCode = 500 };
+				}
 				string directory = $"uploads/subjects/{deleteLesson.SubjectId}/lessonContent/{lesson.Id}";
 				bool videoDeleted = await _cloudinaryServices.DeleteAsync(directory, true,true);
 				if (!videoDeleted)
 				{
 					return new ResultDTO { Message = "Failed to delete video from cloud storage", StatusCode = 500 };
 				}
-				int result = await _lessonRepository.DeleteLesson(deleteLesson.SubjectId, lesson, cancellationToken);
+				result = await _lessonRepository.DeleteLesson(deleteLesson.SubjectId, lesson, cancellationToken);
 				if (result == 0) 
 				{ 
 					return new ResultDTO { Message = "Something went wrong", StatusCode = 500 }; 
@@ -499,6 +437,74 @@ namespace grad.Application.LessonFeatures.Services
 			}
 		}
 
-		
+
+		private async Task<int> UpdatePerquisite(Guid subjectId,bool delete,LessonContent ?lesson,CancellationToken cancellationToken)
+		{
+			if(delete)
+			{
+				int flag = 0;
+				switch (lesson.PerquisiteType)
+				{
+					case PerquisiteType.Lesson:
+						LessonContent Plesson = await _lessonRepository.viewLesson(subjectId, lesson.Perquisite, cancellationToken);
+						if (Plesson != null)
+						{
+							Plesson.Next = null;
+							Plesson.NextType = PerquisiteType.None;
+							int res = await _lessonRepository.editLesson(subjectId,lesson, cancellationToken);
+							flag = res > 0 ? 1 : 0;
+						}
+						break;
+					case PerquisiteType.Quiz:
+						flag = 0;
+						break;
+					default:
+						flag = 1;
+						break;
+				}
+				switch (lesson.NextType)
+				{
+					case PerquisiteType.Lesson:
+						LessonContent Nlesson = await _lessonRepository.viewLesson(subjectId, lesson.Perquisite, cancellationToken);
+						if (Nlesson != null)
+						{
+							Nlesson.Perquisite = null;
+							Nlesson.PerquisiteType = PerquisiteType.None;
+							int res = await _lessonRepository.editLesson(subjectId, lesson, cancellationToken);
+							flag = res > 0 ? 1 : 0;
+						}
+						break;
+					case PerquisiteType.Quiz:
+						flag = 0;
+						break;
+					default:
+						flag = 1;
+						break;
+				}
+				return flag;
+			}
+			else		
+			{
+				switch (lesson.PerquisiteType)
+				{
+					case PerquisiteType.Lesson:
+						LessonContent Plesson = await _lessonRepository.viewLesson(subjectId, lesson.Perquisite, cancellationToken);
+						if (Plesson == null)
+							return 0;
+						else
+						{
+							Plesson.Next = lesson.Id;
+							Plesson.NextType = PerquisiteType.Lesson;
+							return await _lessonRepository.editLesson(subjectId, Plesson, cancellationToken);
+						}
+					case PerquisiteType.Quiz: // needs to be handled
+						return 0;
+
+					default:
+						return 1;
+				}
+			}
+		}
+
 	}
 }	

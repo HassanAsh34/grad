@@ -7,6 +7,7 @@ using Grad.Application.SubjectFeatures.DTOs;
 using Grad.Application.SubjectFeatures.Interfaces;
 using Grad.Application.TeacherFeatures.DTOs;
 using Grad.Application.TeacherFeatures.Interfaces;
+using Grad.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -453,7 +454,23 @@ namespace Grad.API.Controllers
 
 		}
 
-		//implement add exercises
-
+		[HttpGet("list-Perquisites")]
+		public async Task<IActionResult> ListPerquisites([FromHeader] Guid sid, [FromHeader] PerquisiteType perquisiteType, CancellationToken cancellationToken)
+		{
+			string accessToken = User.FindFirst("accessToken")?.Value;
+			string Tid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+			if (string.IsNullOrEmpty(Tid))
+				return Unauthorized();
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
+				return Unauthorized();
+			if (Guid.TryParse(Tid, out Guid GTid))
+			{
+				ResultDTO res =  await _teacherServices.ListPerquisites(new TeacherSubjectDTO { SubjectId = sid, TeacherId = GTid }, perquisiteType, cancellationToken);
+				return StatusCode(res.StatusCode, new { message = res.Message, result = res.result });
+			}
+			else
+				return Unauthorized();
+		}
+			//implement add exercises
 	}
 }

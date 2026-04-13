@@ -69,21 +69,58 @@ namespace Grad.Infrastructure.Repository
 			return level;
 		}
 
+		//public async Task<int> editLevel(Guid Sid, Guid? Lid, Level exercise, CancellationToken CT)
+		//{
+		//	FilterDefinition<SubjectContent> filter;
+		//	UpdateDefinition<SubjectContent> updateBuilder;
+		//	if (Lid == null || Lid == Guid.Empty)
+		//	{
+		//		filter = Builders<SubjectContent>.Filter.And(Builders<SubjectContent>.Filter.Eq(s => s.Id, Sid), Builders<SubjectContent>.Filter.ElemMatch(s => s.Quizzes, q => q.ID == exercise.ID));
+		//		updateBuilder = Builders<SubjectContent>.Update.PullFilter(l => l.Quizzes, q => q.ID == exercise.ID);
+		//		var res = await _subjects.UpdateOneAsync(filter, updateBuilder, cancellationToken: CT);
+		//		if (res.MatchedCount == 0)
+		//			return 0;
+		//		updateBuilder = Builders<SubjectContent>.Update.Push(s => s.Quizzes, exercise);
+		//	}
+		//	else
+		//	{
+		//		filter = Builders<SubjectContent>.Filter.And(Builders<SubjectContent>.Filter.Eq(s => s.Id, Sid), Builders<SubjectContent>.Filter.ElemMatch(s => s.Lessons, l => l.Id == Lid));
+		//		updateBuilder = Builders<SubjectContent>.Update.Set("Lessons.$.Level", exercise);
+		//	}
+		//	var result = await _subjects.UpdateOneAsync(filter, updateBuilder, cancellationToken: CT);
+		//	return (int)result.ModifiedCount;
+		//}
+
 		public async Task<int> editLevel(Guid Sid, Guid? Lid, Level exercise, CancellationToken CT)
 		{
 			FilterDefinition<SubjectContent> filter;
 			UpdateDefinition<SubjectContent> updateBuilder;
+
 			if (Lid == null || Lid == Guid.Empty)
 			{
-				filter = Builders<SubjectContent>.Filter.And(Builders<SubjectContent>.Filter.Eq(s => s.Id, Sid), Builders<SubjectContent>.Filter.ElemMatch(s => s.Quizzes, q => q.ID == exercise.ID));
-				updateBuilder = Builders<SubjectContent>.Update.PullFilter(l => l.Quizzes, q => q.ID == exercise.ID);
+				// ✅ Update specific quiz inside Quizzes array
+				filter = Builders<SubjectContent>.Filter.And(
+					Builders<SubjectContent>.Filter.Eq(s => s.Id, Sid),
+					Builders<SubjectContent>.Filter.ElemMatch(s => s.Quizzes, q => q.ID == exercise.ID)
+				);
+
+				updateBuilder = Builders<SubjectContent>.Update
+					.Set("Quizzes.$", exercise); // 🔥 THIS is the fix
 			}
 			else
 			{
-				filter = Builders<SubjectContent>.Filter.And(Builders<SubjectContent>.Filter.Eq(s => s.Id, Sid), Builders<SubjectContent>.Filter.ElemMatch(s => s.Lessons, l => l.Id == Lid));
-				updateBuilder = Builders<SubjectContent>.Update.Set("Lessons.$.Level", exercise);
+				// ✅ Lessons case (already correct)
+				filter = Builders<SubjectContent>.Filter.And(
+					Builders<SubjectContent>.Filter.Eq(s => s.Id, Sid),
+					Builders<SubjectContent>.Filter.ElemMatch(s => s.Lessons, l => l.Id == Lid)
+				);
+
+				updateBuilder = Builders<SubjectContent>.Update
+					.Set("Lessons.$.Level", exercise);
 			}
+
 			var result = await _subjects.UpdateOneAsync(filter, updateBuilder, cancellationToken: CT);
+
 			return (int)result.ModifiedCount;
 		}
 	}

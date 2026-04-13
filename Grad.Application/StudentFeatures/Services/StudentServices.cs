@@ -1,10 +1,15 @@
+using System.Security.Cryptography;
 using Grad.Application.Common.DTOs;
 using Grad.Application.Common.Interfaces;
+using Grad.Application.ExerciseFeatures.DTOs;
+using Grad.Application.ExerciseFeatures.Interfaces;
 using Grad.Application.LessonFeatures.DTOs;
 using Grad.Application.LessonFeatures.Interfaces;
 using Grad.Application.StudentFeatures.DTOs;
 using Grad.Application.StudentFeatures.Interfaces;
 using Grad.Application.SubjectFeatures.Interfaces;
+using Grad.Application.SubmissionFeatures.DTOs;
+using Grad.Application.SubmissionFeatures.Interfaces;
 using Grad.Domain.Enums;
 using Grad.Domain.Model;
 
@@ -15,6 +20,8 @@ namespace Grad.Application.StudentFeatures.Services
 		private readonly ISubjectServices _subjectServices;
 		private readonly IStudentRepository _studentRepository;
 		private readonly ILessonServices _lessonServices;
+		private readonly ISubmissionServices _submissionServices;
+		private readonly IExerciseServices _exerciseServices;
 		private readonly IlessonRepository _lessonRepository;
 		private readonly IUowServices _uow;
 
@@ -23,12 +30,16 @@ namespace Grad.Application.StudentFeatures.Services
 			IStudentRepository studentRepository,
 			ILessonServices lessonServices,
 			IlessonRepository lessonRepository,
+			ISubmissionServices submissionServices,
+			IExerciseServices exerciseServices,
 			IUowServices uow)
 		{
 			_subjectServices = subjectServices ?? throw new ArgumentNullException(nameof(subjectServices));
 			_lessonServices = lessonServices ?? throw new ArgumentNullException(nameof(lessonServices));
 			_studentRepository = studentRepository ?? throw new ArgumentNullException(nameof(studentRepository));
 			_lessonRepository = lessonRepository ?? throw new ArgumentNullException(nameof(lessonRepository));
+			_submissionServices = submissionServices ?? throw new ArgumentNullException(nameof(submissionServices));
+			_exerciseServices = exerciseServices ?? throw new ArgumentNullException(nameof(exerciseServices));
 			_uow = uow ?? throw new ArgumentNullException(nameof(uow));
 		}
 
@@ -129,11 +140,39 @@ namespace Grad.Application.StudentFeatures.Services
 			}
 		}
 		
-		public async Task<ResultDTO> viewLessons(EnrollSubjectDTO enrollSubject, CancellationToken cancellationToken)
+		public async Task<ResultDTO> viewLessons(EnrollSubjectDTO enrollSubject, CancellationToken cancellationToken)///lockin need to be implemented here
 		{
-			if (await _studentRepository.IsEnrolled(enrollSubject.subFK,enrollSubject.stdFK,cancellationToken))
+			Enrollement enrollement = await _studentRepository.GetEnrollementAsync(enrollSubject.subFK, enrollSubject.stdFK, cancellationToken);
+			if (enrollement != null)
 			{
-				return await _lessonServices.ViewLessons(enrollSubject.subFK, cancellationToken);
+				List<LessonContentDTO> lessons = await _lessonServices.ViewLessons(enrollSubject.subFK, cancellationToken);
+				if(lessons.Count == 0)
+				{
+					return new ResultDTO
+					{
+						Message = "No lessons yet 😊",
+						StatusCode = 200
+					};
+				}
+				else
+				{
+					List<Guid> submittedLessons = enrollement.studentProgresses.Select(e => e.lid).ToList();	
+					foreach(LessonContentDTO lesson in lessons)
+					{
+						if (submittedLessons.Contains(lesson.Id))
+						{
+							lesson.locked = false;
+							lessons.FirstOrDefault(l => l.Id == lesson.Nlid).locked = false;
+						}
+						
+					}
+					return new ResultDTO
+					{
+						Message = "Lessons retrieved successfully",
+						StatusCode = 200,
+						result = lessons
+					};
+				}
 			}
 			else
 			{
@@ -151,10 +190,51 @@ namespace Grad.Application.StudentFeatures.Services
 			return	await _lessonServices.viewLesson(lessonDTO,cancellationToken: cancellationToken);
 		}
 
+		public async Task<ResultDTO> ViewExerciseQuize(LevelDTO levelDTO,Guid stdID,CancellationToken cancellationToken)
+		{
+			if(await _studentRepository.IsEnrolled(levelDTO.Sid,stdID,cancellationToken))
+			{
+				return await _exerciseServices.viewLevel(levelDTO,false,cancellationToken);
+			}
+			else
+				return new ResultDTO
+				{
+					Message = "Restricted access",
+					StatusCode = 403
+				};
+		}
+
+		public async Task<ResultDTO> createSubmission(CreateSubmissionDTO createSubmission, CancellationToken cancellationToken)
+		{
+			if (await _studentRepository.IsEnrolled(createSubmission.SubjectFK, createSubmission.SubmittedBy, cancellationToken))
+			{
+				return await _submissionServices.createSubmission(createSubmission, cancellationToken);
+			}
+			else
+			{
+				return new ResultDTO
+				{
+					Message = "You dont have access to submit to this subject",
+					StatusCode = 403
+				};
+			}
+		}
+
+
+
 		public async Task<ResultDTO> completeLesson(CompletelessonDTO completelesson, CancellationToken cancellationToken)
 		{
 			// Step 1: Verify lesson exists via IlessonRepository (Option A — no service-to-service call)
-			LessonContent lesson = await _lessonRepository.viewLesson(completelesson.Sid, completelesson.Lid, cancellationToken);
+			Enrollement enrollement = await _studentRepository.GetEnrollementAsync(completelesson.Sid, completelesson.uid, cancellationToken);
+			if(enrollement == null)
+			{
+				return new ResultDTO
+				{
+					Message = "You are not enrolled in this subject",
+					StatusCode = 403
+				};
+			}
+			LessonContent lesson = await _lessonRepository.viewLesson(enrollement.SUBFK, completelesson.Lid, cancellationToken);
 			if (lesson == null)
 			{
 				return new ResultDTO
@@ -163,19 +243,7 @@ namespace Grad.Application.StudentFeatures.Services
 					StatusCode = 404
 				};
 			}
-
-			// Step 2: Fetch the student's enrollment (includes studentProgresses navigation property)
-			List<Enrollement> enrollements = await _studentRepository.GetEnrollementsAsync(completelesson.uid, cancellationToken);
-			Enrollement enrollement = enrollements.FirstOrDefault(e => e.SUBFK == completelesson.Sid);
-
-			if (enrollement == null)
-			{
-				return new ResultDTO
-				{
-					Message = "You are not enrolled in this subject",
-					StatusCode = 403
-				};
-			}
+			
 
 			// Step 3: Check if already completed
 			if (enrollement.studentProgresses?.FirstOrDefault(s => s.lid == completelesson.Lid) != null)

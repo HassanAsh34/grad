@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Grad.Domain.Enums;
 using Grad.Domain.Model;
 
 namespace Grad.Application.LessonFeatures.Interfaces
@@ -25,6 +26,8 @@ namespace Grad.Application.LessonFeatures.Interfaces
 		Task<int> DeleteVideo(Guid sid, Guid lid, Guid ?vid = null, CancellationToken CT = default);
 
 		Task<int> editLesson(Guid sid, LessonContent lesson, CancellationToken CT = default);
+
+		Task<int> updateNext(Guid sid, Guid lid, Guid Nlid, PerquisiteType type, CancellationToken CT = default);
 
 	}
 }

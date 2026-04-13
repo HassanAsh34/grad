@@ -11,6 +11,7 @@ using Grad.Application.SubjectFeatures.Interfaces;
 using Grad.Application.TeacherFeatures.DTOs;
 using Grad.Application.TeacherFeatures.Interfaces;
 using Grad.Application.Users.Interfaces;
+using Grad.Domain.Enums;
 using Grad.Domain.Model;
 
 
@@ -98,7 +99,15 @@ namespace Grad.Application.TeacherFeatures.Services
 					Message = "Subject wasnt found"
 				};
 			else
-				return await _lessonServices.ViewLessons(teacherSubject.SubjectId,cancellation: cancellationToken);
+			{
+				List<LessonContentDTO> lessons = await _lessonServices.ViewLessons(teacherSubject.SubjectId, cancellation: cancellationToken);
+				return new ResultDTO
+				{
+					Message = lessons.Any() ? "Lessons retrieved successfully" : "No result",
+					StatusCode = lessons.Any() ? 200 : 404,
+					result = lessons
+				};
+			}
 		}
 
 		public async Task<ResultDTO> ViewLesson(LessonContentDTO lessonContent, CancellationToken cancellationToken)
@@ -195,11 +204,67 @@ namespace Grad.Application.TeacherFeatures.Services
 				};
 			else
 			{
-				return await _exerciseServices.GetQuizes(teacherSubject.SubjectId, cancellationToken);
+				List<LevelDTO> levels =  await _exerciseServices.GetQuizes(teacherSubject.SubjectId, cancellationToken);
+				return new ResultDTO
+				{
+					Message = levels.Any() ? "Quizes retrieved successfully" : "No result",
+					StatusCode = levels.Any() ? 200 : 404,
+					result = levels
+				};
 			}
 		}
 
-		public async Task<ResultDTO> ViewLevel(LevelDTO level,Guid Tid,CancellationToken CT)
+		public async Task<ResultDTO> ListPerquisites(TeacherSubjectDTO teacherSubject,PerquisiteType type,CancellationToken cancellationToken)
+		{
+			if (!await _teacherRepository.CanAccess(teacherSubject.TeacherId, teacherSubject.SubjectId, cancellationToken))
+				return new ResultDTO
+				{
+					StatusCode = 403,
+					Message = "Restricted Access"
+				};
+			else
+			{
+				List<Perquisite> perquisites = new();
+				switch (type)
+				{
+					case PerquisiteType.Lesson:
+						List<LessonContentDTO> lesson = await _lessonServices.ViewLessons(teacherSubject.SubjectId, cancellationToken);
+						perquisites = lesson.Select(l => new Perquisite
+						{
+							id = l.Id,
+							name = l.Title,
+						}).ToList();
+						return new ResultDTO
+						{
+							Message = perquisites.Any() ? "Perquisites retrieved successfully" : "No result",
+							StatusCode = perquisites.Any() ? 200 : 404,
+							result = perquisites
+						};
+					case PerquisiteType.Quiz:
+						List<LevelDTO> levels = await _exerciseServices.GetQuizes(teacherSubject.SubjectId, cancellationToken);
+						perquisites = levels.Select(l => new Perquisite
+						{
+							id = l.ID,
+							name = l.Name,
+						}).ToList();
+						return new ResultDTO
+						{
+							Message = perquisites.Any() ? "Perquisites retrieved successfully" : "No result",
+							StatusCode = perquisites.Any() ? 200 : 404,
+							result = perquisites
+						};
+					default:
+						return new ResultDTO
+						{
+							StatusCode = 400,
+							Message = "Invalid perquisite type"
+						};
+				}
+			}
+		}
+
+
+		public async Task<ResultDTO> ViewLevel(LevelDTO level, Guid Tid, CancellationToken CT)
 		{
 			if (!await _teacherRepository.CanAccess(Tid, level.Sid, CT))
 				return new ResultDTO
@@ -209,7 +274,7 @@ namespace Grad.Application.TeacherFeatures.Services
 				};
 			else
 			{
-				return await _exerciseServices.viewLevel(level,true,CT);
+				return await _exerciseServices.viewLevel(level, true, CT);
 			}
 		}
 

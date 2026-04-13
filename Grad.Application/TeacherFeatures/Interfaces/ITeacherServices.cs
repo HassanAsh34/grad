@@ -3,6 +3,7 @@ using Grad.Application.ExerciseFeatures.DTOs;
 using Grad.Application.LessonFeatures.DTOs;
 using Grad.Application.SubjectFeatures.DTOs;
 using Grad.Application.TeacherFeatures.DTOs;
+using Grad.Domain.Enums;
 
 
 namespace Grad.Application.TeacherFeatures.Interfaces
@@ -42,5 +43,7 @@ namespace Grad.Application.TeacherFeatures.Interfaces
 		public Task<ResultDTO> ViewLevel(LevelDTO level, Guid Tid, CancellationToken CT = default );
 
 		public Task<ResultDTO> EditLevel(EditLevelDTO editLevel, CancellationToken CT = default);
+
+		public Task<ResultDTO> ListPerquisites(TeacherSubjectDTO teacherSubject, PerquisiteType type, CancellationToken cancellationToken = default);
 	}
 }

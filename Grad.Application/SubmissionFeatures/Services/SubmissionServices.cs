@@ -33,49 +33,48 @@ namespace Grad.Application.SubmissionFeatures.Services
 
 		public async Task<ResultDTO> createSubmission(CreateSubmissionDTO createSubmission,CancellationToken CT)
 		{
-			if(await _studentRepository.IsEnrolled(createSubmission.SubmittedBy, createSubmission.SubjectFK, CT))
-			{
-				Level level = await _exerciseRepository.GetLevel(createSubmission.SubjectFK,createSubmission.LessonID,createSubmission.LevelFK,CT);
-				if (level == null)
-					return new ResultDTO
-					{
-						StatusCode = 400,
-						Message = "Failed to Complete Level"
-					};
-				Grade grade = GradeLevel(level, createSubmission.sEDTOs);
-				if(grade == null)
-					return new ResultDTO
-					{
-						StatusCode = 400,
-						Message = "Failed to Complete Level"
-					};
-				Submission submission = new Submission();
-				submission.SubjectFK = createSubmission.SubjectFK;
-				submission.SubmittedBy = createSubmission.SubmittedBy;
-				submission.LevelFK = createSubmission.LevelFK;
-				submission.LessonID = createSubmission.LessonID;
-				submission.Percentage = grade.Percentage;
-				submission.Passed = grade.Passed;
-				_studentRepository.CreateEntityAsync(submission);
-				return await _uow.SaveChangesAsync() > 0 ? new ResultDTO
-				{
-					StatusCode = 200,
-					Message = submission.Passed ? "Yay! You did it!" : "Not this time, but that’s okay! Keep practicing—you’re getting closer!"
-				} : new ResultDTO
+			//if(await _studentRepository.IsEnrolled(createSubmission.SubmittedBy, createSubmission.SubjectFK, CT))
+			//{
+			Level level = await _exerciseRepository.GetLevel(createSubmission.SubjectFK,createSubmission.LessonID,createSubmission.LevelFK,CT);
+			if (level == null)
+				return new ResultDTO
 				{
 					StatusCode = 400,
 					Message = "Failed to Complete Level"
 				};
-			}
-			else
-			{
+			Grade grade = GradeLevel(level, createSubmission.sEDTOs);
+			if(grade == null)
 				return new ResultDTO
 				{
-					StatusCode = 403,
-					Message = "Action cannot be performed"
+					StatusCode = 400,
+					Message = "Failed to Complete Level"
 				};
-			}
+			Submission submission = new Submission();
+			submission.SubjectFK = createSubmission.SubjectFK;
+			submission.SubmittedBy = createSubmission.SubmittedBy;
+			submission.LevelFK = createSubmission.LevelFK;
+			submission.LessonID = createSubmission.LessonID;
+			submission.Percentage = grade.Percentage;
+			submission.Passed = grade.Passed;
+			_studentRepository.CreateEntityAsync(submission);
+			return await _uow.SaveChangesAsync() > 0 ? new ResultDTO
+			{
+				StatusCode = 200,
+				Message = submission.Passed ? "Yay! You did it!" : "Not this time, but that’s okay! Keep practicing—you’re getting closer!"
+			} : new ResultDTO
+			{
+				StatusCode = 400,
+				Message = "Failed to Complete Level"
+			};
 		}
+			//else
+			//{
+			//	return new ResultDTO
+			//	{
+			//		StatusCode = 403,
+			//		Message = "Action cannot be performed"
+			//	};
+			//}
 
 		private Grade GradeLevel(Level level,List<SEDTO> SEDTOs)
 		{
@@ -89,11 +88,12 @@ namespace Grad.Application.SubmissionFeatures.Services
 				foreach(SADTO sa in se.SADTO)
 				{
 					Question q = e.questions.FirstOrDefault(q=>q.Qid == sa.Qid);
-					if (q.CorrectAnswer.Id == sa.Aid)
+					if (q.CorrectAnswer == sa.Aid)
 						score += q.score;
 				}
 			}
-			grade.Percentage = (score / level.total_score) * 100;
+			decimal total_score = level.Exercise.SelectMany(e => e.questions).Sum(q => q.score);
+			grade.Percentage = (score / total_score) * 100;
 			if(grade.Percentage > level.PassingPercentage)
 				grade.Passed = true;
 			return grade;

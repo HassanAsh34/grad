@@ -16,8 +16,8 @@ namespace Grad.Domain.Model
 		public List<Exercise> Exercise { get; set; } = new List<Exercise>();
 		public int PassingPercentage { get; set; }
 		public Difficulty levelDifficulty { get; set; }
-		public int total_score => Exercise?.Sum(e => e.total_score) ?? 0;
+		//public int total_score => Exercise?.Sum(e => e.total_score) ?? 0;
 
-		public int PassingScore => total_score * PassingPercentage / 100;
+		//public int PassingScore => total_score * PassingPercentage / 100;
 	}
 }

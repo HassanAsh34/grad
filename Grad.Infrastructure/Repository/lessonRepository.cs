@@ -2,6 +2,7 @@
 using System.Threading;
 using Grad.Application.LessonFeatures.DTOs;
 using Grad.Application.LessonFeatures.Interfaces;
+using Grad.Domain.Enums;
 using Grad.Domain.Model;
 using Grad.Infrastructure.Persistence;
 using MongoDB.Driver;
@@ -91,8 +92,22 @@ namespace Grad.Infrastructure.Repository
 		public async Task<int> editLesson(Guid sid,LessonContent lesson,CancellationToken CT)
 		{
 			var filter = Builders<SubjectContent>.Filter.And(Builders<SubjectContent>.Filter.Eq(s => s.Id, sid), Builders<SubjectContent>.Filter.ElemMatch(s => s.Lessons, l => l.Id == lesson.Id));
-			var update =Builders<SubjectContent>.Update.Set("Lessons.$.Title", lesson.Title);
+			var update = Builders<SubjectContent>.Update.Combine(Builders<SubjectContent>.Update.Set("Lessons.$.Title", lesson.Title),
+				Builders<SubjectContent>.Update.Set("Lessons.$.Level", lesson.Level),
+				Builders<SubjectContent>.Update.Set("Lessons.$.Perquisite", lesson.Perquisite),
+				Builders<SubjectContent>.Update.Set("Lessons.$.PerquisiteType", lesson.PerquisiteType),
+				Builders<SubjectContent>.Update.Set("Lessons.$.Next", lesson.Next), Builders<SubjectContent>.Update.Set("Lessons.$.NextType", lesson.NextType));
 			var result = await _subjects.UpdateOneAsync(filter, update,cancellationToken: CT);
+			return (int)result.ModifiedCount;
+		}
+
+		public async Task<int> updateNext(Guid sid,Guid lid,Guid Nlid,PerquisiteType type,CancellationToken CT)
+		{
+			var filter = Builders<SubjectContent>.Filter.And(Builders<SubjectContent>.Filter.Eq(s => s.Id, sid), Builders<SubjectContent>.Filter.ElemMatch(s => s.Lessons, l => l.Id == lid));
+			var update = Builders<SubjectContent>.Update.Combine(
+				Builders<SubjectContent>.Update.Set("Lessons.$.Next", Nlid),
+				Builders<SubjectContent>.Update.Set("Lessons.$.NextType", type));
+			var result = await _subjects.UpdateOneAsync(filter, update, cancellationToken: CT);
 			return (int)result.ModifiedCount;
 		}
 		

@@ -8,7 +8,7 @@ namespace Grad.Application.ExerciseFeatures.Interfaces
 	{
 		public Task<ResultDTO> CreateExercise(CreateLevelDTO exerciseDTO, CancellationToken cancellationToken = default);
 
-		public Task<ResultDTO> GetQuizes(Guid sid, CancellationToken CT = default);
+		public Task<List<LevelDTO>> GetQuizes(Guid sid, CancellationToken CT = default);
 
 		public Task<ResultDTO> viewLevel(LevelDTO levelDTO, bool teacher, CancellationToken CT = default);
 

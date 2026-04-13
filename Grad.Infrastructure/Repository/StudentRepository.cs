@@ -1,8 +1,9 @@
-﻿using Grad.Application.StudentFeatures.Interfaces;
+﻿using System.Security.Cryptography;
+using Grad.Application.Common.Interfaces;
+using Grad.Application.StudentFeatures.Interfaces;
 using Grad.Domain.Enums;
 using Grad.Domain.Model;
 using Grad.Infrastructure.Persistence;
-using Grad.Application.Common.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace Grad.Infrastructure.Repository
@@ -37,6 +38,11 @@ namespace Grad.Infrastructure.Repository
 		{
 			Student s = await base.GetEntityAsync<Student>(s=>s.Id ==  Sid,CT);
 			return s != null ? s.Disability : DisablityType.None;
+		}
+
+		public async Task<Enrollement> GetEnrollementAsync(Guid SID, Guid STDID,CancellationToken CT = default)
+		{
+			return await _context.Set<Enrollement>().Where(e => e.STUFK == STDID && e.SUBFK == SID).Include(e => e.studentProgresses).FirstOrDefaultAsync();
 		}
 		//public async Task<List>
 	}
