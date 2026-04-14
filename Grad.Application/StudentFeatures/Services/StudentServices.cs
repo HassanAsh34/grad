@@ -140,13 +140,13 @@ namespace Grad.Application.StudentFeatures.Services
 			}
 		}
 		
-		public async Task<ResultDTO> viewLessons(EnrollSubjectDTO enrollSubject, CancellationToken cancellationToken)///lockin need to be implemented here
+		public async Task<ResultDTO> viewLessons(EnrollSubjectDTO enrollSubject, CancellationToken cancellationToken)//Enhanced
 		{
 			Enrollement enrollement = await _studentRepository.GetEnrollementAsync(enrollSubject.subFK, enrollSubject.stdFK, cancellationToken);
 			if (enrollement != null)
 			{
-				List<LessonContentDTO> lessons = await _lessonServices.ViewLessons(enrollSubject.subFK, cancellationToken);
-				if(lessons.Count == 0)
+				Dictionary<Guid, LessonContentDTO> lessons = (await _lessonServices.ViewLessons(enrollSubject.subFK, cancellationToken)).ToDictionary(l => l.Id, l => l);
+				if (lessons.Count == 0)
 				{
 					return new ResultDTO
 					{
@@ -157,20 +157,25 @@ namespace Grad.Application.StudentFeatures.Services
 				else
 				{
 					List<Guid> submittedLessons = enrollement.studentProgresses.Select(e => e.lid).ToList();	
-					foreach(LessonContentDTO lesson in lessons)
+					foreach(Guid Lid in submittedLessons)
 					{
-						if (submittedLessons.Contains(lesson.Id))
+						LessonContentDTO lesson = lessons.TryGetValue(Lid,out var l) ? l : null;
+						if(lesson != null)
 						{
-							lesson.locked = false;
-							lessons.FirstOrDefault(l => l.Id == lesson.Nlid).locked = false;
+							Guid Nlid = lesson.Nlid ?? Guid.Empty;
+							LessonContentDTO Nlesson = Nlid != Guid.Empty ? lessons[Nlid] : null;
+							if(Nlesson != null)
+							{
+								Nlesson.locked = false;
+								lessons[Nlid] = Nlesson;
+							}
 						}
-						
 					}
 					return new ResultDTO
 					{
 						Message = "Lessons retrieved successfully",
 						StatusCode = 200,
-						result = lessons
+						result = lessons.Values.ToList()
 					};
 				}
 			}
@@ -246,7 +251,8 @@ namespace Grad.Application.StudentFeatures.Services
 			
 
 			// Step 3: Check if already completed
-			if (enrollement.studentProgresses?.FirstOrDefault(s => s.lid == completelesson.Lid) != null)
+			if (enrollement.studentProgresses?.FirstOrDefault
+				(s => s.lid == completelesson.Lid) != null)
 			{
 				return new ResultDTO
 				{

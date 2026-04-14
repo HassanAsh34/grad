@@ -60,7 +60,8 @@ namespace Grad.Application.SubmissionFeatures.Services
 			return await _uow.SaveChangesAsync() > 0 ? new ResultDTO
 			{
 				StatusCode = 200,
-				Message = submission.Passed ? "Yay! You did it!" : "Not this time, but that’s okay! Keep practicing—you’re getting closer!"
+				Message = submission.Passed ? "Yay! You did it!" : "Not this time, but that’s okay! Keep practicing—you’re getting closer!",
+				result = grade
 			} : new ResultDTO
 			{
 				StatusCode = 400,
@@ -82,18 +83,20 @@ namespace Grad.Application.SubmissionFeatures.Services
 			decimal score = 0;
 			if (SEDTOs.Count == 0)
 				return null;
-			foreach(SEDTO se in SEDTOs)
+			Dictionary<Guid, Exercise> exerciseDict = level.Exercise.ToDictionary(e => e.Id,e=>e);
+			Dictionary<Guid, Question> questionDict = level.Exercise.SelectMany(e => e.questions).ToDictionary(q => q.Qid, q => q);
+			foreach (SEDTO se in SEDTOs)
 			{
-				Exercise e = level.Exercise.FirstOrDefault(e => e.Id == se.Eid);
-				foreach(SADTO sa in se.SADTO)
+				Exercise e = exerciseDict.TryGetValue(se.Eid, out var ex) ? ex : null;
+				foreach (SADTO sa in se.SADTO)
 				{
-					Question q = e.questions.FirstOrDefault(q=>q.Qid == sa.Qid);
-					if (q.CorrectAnswer == sa.Aid)
+					Question q = questionDict.TryGetValue(sa.Qid, out var ques) ? ques : null;
+					if (q != null && q.CorrectAnswer == sa.Aid)
 						score += q.score;
 				}
 			}
 			decimal total_score = level.Exercise.SelectMany(e => e.questions).Sum(q => q.score);
-			grade.Percentage = (score / total_score) * 100;
+			grade.Percentage = total_score != 0 ? (score / total_score) * 100 : 0;
 			if(grade.Percentage > level.PassingPercentage)
 				grade.Passed = true;
 			return grade;

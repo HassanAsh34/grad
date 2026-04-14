@@ -423,11 +423,12 @@ namespace Grad.Application.ExerciseFeatures.Services
 				directoryPath += $"lessonContent/{editLevel.Lid}/";
 			}
 			directoryPath += $"exercise/{level.ID}/";
+			Dictionary<Guid, Exercise> Exercises = level.Exercise.ToDictionary(e => e.Id, e => e);
 			if (editLevel.ExerciseDTOs != null && editLevel.ExerciseDTOs.Count > 0)
 			{
 				foreach(ExerciseDTO exerciseDTO in editLevel.ExerciseDTOs)
 				{
-					Exercise exercise = level.Exercise.FirstOrDefault(e => e.Id == exerciseDTO.Id);
+					Exercise exercise = Exercises.TryGetValue(exerciseDTO.Id, out var e) ? e : null;
 					if (exercise != null)
 					{
 						level.Exercise.Remove(exercise);
@@ -489,10 +490,11 @@ namespace Grad.Application.ExerciseFeatures.Services
 					return null;
 				}
 			}
+			Dictionary<Guid, Question> Questions = exercise != null ? exercise.questions.ToDictionary(q => q.Qid, q => q) : new Dictionary<Guid, Question>();
 			foreach (QuestionDTO questionDTO in exerciseDTO.questions)
 			{
 
-				Question question = exercise != null ? exercise.questions.FirstOrDefault(q => q.Qid == questionDTO.Qid) : null;
+				Question question = Questions.TryGetValue(questionDTO.Qid, out var q) ? q : null;
 				if (question == null)
 				{
 					question = await editQuestion(questionDTO, null, Nexercise.Type, directoryPath, cancellationToken);
@@ -564,11 +566,11 @@ namespace Grad.Application.ExerciseFeatures.Services
 					}
 					break;
 				case ExerciseType.MCQ:
-					List<Answer> answers = question != null ? question.Answers : null;
+					Dictionary<Guid,Answer> answers = question != null ? question.Answers.ToDictionary(a=>a.Id,a=>a) : null;
 					Nquestion.Answers = new List<Answer>();
 					foreach (AnswerDTO answerDTO in questionDTO.Answers)
 					{
-						Answer answer = answerDTO.Id != null ? answers != null ? answers.FirstOrDefault(a => a.Id == answerDTO.Id) : null : null;
+						Answer answer = (answerDTO.Id != null && answers.TryGetValue(answerDTO.Id, out var a)) ? a : null;
 						if (answer != null)
 						{
 							answer = await editAnswer(answerDTO, answer, directory, cancellation);
