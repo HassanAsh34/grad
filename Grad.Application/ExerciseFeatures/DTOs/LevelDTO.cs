@@ -17,6 +17,10 @@ namespace Grad.Application.ExerciseFeatures.DTOs
 
 		public int DurationInMinutes { get; set; } = -1;
 
+		public int AttemptsAllowed { get; set; } = 0;	
+
+
+
 		public string Name { get; set; }
 		public IEnumerable<ExerciseDTO> Exercise { get; set; }
 		public int PassingPercentage { get; set; }

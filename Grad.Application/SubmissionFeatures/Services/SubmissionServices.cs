@@ -10,6 +10,7 @@ using Grad.Application.StudentFeatures.Interfaces;
 using Grad.Application.SubjectFeatures.Interfaces;
 using Grad.Application.SubmissionFeatures.DTOs;
 using Grad.Application.SubmissionFeatures.Interfaces;
+using Grad.Domain.Enums;
 using Grad.Domain.Model;
 
 namespace Grad.Application.SubmissionFeatures.Services
@@ -33,8 +34,7 @@ namespace Grad.Application.SubmissionFeatures.Services
 
 		public async Task<ResultDTO> createSubmission(CreateSubmissionDTO createSubmission,CancellationToken CT)
 		{
-			//if(await _studentRepository.IsEnrolled(createSubmission.SubmittedBy, createSubmission.SubjectFK, CT))
-			//{
+
 			Level level = await _exerciseRepository.GetLevel(createSubmission.SubjectFK,createSubmission.LessonID,createSubmission.LevelFK,CT);
 			if (level == null)
 				return new ResultDTO
@@ -49,12 +49,28 @@ namespace Grad.Application.SubmissionFeatures.Services
 					StatusCode = 400,
 					Message = "Failed to Complete Level"
 				};
+			int AttemptsRemaining = 0;
+			if (level.AttemptsAllowed != -1)
+			{
+				int attemptsMade = await _submissionRepository.RetakeAttempted( createSubmission.SubmittedBy,createSubmission.LevelFK,CT);
+				AttemptsRemaining = level.AttemptsAllowed - attemptsMade - 1;
+				if (AttemptsRemaining <= 0)
+					return new ResultDTO
+					{
+						StatusCode = 400,
+						Message = "No Attempts Remaining"
+					};
+			}
+			else
+				AttemptsRemaining = -1;
 			Submission submission = new Submission();
 			submission.SubjectFK = createSubmission.SubjectFK;
 			submission.SubmittedBy = createSubmission.SubmittedBy;
 			submission.LevelFK = createSubmission.LevelFK;
 			submission.LessonID = createSubmission.LessonID;
+			submission.quizName = level.Name;
 			submission.Percentage = grade.Percentage;
+			submission.AttemptsRemaining = AttemptsRemaining;
 			submission.Passed = grade.Passed;
 			_studentRepository.CreateEntityAsync(submission);
 			return await _uow.SaveChangesAsync() > 0 ? new ResultDTO
@@ -68,14 +84,29 @@ namespace Grad.Application.SubmissionFeatures.Services
 				Message = "Failed to Complete Level"
 			};
 		}
-			//else
-			//{
-			//	return new ResultDTO
-			//	{
-			//		StatusCode = 403,
-			//		Message = "Action cannot be performed"
-			//	};
-			//}
+			
+
+		public async Task<List<SubmissionDTO>> GetSubmissions(Guid STDid, CancellationToken cancellationToken)
+		{
+			List<Submission> submissions = await _submissionRepository.GetSubmissions(STDid, cancellationToken);
+			List<SubmissionDTO> submissionDTOs = new List<SubmissionDTO>();
+			foreach(Submission s in submissions)
+			{
+				submissionDTOs.Add(new SubmissionDTO
+				{
+					SubjectName = s.Subject != null ? s.Subject.Name : "Unknown Subject",
+					LevelName = s.quizName,
+					SubjectFK = s.SubjectFK,
+					LevelFK = s.LevelFK,
+					LessonID = s.LessonID ?? null,
+					Percentage = s.Percentage,
+					SubmittedAt = s.SubmittedAt,
+					RetakesRemaining = s.AttemptsRemaining, // This would require additional logic to calculate based on the student's history and the subject's retake policy
+					TimeTakenInMinutes = 0, // This would require additional logic to calculate based on the submission's start and end times
+				});
+			}
+			return submissionDTOs;
+		}
 
 		private Grade GradeLevel(Level level,List<SEDTO> SEDTOs)
 		{

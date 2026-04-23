@@ -22,6 +22,10 @@ namespace Grad.Application.ExerciseFeatures.DTOs
 
 		public int PassingGradePercentage { get; set; }
 
+		public PerquisiteType PerquisiteType { get; set; } = PerquisiteType.None;
+
+		public Guid ? PerquisiteID { get; set; }
+
 		public Difficulty levelDifficulty { get; set; }
 	}
 }

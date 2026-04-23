@@ -1,4 +1,4 @@
-﻿using Grad.Domain.Enums;
+using Grad.Domain.Enums;
 
 namespace Grad.Domain.Model
 {
@@ -8,6 +8,7 @@ namespace Grad.Domain.Model
 		public Guid Id { get; private set; } = Guid.NewGuid();
 
 		public string Title { get; set; }
+		public string Description { get; set; }
 
 		public Guid? Perquisite { get; set; }
 

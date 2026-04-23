@@ -5,11 +5,14 @@ using System.Text;
 using System.Threading.Tasks;
 using Grad.Application.Common.DTOs;
 using Grad.Application.SubmissionFeatures.DTOs;
+using Grad.Domain.Model;
 
 namespace Grad.Application.SubmissionFeatures.Interfaces
 {
 	public interface ISubmissionServices
 	{
 		public Task<ResultDTO> createSubmission(CreateSubmissionDTO createSubmission, CancellationToken CT);
+
+		public Task<List<SubmissionDTO>> GetSubmissions(Guid STDid, CancellationToken cancellationToken);
 	}
 }

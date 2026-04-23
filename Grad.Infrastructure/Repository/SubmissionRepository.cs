@@ -24,6 +24,9 @@ namespace Grad.Infrastructure.Repository
 			return await _Context.submissions.Where(s => s.SubmittedBy == STDid).Include(s => s.Subject).ToListAsync(cancellationToken);
 		}
 
-		
+		public async Task<int> RetakeAttempted(Guid STDid, Guid Lvlid, CancellationToken cancellationToken)
+		{
+			return await _Context.submissions.Where(s=>s.SubmittedBy == STDid && s.LevelFK == Lvlid).CountAsync(cancellationToken);
+		}
 	}
 }

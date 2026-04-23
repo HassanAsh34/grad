@@ -14,13 +14,15 @@ namespace grad.Application.LessonFeatures.Services
 		private readonly ICloudinaryServices _cloudinaryServices;
 		private readonly ISubjectServices _subjectServices;
 		private readonly IlessonRepository _lessonRepository;
+		private readonly IPerquisiteServices _perquisiteServices;
 		//private readonly IUowServices _Uow;
 
-		public LessonServices(ICloudinaryServices cloudinaryServices, ISubjectServices subjectServices, IlessonRepository repository)
+		public LessonServices(ICloudinaryServices cloudinaryServices, ISubjectServices subjectServices, IlessonRepository repository,IPerquisiteServices perquisiteServices)
 		{
 			_cloudinaryServices = cloudinaryServices ?? throw new ArgumentNullException(nameof(cloudinaryServices));
 			_subjectServices = subjectServices ?? throw new ArgumentNullException(nameof(subjectServices));
 			_lessonRepository = repository ?? throw new ArgumentNullException(nameof(repository));
+			_perquisiteServices = perquisiteServices ?? throw new ArgumentNullException(nameof(perquisiteServices));
 			//_Uow = uow ?? throw new ArgumentNullException(nameof(uow));
 		}
 
@@ -29,6 +31,7 @@ namespace grad.Application.LessonFeatures.Services
 			LessonContent Nlesson = new LessonContent
 			{
 				Title = lessonDTO.Title,
+				Description = lessonDTO.Description,
 				Perquisite = lessonDTO.Perquisite,
 				PerquisiteType = lessonDTO.PerquisiteType,
 				Next = null,
@@ -44,9 +47,9 @@ namespace grad.Application.LessonFeatures.Services
 				};
 			}
 			
-			res = await UpdatePerquisite(lessonDTO.SubjectId,false,Nlesson, cancellationToken);
+			res = await _perquisiteServices.UpdatePerquisite(lessonDTO.SubjectId,Nlesson.PerquisiteType,Nlesson.Perquisite??Guid.Empty,Guid.Empty,PerquisiteType.None,Nlesson.Id,true,cancellationToken: cancellationToken);
 
-			if (res == 0)
+			if (res <= 0)
 			{
 				await _lessonRepository.DeleteLesson(lessonDTO.SubjectId, Nlesson, cancellationToken);
 				return new ResultDTO
@@ -321,6 +324,7 @@ namespace grad.Application.LessonFeatures.Services
 					Id = l.Id,
 					SubjectId = sid,
 					Title = l.Title,
+					Description = l.Description,
 					VideosCount = l.Videos.Count,
 					NextType = l.NextType,
 					Nlid = l.Next,
@@ -344,6 +348,7 @@ namespace grad.Application.LessonFeatures.Services
 				};
 			}
 			lessonContentDTO.Title = lesson.Title;
+			lessonContentDTO.Description = lesson.Description;
 			lessonContentDTO.VideosCount = lesson.Videos.Count;
 			if (lesson.Level != null)
 			{
@@ -388,14 +393,65 @@ namespace grad.Application.LessonFeatures.Services
 					Message = "lessson wasnt found",
 					StatusCode = 400
 				};
+
+			bool changed = false;
 			if (!string.IsNullOrEmpty(lessonDTO.Title))
+			{
 				lesson.Title = lessonDTO.Title;
-			else
+				changed = true;
+			}
+			
+			if (lessonDTO.Description != null)
+			{
+				lesson.Description = lessonDTO.Description;
+				changed = true;
+			}
+
+			int updated = await _perquisiteServices.UpdatePerquisite(lessonDTO.SubjectId, lesson.PerquisiteType, lesson.Perquisite ?? Guid.Empty, lessonDTO.Perquisite ?? Guid.Empty,lessonDTO.PerquisiteType, lesson.Id,cancellationToken: cancellationToken);
+
+			switch(updated)
+			{
+				case -1:
+					changed = false;
+					break;
+				case -2:
+					return new ResultDTO
+					{
+						Message = "Failed to update Perquisite, No changes were made",
+						StatusCode = 500
+					};
+				case -3:
+					return new ResultDTO
+					{
+						Message = "Lesson cant be a perquisite of itself",
+						StatusCode = 400
+					};
+				case -4:
+					return new ResultDTO
+					{
+						Message = $"this {lessonDTO.PerquisiteType.ToString()} can't be a perquisite because this lesson is already a perquisite of that {lessonDTO.PerquisiteType.ToString()}",
+						StatusCode = 400
+					};
+				case 0:
+					return new ResultDTO
+					{
+						Message = $"this {lessonDTO.PerquisiteType.ToString()} wasnt found, No changes were made",
+						StatusCode = 400
+					};
+				default:
+					changed = true;
+					lesson.Perquisite = lessonDTO.PerquisiteType  != PerquisiteType.None ? lessonDTO.Perquisite : null;
+					lesson.PerquisiteType = lessonDTO.PerquisiteType;
+					break;
+			}
+			if (!changed)
+			{
 				return new ResultDTO
 				{
 					Message = "No changes were made.",
 					StatusCode = 200
 				};
+			}
 
 			int res = await _lessonRepository.editLesson(lessonDTO.SubjectId, lesson, cancellationToken);
 			return new ResultDTO
@@ -414,8 +470,8 @@ namespace grad.Application.LessonFeatures.Services
 			}
 			else
 			{
-				int result = await UpdatePerquisite(deleteLesson.SubjectId, true, lesson, cancellationToken);
-				if(result == 0)
+				int result = await _perquisiteServices.RemovePerquisite(deleteLesson.SubjectId,lesson.Perquisite ?? Guid.Empty,lesson.PerquisiteType, cancellationToken);
+				if(result == 0 || result == -1)
 				{
 					return new ResultDTO { Message = "Failed to update perquisites, lesson was not deleted", StatusCode = 500 };
 				}
@@ -438,73 +494,7 @@ namespace grad.Application.LessonFeatures.Services
 		}
 
 
-		private async Task<int> UpdatePerquisite(Guid subjectId,bool delete,LessonContent ?lesson,CancellationToken cancellationToken)
-		{
-			if(delete)
-			{
-				int flag = 0;
-				switch (lesson.PerquisiteType)
-				{
-					case PerquisiteType.Lesson:
-						LessonContent Plesson = await _lessonRepository.viewLesson(subjectId, lesson.Perquisite, cancellationToken);
-						if (Plesson != null)
-						{
-							Plesson.Next = null;
-							Plesson.NextType = PerquisiteType.None;
-							int res = await _lessonRepository.editLesson(subjectId,lesson, cancellationToken);
-							flag = res > 0 ? 1 : 0;
-						}
-						break;
-					case PerquisiteType.Quiz:
-						flag = 0;
-						break;
-					default:
-						flag = 1;
-						break;
-				}
-				switch (lesson.NextType)
-				{
-					case PerquisiteType.Lesson:
-						LessonContent Nlesson = await _lessonRepository.viewLesson(subjectId, lesson.Perquisite, cancellationToken);
-						if (Nlesson != null)
-						{
-							Nlesson.Perquisite = null;
-							Nlesson.PerquisiteType = PerquisiteType.None;
-							int res = await _lessonRepository.editLesson(subjectId, lesson, cancellationToken);
-							flag = res > 0 ? 1 : 0;
-						}
-						break;
-					case PerquisiteType.Quiz:
-						flag = 0;
-						break;
-					default:
-						flag = 1;
-						break;
-				}
-				return flag;
-			}
-			else		
-			{
-				switch (lesson.PerquisiteType)
-				{
-					case PerquisiteType.Lesson:
-						LessonContent Plesson = await _lessonRepository.viewLesson(subjectId, lesson.Perquisite, cancellationToken);
-						if (Plesson == null)
-							return 0;
-						else
-						{
-							Plesson.Next = lesson.Id;
-							Plesson.NextType = PerquisiteType.Lesson;
-							return await _lessonRepository.editLesson(subjectId, Plesson, cancellationToken);
-						}
-					case PerquisiteType.Quiz: // needs to be handled
-						return 0;
-
-					default:
-						return 1;
-				}
-			}
-		}
+		
 
 	}
 }	

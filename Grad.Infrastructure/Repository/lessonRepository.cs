@@ -1,4 +1,4 @@
-﻿using System.Security.Cryptography;
+using System.Security.Cryptography;
 using System.Threading;
 using Grad.Application.LessonFeatures.DTOs;
 using Grad.Application.LessonFeatures.Interfaces;
@@ -44,7 +44,7 @@ namespace Grad.Infrastructure.Repository
 				return null;
 			var filter = Builders<SubjectContent>.Filter.And(Builders<SubjectContent>.Filter.Eq(s => s.Id, sid), Builders<SubjectContent>.Filter.ElemMatch(s => s.Lessons, l => l.Id == lid));
 			SubjectContent subjectContent = await _subjects.Find(filter).FirstOrDefaultAsync(CT);
-			return subjectContent.Lessons.FirstOrDefault(l => l.Id == lid);
+			return subjectContent != null ? subjectContent.Lessons.FirstOrDefault(l => l.Id == lid) : null;
 		}
 
 		public async Task<int> uploadVideo(Guid sid,LessonContent lesson, CancellationToken CT)
@@ -93,6 +93,7 @@ namespace Grad.Infrastructure.Repository
 		{
 			var filter = Builders<SubjectContent>.Filter.And(Builders<SubjectContent>.Filter.Eq(s => s.Id, sid), Builders<SubjectContent>.Filter.ElemMatch(s => s.Lessons, l => l.Id == lesson.Id));
 			var update = Builders<SubjectContent>.Update.Combine(Builders<SubjectContent>.Update.Set("Lessons.$.Title", lesson.Title),
+				Builders<SubjectContent>.Update.Set("Lessons.$.Description", lesson.Description),
 				Builders<SubjectContent>.Update.Set("Lessons.$.Level", lesson.Level),
 				Builders<SubjectContent>.Update.Set("Lessons.$.Perquisite", lesson.Perquisite),
 				Builders<SubjectContent>.Update.Set("Lessons.$.PerquisiteType", lesson.PerquisiteType),

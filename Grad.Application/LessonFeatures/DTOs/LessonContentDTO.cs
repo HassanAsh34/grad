@@ -1,4 +1,4 @@
-﻿using Grad.Application.ExerciseFeatures.DTOs;
+using Grad.Application.ExerciseFeatures.DTOs;
 using Grad.Domain.Enums;
 
 namespace Grad.Application.LessonFeatures.DTOs
@@ -11,6 +11,7 @@ namespace Grad.Application.LessonFeatures.DTOs
 		public Guid SubjectId { get; set; }
 
 		public string Title { get; set; }
+		public string Description { get; set; } = string.Empty;
 
 
 		public int VideosCount { get; set; } = 0;

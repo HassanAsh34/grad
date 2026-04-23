@@ -1,4 +1,4 @@
-﻿using System.Security.Cryptography;
+using System.Security.Cryptography;
 using Grad.Application.Common.DTOs;
 using Grad.Application.Common.Interfaces;
 using Grad.Application.ExerciseFeatures.DTOs;
@@ -240,7 +240,7 @@ namespace Grad.API.Controllers
 		}
 
 		[HttpPatch("Edit-Lesson")]
-		public async Task<IActionResult> editLisson([FromBody] EditLessonDTO lessonDTO, CancellationToken cancellationToken)
+		public async Task<IActionResult> editLesson([FromBody] EditLessonDTO lessonDTO, CancellationToken cancellationToken)
 		{
 			string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
 			string uid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;

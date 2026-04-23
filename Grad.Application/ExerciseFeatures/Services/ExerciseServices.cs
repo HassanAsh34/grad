@@ -3,6 +3,7 @@ using Grad.Application.Common.DTOs;
 using Grad.Application.Common.Interfaces;
 using Grad.Application.ExerciseFeatures.DTOs;
 using Grad.Application.ExerciseFeatures.Interfaces;
+using Grad.Application.LessonFeatures.Interfaces;
 using Grad.Application.SubjectFeatures.Interfaces;
 using Grad.Domain.Enums;
 using Grad.Domain.Model;
@@ -15,12 +16,15 @@ namespace Grad.Application.ExerciseFeatures.Services
 		private readonly ICloudinaryServices _cloudinaryServices;
 		private readonly IExerciseRepository _exerciseRepository;
 		private readonly ISubjectRepository _subjectRepository;
+		private readonly IPerquisiteServices _perquisiteServices;
+		//private readonly IlessonRepository _IlessonRepository;
 
-		public ExerciseServices(ICloudinaryServices cloudinaryServices, ISubjectRepository subjectRepository, IExerciseRepository exerciseRepository)
+		public ExerciseServices(ICloudinaryServices cloudinaryServices, ISubjectRepository subjectRepository, IExerciseRepository exerciseRepository,IPerquisiteServices perquisiteServices)
 		{
 			_cloudinaryServices = cloudinaryServices ?? throw new ArgumentNullException(nameof(cloudinaryServices));
 			_exerciseRepository = exerciseRepository ?? throw new ArgumentNullException(nameof(exerciseRepository));
 			_subjectRepository = subjectRepository ?? throw new ArgumentNullException(nameof(subjectRepository));
+			_perquisiteServices = perquisiteServices ?? throw new ArgumentNullException(nameof(perquisiteServices));
 		}
 
 		//public async Task<ResultDTO> CreateExercise(CreateLevelDTO levelDTO, CancellationToken cancellationToken) //not tested yet
@@ -225,14 +229,36 @@ namespace Grad.Application.ExerciseFeatures.Services
 							StatusCode = 400
 						};
 					}
-					LessonContent lesson = subjectContent.Lessons.FirstOrDefault(l => l.Id == levelDTO.Lid);
+					Dictionary<Guid, LessonContent> lessons = subjectContent.Lessons.ToDictionary(l => l.Id, l => l);
+					lessons.TryGetValue(levelDTO.Lid ?? Guid.Empty, out LessonContent lesson);
 					Level level = new Level
 					{
 						Name = levelDTO.Name,
 						PassingPercentage = levelDTO.PassingGradePercentage,
-						levelDifficulty = levelDTO.levelDifficulty
+						levelDifficulty = levelDTO.levelDifficulty,
+						//Perquisite = levelDTO.PerquisiteID,
+						PerquisiteType = levelDTO.Lid == null ? levelDTO.PerquisiteType : PerquisiteType.None,
+						Perquisite = levelDTO.Lid == null ? levelDTO.PerquisiteID : null
 					};
 
+
+					//int perquisiteResult = await _perquisiteServices.UpdatePerquisite(levelDTO.Sid, levelDTO.PerquisiteType, levelDTO.PerquisiteID ?? Guid.Empty, Guid.Empty, level.ID, cancellationToken: cancellationToken);
+					int perquisiteResult = await _perquisiteServices.UpdatePerquisite(levelDTO.Sid, level.PerquisiteType, level.Perquisite ?? Guid.Empty,Guid.Empty,PerquisiteType.None,level.ID,true,cancellationToken: cancellationToken);
+
+					//switch (level.PerquisiteType)
+					//{
+					//	case PerquisiteType.Lesson:
+					//		lessons.TryGetValue(levelDTO.PerquisiteID ?? Guid.Empty, out LessonContent Plesson);
+					//		if (Plesson != null)
+					//		{
+					//			Plesson.NextType = PerquisiteType.Quiz;
+					//			Plesson.Next = level.ID;
+					//			perquisiteResult = await _IlessonRepository.editLesson(subjectContent.Id, Plesson, cancellationToken);
+					//		}
+					//		break;
+					//	default:
+					//		break;
+					//}
 					string directoryPath = $"subjects/{subjectContent.Id}/";
 					if (lesson != null)
 					{
@@ -263,6 +289,13 @@ namespace Grad.Application.ExerciseFeatures.Services
 					}
 					else
 					{
+						if (level.PerquisiteType != PerquisiteType.None && perquisiteResult <= 0)
+						{
+							level.PerquisiteType = PerquisiteType.None;
+							level.Perquisite = null;
+						}
+						else
+							perquisiteResult = 1;
 						res = await _exerciseRepository.addQuizToSubject(subjectContent.Id, level, cancellationToken);
 					}
 					if (res == 0)
@@ -279,7 +312,7 @@ namespace Grad.Application.ExerciseFeatures.Services
 					{
 						return new ResultDTO
 						{
-							Message = "Exercise was added successfully",
+							Message = perquisiteResult == 0 ? "Exercise was added successfully" : "Exercise was added successfully, but perquisite was not saved",
 							StatusCode = 201
 						};
 					}
@@ -405,7 +438,7 @@ namespace Grad.Application.ExerciseFeatures.Services
 			};
 		}
 
-		public async Task<ResultDTO> EditLevel(EditLevelDTO editLevel, CancellationToken cancellationToken)
+		public async Task<ResultDTO> EditLevel(EditLevelDTO editLevel, CancellationToken cancellationToken)//update edit to handle perquisites
 		{
 			Level level = await _exerciseRepository.GetLevel(editLevel.Sid, editLevel.Lid, editLevel.Id, cancellationToken);
 			if (level == null)
@@ -566,7 +599,7 @@ namespace Grad.Application.ExerciseFeatures.Services
 					}
 					break;
 				case ExerciseType.MCQ:
-					Dictionary<Guid,Answer> answers = question != null ? question.Answers.ToDictionary(a=>a.Id,a=>a) : null;
+					Dictionary<Guid,Answer> answers = question != null ? question.Answers.ToDictionary(a=>a.Id,a=>a) : new Dictionary<Guid, Answer>();
 					Nquestion.Answers = new List<Answer>();
 					foreach (AnswerDTO answerDTO in questionDTO.Answers)
 					{

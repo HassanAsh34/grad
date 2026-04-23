@@ -11,8 +11,19 @@ namespace Grad.Domain.Model
 	{
 		public Guid ID { get; set; } = Guid.NewGuid();
 
-		public int Duration { get; set; } = -1;
+		public int Duration { get; set; } = -1; // -1 indicates unlimited time
+
+		public int AttemptsAllowed { get; set; } = -1; // -1 indicates unlimited attempts
 		public string Name { get; set; }
+
+		public Guid? Perquisite { get; set; }
+
+		public Guid? Next { get; set; }
+
+		public PerquisiteType NextType { get; set; } = PerquisiteType.None;
+
+		public PerquisiteType PerquisiteType { get; set; } = PerquisiteType.None;
+
 		public List<Exercise> Exercise { get; set; } = new List<Exercise>();
 		public int PassingPercentage { get; set; }
 		public Difficulty levelDifficulty { get; set; }

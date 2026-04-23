@@ -21,6 +21,8 @@ namespace Grad.Application.StudentFeatures.Interfaces
 
 		public Task<ResultDTO> createSubmission(CreateSubmissionDTO createSubmission, CancellationToken cancellationToken = default);
 
-		public Task<ResultDTO> completeLesson(CompletelessonDTO lessonDTO, CancellationToken cancellationToken);
+		public Task<ResultDTO> completeLesson(CompletelessonDTO lessonDTO, CancellationToken cancellationToken = default);
+
+		public Task<ResultDTO> viewSubmissions(Guid stdID, CancellationToken cancellationToken = default);
 	}
 }

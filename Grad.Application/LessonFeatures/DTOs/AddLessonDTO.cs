@@ -1,4 +1,4 @@
-﻿using Grad.Domain.Enums;
+using Grad.Domain.Enums;
 
 namespace Grad.Application.LessonFeatures.DTOs
 {
@@ -13,5 +13,6 @@ namespace Grad.Application.LessonFeatures.DTOs
 		public Guid? Perquisite { get; set; }
 
 		public string Title { get; set; }
+		public string? Description { get; set; }
 	}
 }

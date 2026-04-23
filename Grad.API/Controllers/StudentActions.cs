@@ -47,6 +47,27 @@ namespace Grad.API.Controllers
 			}
 		}
 
+		
+		[HttpGet("View-Submissions")]
+		public async Task<IActionResult> viewSubmissions(CancellationToken cancellationToken)
+		{
+			string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
+			{
+				return Unauthorized();
+			}
+			string id = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+			if (Guid.TryParse(id, out Guid guid))
+			{
+				ResultDTO result = await _studentServices.viewSubmissions(guid, cancellationToken);
+				return StatusCode(result.StatusCode, new { message = result.Message, result = result.result });
+			}
+			else
+			{
+				return Unauthorized();
+			}
+		}
+
 		//[HttpGet("View-Subject/{sid}")]
 		//public async Task<IActionResult> viewSubject(string sid, CancellationToken cancellationToken)
 		//{

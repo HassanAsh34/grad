@@ -7,6 +7,7 @@ using Grad.Application.AdminFeatures.Services;
 using Grad.Application.Auth.Interfaces;
 using Grad.Application.Auth.Services;
 using Grad.Application.Common.Interfaces;
+using Grad.Application.Common.Services;
 using Grad.Application.ExerciseFeatures.Interfaces;
 using Grad.Application.ExerciseFeatures.Services;
 using Grad.Application.LessonFeatures.Interfaces;
@@ -233,7 +234,7 @@ namespace Grad.API
 			builder.Services.AddScoped<IAdminServices, AdminServices>();
 			builder.Services.AddScoped<IAuthServices, AuthServices>();
 			builder.Services.AddScoped<ISubmissionServices, SubmissionServices>();
-
+			builder.Services.AddScoped<IPerquisiteServices, PerquisiteServices>();
 
 
 

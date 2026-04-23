@@ -225,7 +225,16 @@ namespace Grad.Application.StudentFeatures.Services
 			}
 		}
 
-
+		public async Task<ResultDTO> viewSubmissions(Guid stdID, CancellationToken cancellationToken)
+		{
+			List<SubmissionDTO> submissionDTOs = await _submissionServices.GetSubmissions(stdID, cancellationToken);
+			return new ResultDTO
+			{
+				Message = "Submissions retrieved successfully",
+				StatusCode = 200,
+				result = submissionDTOs
+			};
+		}
 
 		public async Task<ResultDTO> completeLesson(CompletelessonDTO completelesson, CancellationToken cancellationToken)
 		{

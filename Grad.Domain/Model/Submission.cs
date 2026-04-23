@@ -14,15 +14,19 @@ namespace Grad.Domain.Model
 
 		public Guid SubmittedBy { get; set; }
 
-		public Guid ?SubjectFK { get; set; }
+		public Guid SubjectFK { get; set; }
 
 		public Guid LevelFK { get; set; }
 
 		public Guid ?LessonID { get; set; }
 
+		public string quizName { get; set; }
+
 		public decimal Percentage { get; set; } = 0;
 
 		public bool Passed { get; set; } = false;
+
+		public int AttemptsRemaining { get; set; } = -1; // -1 indicates unlimited attempts
 
 		public Subject ?Subject { get; set; }
 

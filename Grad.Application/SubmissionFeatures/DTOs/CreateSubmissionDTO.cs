@@ -17,6 +17,8 @@ namespace Grad.Application.SubmissionFeatures.DTOs
 
 		public Guid? LessonID { get; set; }
 
+		public int TimeTakenInMinutes { get; set; } = 0;
+
 		public List<SEDTO> sEDTOs { get; set; } = new List<SEDTO>();
 	}
 }
