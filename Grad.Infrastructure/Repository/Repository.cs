@@ -71,12 +71,12 @@ namespace  Grad.Infrastructure.Repository
 			_context.Set<TEntity>().Update(entity);
 		}
 
-		public async void DeleteEntityAsync<TEntity>(TEntity entity=null, CancellationToken cancellationToken = default) where TEntity : class
+		public void DeleteEntityAsync<TEntity>(TEntity entity=null, CancellationToken cancellationToken = default) where TEntity : class
 		{
 			_context.Set<TEntity>().Remove(entity);
 		}
 		
-		public async Task<int> DleteEntitiesAsync<TEntity>(Expression<Func<TEntity, bool>>? filter, CancellationToken cancellationToken = default) where TEntity : class
+		public async Task<int> DeleteEntitiesAsync<TEntity>(Expression<Func<TEntity, bool>>? filter, CancellationToken cancellationToken = default) where TEntity : class
 		{
 			return	await _context.Set<TEntity>().Where(filter).ExecuteDeleteAsync();	
 		}

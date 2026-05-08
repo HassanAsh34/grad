@@ -7,6 +7,7 @@ using Grad.Application.ParentFeatures.DTOs;
 using Grad.Domain.Enums;
 using Grad.Domain.Model;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 
 namespace Grad.Application.Auth.Services
 {
@@ -18,8 +19,9 @@ namespace Grad.Application.Auth.Services
 		private readonly ITokenServices _TokenServices;
 		private readonly IUowServices _uow;
 		private readonly ICloudinaryServices _cloudinaryServices;
+		private readonly ILogger<AuthServices> _logger;
 
-		public AuthServices(IAuthRepository authRepository, IRedisServices redis, IEmailServices emailServices, ITokenServices tokenServices, IUowServices uow, ICloudinaryServices cloudinaryServices)
+		public AuthServices(IAuthRepository authRepository, IRedisServices redis, IEmailServices emailServices, ITokenServices tokenServices, IUowServices uow, ICloudinaryServices cloudinaryServices, ILogger<AuthServices> logger)
 		{
 			_repository = authRepository ?? throw new ArgumentNullException(nameof(authRepository));
 			_redis = redis ?? throw new ArgumentNullException(nameof(redis));
@@ -27,6 +29,7 @@ namespace Grad.Application.Auth.Services
 			_TokenServices = tokenServices ?? throw new ArgumentNullException(nameof(tokenServices));
 			_uow = uow ?? throw new ArgumentNullException(nameof(uow));
 			_cloudinaryServices = cloudinaryServices ?? throw new ArgumentNullException(nameof(cloudinaryServices));
+			_logger = logger ?? throw new ArgumentNullException(nameof(logger));
 		}
 
 		public async Task<ResultDTO> register(SignupDTO? user, RegisterStudentDTO? studentDTO, bool Reg, CancellationToken cancellationToken)
@@ -333,7 +336,7 @@ namespace Grad.Application.Auth.Services
 			bool res = await storeOTP(email, hashedotp);
 			if (res)
 			{
-				Console.WriteLine($"otp {otp}");
+				_logger.LogDebug("OTP generated for {Email}", email);
 				//
 				if (await _emailServices.SendOTPEmail(Email, otp, cancellationToken))
 					return new ResultDTO

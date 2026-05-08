@@ -26,7 +26,7 @@ namespace Grad.Application.Common.Interfaces
 			TEntity entity = null,
 			CancellationToken cancellationToken = default) where TEntity : class;
 
-		Task<int> DleteEntitiesAsync<TEntity>(
+		Task<int> DeleteEntitiesAsync<TEntity>(
 			Expression<Func<TEntity, bool>>? filter,
 			CancellationToken cancellationToken = default) where TEntity : class;
 	}

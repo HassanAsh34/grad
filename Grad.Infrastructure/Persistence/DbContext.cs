@@ -65,7 +65,7 @@ namespace  Grad.Infrastructure.Persistence
 			.HasOne(s => s.parent)
 			.WithMany(p => p.students)
 			.HasForeignKey(s => s.PID)
-			.OnDelete(DeleteBehavior.NoAction);
+			.OnDelete(DeleteBehavior.SetNull);
 
 			modelBuilder.Entity<RefreshToken>()
 				.HasOne(t=>t.User)

@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using System.Security.Cryptography;
 using Microsoft.IdentityModel.Tokens;
 using Grad.Application.Auth.Interfaces;
@@ -7,6 +7,7 @@ using Grad.Application.Common.Interfaces;
 using Microsoft.Extensions.Configuration;
 using System.IdentityModel.Tokens.Jwt;
 using Grad.Application.Auth.DTOs;
+using Microsoft.Extensions.Logging;
 
 
 namespace grad.Application.Auth.Services
@@ -18,13 +19,15 @@ namespace grad.Application.Auth.Services
 		private readonly IConfiguration _configuration;
 		private readonly IAuthRepository _repository;
 		private readonly IUowServices _uow;
-		public TokenServices(IRedisServices redisServices, IConfiguration configuration,IAuthRepository authRepository,IUowServices uow)
+		private readonly ILogger<TokenServices> _logger;
+		public TokenServices(IRedisServices redisServices, IConfiguration configuration,IAuthRepository authRepository,IUowServices uow, ILogger<TokenServices> logger)
 		{
 			_redisServices = redisServices ?? throw new ArgumentNullException(nameof(redisServices));
 			_configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
 			_secretKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(_configuration["JWT:Key"]));
 			_repository = authRepository ?? throw new ArgumentNullException(nameof(authRepository));
 			_uow = uow ?? throw new ArgumentNullException(nameof(uow));	
+			_logger = logger ?? throw new ArgumentNullException(nameof(logger));
 		}
 		public string generateAccessToken(User user, bool reset = false)
 		{
@@ -227,11 +230,11 @@ namespace grad.Application.Auth.Services
 				var subClaim = jwt.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value.Trim();
 				var jtiClaim = jwt.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Jti)?.Value.Trim();
 
-				Console.WriteLine($"[validateRefreshToken] claims => nameid: '{nameIdClaim}', sub: '{subClaim}', jti: '{(jtiClaim != null ? jtiClaim : "<null>")}'");
+				_logger.LogDebug("ValidateRefreshToken claims => nameid: {NameId}, sub: {Sub}, jti present: {JtiPresent}", nameIdClaim, subClaim, jtiClaim != null);
 
 				if (subClaim == null || jtiClaim == null)
 				{
-					Console.WriteLine("[validateRefreshToken] missing required claims (sub or jti).");
+					_logger.LogWarning("ValidateRefreshToken: missing required claims (sub or jti)");
 					return null;
 				}
 
@@ -257,35 +260,35 @@ namespace grad.Application.Auth.Services
 
 				if (user == null)
 				{
-					Console.WriteLine($"[validateRefreshToken] user not found for uid '{refreshTokenDTO.Uid}'.");
+					_logger.LogWarning("ValidateRefreshToken: user not found for uid {UserId}", refreshTokenDTO.Uid);
 					return null;
 				}
 
 				var refreshToken = user.RefreshToken;
 				if (refreshToken == null)
 				{
-					Console.WriteLine($"[validateRefreshToken] user has no RefreshToken record.");
+					_logger.LogWarning("ValidateRefreshToken: user {UserId} has no RefreshToken record", refreshTokenDTO.Uid);
 					return null;
 				}
 
-				Console.WriteLine($"[validateRefreshToken] stored hashed TokenKey (DB): '{refreshToken.TokenKey?.Substring(0, Math.Min(60, refreshToken.TokenKey?.Length ?? 0))}...'");
+				_logger.LogDebug("ValidateRefreshToken: stored hashed TokenKey length: {TokenKeyLength}", refreshToken.TokenKey?.Length ?? 0);
 
 				bool validRefresh = false;
 				try
 				{
 					// Debug: explicitly log the raw jti value length and a safe sample (do not log full sensitive tokens in production)
-					Console.WriteLine($"[validateRefreshToken] comparing raw jti length={refreshTokenDTO.TokenKey?.Length}, sample='{(refreshTokenDTO.TokenKey?.Length > 20 ? refreshTokenDTO.TokenKey.Substring(0, 20) + "..." : refreshTokenDTO.TokenKey)}'");
+					_logger.LogDebug("ValidateRefreshToken: comparing raw jti length={JtiLength}", refreshTokenDTO.TokenKey?.Length);
 
 					if (!string.IsNullOrEmpty(refreshToken.TokenKey))
 						validRefresh = BCrypt.Net.BCrypt.Verify(refreshTokenDTO.TokenKey, refreshToken.TokenKey);
 				}
 				catch (Exception exVerify)
 				{
-					Console.WriteLine($"[validateRefreshToken] BCrypt.Verify threw: {exVerify.Message}");
+					_logger.LogError(exVerify, "ValidateRefreshToken: BCrypt.Verify threw an exception");
 					validRefresh = false;
 				}
 
-				Console.WriteLine($"[validateRefreshToken] BCrypt.Verify result: {validRefresh}");
+				_logger.LogDebug("ValidateRefreshToken: BCrypt.Verify result: {IsValid}", validRefresh);
 
 				if (!validRefresh)
 					return null;
@@ -293,7 +296,7 @@ namespace grad.Application.Auth.Services
 				refreshTokenDTO.role = (int)user.Role;
 				if(refresh && refreshToken.Revoked)
 				{
-					Console.WriteLine($"[validateRefreshToken] refresh token has been revoked.");
+					_logger.LogWarning("ValidateRefreshToken: refresh token has been revoked for user {UserId}", refreshTokenDTO.Uid);
 					return null;
 				}
 				else if (revoke)
@@ -304,9 +307,7 @@ namespace grad.Application.Auth.Services
 			catch (Exception ex)
 			{
 				// Log the real exception so you can see why ValidateToken failed
-				Console.WriteLine("-----------------------------------------");
-				Console.WriteLine($"[validateRefreshToken] exception validating token: {ex.GetType().Name} - {ex.Message}");
-				Console.WriteLine(ex.StackTrace);
+				_logger.LogError(ex, "ValidateRefreshToken: exception validating token");
 				return null; // invalid or tampered token
 			}
 		}

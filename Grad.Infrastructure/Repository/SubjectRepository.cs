@@ -90,6 +90,7 @@ namespace Grad.Infrastructure.Repository
 			return await _context.subjects
 				.Include(s => s.AssignedSubjects)
 				.Include(s => s.Students)
+				.Include(s => s.Submissions)
 				.FirstOrDefaultAsync(s => s.Id == subjectId, ct);
 		}
 
@@ -150,6 +151,14 @@ namespace Grad.Infrastructure.Repository
 			base.UpdateEntityAsync(subject, ct);
 			int res = await _uowServices.SaveChangesAsync();
 			return res > 0;
+		}
+
+		public async Task<int> DeleteSubject(Subject subject, CancellationToken cancellationToken = default)
+		{
+			base.DeleteEntityAsync(subject, cancellationToken);
+			 _subjects.DeleteOne(s => s.Id == subject.Id, cancellationToken);
+			int res =await _uowServices.SaveChangesAsync();
+			return res;
 		}
 	}
 }

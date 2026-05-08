@@ -1,7 +1,6 @@
 ﻿using System.Net.Mail;
 using Grad.Application.Common.Interfaces;
 using Grad.Infrastructure.Persistence.Configurations;
-using MailKit.Net.Smtp;
 using Microsoft.Extensions.Options;
 using MimeKit;
 

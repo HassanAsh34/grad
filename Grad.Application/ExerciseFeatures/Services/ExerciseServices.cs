@@ -8,6 +8,7 @@ using Grad.Application.SubjectFeatures.Interfaces;
 using Grad.Domain.Enums;
 using Grad.Domain.Model;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Extensions.Logging;
 
 namespace Grad.Application.ExerciseFeatures.Services
 {
@@ -17,14 +18,16 @@ namespace Grad.Application.ExerciseFeatures.Services
 		private readonly IExerciseRepository _exerciseRepository;
 		private readonly ISubjectRepository _subjectRepository;
 		private readonly IPerquisiteServices _perquisiteServices;
+		private readonly ILogger<ExerciseServices> _logger;
 		//private readonly IlessonRepository _IlessonRepository;
 
-		public ExerciseServices(ICloudinaryServices cloudinaryServices, ISubjectRepository subjectRepository, IExerciseRepository exerciseRepository,IPerquisiteServices perquisiteServices)
+		public ExerciseServices(ICloudinaryServices cloudinaryServices, ISubjectRepository subjectRepository, IExerciseRepository exerciseRepository,IPerquisiteServices perquisiteServices, ILogger<ExerciseServices> logger)
 		{
 			_cloudinaryServices = cloudinaryServices ?? throw new ArgumentNullException(nameof(cloudinaryServices));
 			_exerciseRepository = exerciseRepository ?? throw new ArgumentNullException(nameof(exerciseRepository));
 			_subjectRepository = subjectRepository ?? throw new ArgumentNullException(nameof(subjectRepository));
 			_perquisiteServices = perquisiteServices ?? throw new ArgumentNullException(nameof(perquisiteServices));
+			_logger = logger ?? throw new ArgumentNullException(nameof(logger));
 		}
 
 		//public async Task<ResultDTO> CreateExercise(CreateLevelDTO levelDTO, CancellationToken cancellationToken) //not tested yet
@@ -240,9 +243,6 @@ namespace Grad.Application.ExerciseFeatures.Services
 						PerquisiteType = levelDTO.Lid == null ? levelDTO.PerquisiteType : PerquisiteType.None,
 						Perquisite = levelDTO.Lid == null ? levelDTO.PerquisiteID : null
 					};
-
-
-					//int perquisiteResult = await _perquisiteServices.UpdatePerquisite(levelDTO.Sid, levelDTO.PerquisiteType, levelDTO.PerquisiteID ?? Guid.Empty, Guid.Empty, level.ID, cancellationToken: cancellationToken);
 					int perquisiteResult = await _perquisiteServices.UpdatePerquisite(levelDTO.Sid, level.PerquisiteType, level.Perquisite ?? Guid.Empty,Guid.Empty,PerquisiteType.None,level.ID,true,cancellationToken: cancellationToken);
 
 					//switch (level.PerquisiteType)
@@ -475,7 +475,7 @@ namespace Grad.Application.ExerciseFeatures.Services
 						level.Exercise.Add(exercise);
 					else
 					{
-						Console.WriteLine($"failed to update or add exercise {exerciseDTO.Id}");
+						_logger.LogWarning("Failed to update or add exercise {ExerciseId}", exerciseDTO.Id);
 						continue;
 					}
 				}
@@ -495,6 +495,88 @@ namespace Grad.Application.ExerciseFeatures.Services
 				{
 					Message = "Level was updated successfully",
 					StatusCode = 200
+				};
+			}
+		}
+
+		public async Task<ResultDTO> DeleteLevel(LevelDTO levelDTO, CancellationToken cancellationToken)
+		{
+			Level level = await _exerciseRepository.GetLevel(levelDTO.Sid, levelDTO.Lid, levelDTO.ID, cancellationToken);
+			int res = 0;
+			if (level != null)
+			{
+				string directoryPath = $"subjects/{levelDTO.Sid}/";
+				if (levelDTO.Lid != null)
+				{
+					directoryPath += $"lessonContent/{levelDTO.Lid}/";
+				}
+				directoryPath += $"exercise/{level.ID}/";
+				if (levelDTO.Lid == null || levelDTO.Lid == Guid.Empty)
+				{
+					res = await _perquisiteServices.removeDependency(levelDTO.Sid, level: level ,cancellationToken: cancellationToken);
+					switch(res)
+					{
+						case 1:
+							if(!await _cloudinaryServices.DeleteAsync(directoryPath, false, true, cancellationToken))
+							{
+								return new ResultDTO
+								{
+									Message = "failed to remove quiz content , quiz wasnt removed",
+									StatusCode = 500
+								};
+							}
+							res = await _exerciseRepository.DeleteQuiz(levelDTO.Sid, null, levelDTO.ID, cancellationToken);
+							if(res == 0 || res == -1)
+								return new ResultDTO
+								{
+									Message = "failed to remove quiz",
+									StatusCode = 500
+								};
+							else
+								return new ResultDTO
+								{
+									Message = "Quiz was removed successfully",
+									StatusCode = 200
+								};
+						default:
+							return new ResultDTO
+							{
+								Message = "failed to remove quiz",
+								StatusCode = 500
+							};
+					}
+				}
+				else
+				{
+					if (!await _cloudinaryServices.DeleteAsync(directoryPath, false, true, cancellationToken))
+					{
+						return new ResultDTO
+						{
+							Message = "failed to remove exercise content , exercise wasnt removed",
+							StatusCode = 500
+						};
+					}
+					res = await _exerciseRepository.DeleteQuiz(levelDTO.Sid,levelDTO.Lid, levelDTO.ID, cancellationToken);
+					if (res == 0 || res == -1)
+						return new ResultDTO
+						{
+							Message = "failed to remove quiz",
+							StatusCode = 500
+						};
+					else
+						return new ResultDTO
+						{
+							Message = "Quiz was removed successfully",
+							StatusCode = 200
+						};
+				}
+			}
+			else
+			{
+				return new ResultDTO
+				{
+					Message = levelDTO.Lid != null ?  "Exercise wasnt found" : "Quiz wasnt found",
+					StatusCode = 404
 				};
 			}
 		}
@@ -519,7 +601,7 @@ namespace Grad.Application.ExerciseFeatures.Services
 				};
 				if (Nexercise.Type == 0)
 				{
-					Console.WriteLine($"{exerciseDTO.Name} has invalid type");
+					_logger.LogWarning("Exercise {ExerciseName} has invalid type", exerciseDTO.Name);
 					return null;
 				}
 			}
@@ -543,7 +625,7 @@ namespace Grad.Application.ExerciseFeatures.Services
 				}
 				else
 				{
-					Console.WriteLine($"failed to update or add question {questionDTO.Qid}");
+					_logger.LogWarning("Failed to update or add question {QuestionId}", questionDTO.Qid);
 					continue;
 				}
 			}
@@ -558,14 +640,17 @@ namespace Grad.Application.ExerciseFeatures.Services
 				Nquestion = question;
 			else
 				Nquestion = new Question();
-			Nquestion.prompt_text = questionDTO.prompt_text != null ? questionDTO.prompt_text : question.prompt_text;
+			if (questionDTO.prompt_text != null)
+			{
+				Nquestion.prompt_text = questionDTO.prompt_text;
+			}
 			Nquestion.score = questionDTO.score != 0 ? questionDTO.score : question.score;
 			if (questionDTO.prompt_image != null)
 			{
-				Nquestion.prompt_image = await _cloudinaryServices.UploadImageAsync(questionDTO.prompt_image, directory, questionDTO.Qid.ToString(), cancellation);
-				if (Nquestion.prompt_image.IsNullOrEmpty())
+				Nquestion.prompt_image = await _cloudinaryServices.UploadImageAsync(questionDTO.prompt_image, directory, Nquestion.Qid.ToString(), cancellation);
+				if (string.IsNullOrEmpty(Nquestion.prompt_image))
 				{
-					Console.WriteLine($"failed to update question {questionDTO.Qid}");
+					_logger.LogWarning("Failed to upload prompt image for question {QuestionId}", questionDTO.Qid);
 				}
 				else
 				{
@@ -573,7 +658,7 @@ namespace Grad.Application.ExerciseFeatures.Services
 					{
 						string directorypath = directory + $"{question.Qid}";
 						if (await _cloudinaryServices.DeleteAsync(directorypath))
-							Console.WriteLine($"deleted image with id {question.Qid}");
+							_logger.LogInformation("Deleted old prompt image for question {QuestionId}", question.Qid);
 					}
 					Nquestion.prompt_image = Nquestion.prompt_image;
 				}
@@ -594,8 +679,9 @@ namespace Grad.Application.ExerciseFeatures.Services
 						}
 						if (Nquestion.Answer == null)
 						{
-							Console.WriteLine($"failed to update or add answer for question {questionDTO.Qid}");
+							_logger.LogWarning("Failed to update or add matching answer for question {QuestionId}", questionDTO.Qid);
 						}
+						Nquestion.CorrectAnswer = Nquestion.Answer.Id;
 					}
 					break;
 				case ExerciseType.MCQ:
@@ -611,7 +697,7 @@ namespace Grad.Application.ExerciseFeatures.Services
 								Nquestion.Answers.Add(answer);
 							else
 							{
-								Console.WriteLine($"failed to update or add answer for question {questionDTO.Qid}");
+								_logger.LogWarning("Failed to update existing MCQ answer for question {QuestionId}", questionDTO.Qid);
 								continue;
 							}
 						}
@@ -622,7 +708,7 @@ namespace Grad.Application.ExerciseFeatures.Services
 								Nquestion.Answers.Add(answer);
 							else
 							{
-								Console.WriteLine($"failed to update or add answer for question {questionDTO.Qid}");
+								_logger.LogWarning("Failed to add new MCQ answer for question {QuestionId}", questionDTO.Qid);
 								continue;
 							}
 						}
@@ -718,9 +804,9 @@ namespace Grad.Application.ExerciseFeatures.Services
 			if (answerDTO.IMG != null)
 			{
 				Nanswer.IMG = await _cloudinaryServices.UploadImageAsync(answerDTO.IMG, directory, answerDTO.Id.ToString(), cancellation);
-				if (Nanswer.IMG.IsNullOrEmpty())
+				if (string.IsNullOrEmpty(Nanswer.IMG))
 				{
-					Console.WriteLine($"failed to update answer {answerDTO.Id}");
+					_logger.LogWarning("Failed to upload image for answer {AnswerId}", answerDTO.Id);
 					return null;
 				}
 				else
@@ -729,7 +815,7 @@ namespace Grad.Application.ExerciseFeatures.Services
 					{
 						string directorypath = directory + $"{answer.Id}";
 						if (await _cloudinaryServices.DeleteAsync(directorypath))
-							Console.WriteLine($"deleted image with id {answer.Id}");
+							_logger.LogInformation("Deleted old image for answer {AnswerId}", answer.Id);
 					}
 					Nanswer.IMG = Nanswer.IMG;
 				}

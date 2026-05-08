@@ -6,6 +6,7 @@ using Grad.Application.LessonFeatures.Interfaces;
 using Grad.Application.SubjectFeatures.Interfaces;
 using Grad.Domain.Enums;
 using Grad.Domain.Model;
+using Microsoft.Extensions.Logging;
 
 namespace grad.Application.LessonFeatures.Services
 {
@@ -15,14 +16,16 @@ namespace grad.Application.LessonFeatures.Services
 		private readonly ISubjectServices _subjectServices;
 		private readonly IlessonRepository _lessonRepository;
 		private readonly IPerquisiteServices _perquisiteServices;
+		private readonly ILogger<LessonServices> _logger;
 		//private readonly IUowServices _Uow;
 
-		public LessonServices(ICloudinaryServices cloudinaryServices, ISubjectServices subjectServices, IlessonRepository repository,IPerquisiteServices perquisiteServices)
+		public LessonServices(ICloudinaryServices cloudinaryServices, ISubjectServices subjectServices, IlessonRepository repository,IPerquisiteServices perquisiteServices, ILogger<LessonServices> logger)
 		{
 			_cloudinaryServices = cloudinaryServices ?? throw new ArgumentNullException(nameof(cloudinaryServices));
 			_subjectServices = subjectServices ?? throw new ArgumentNullException(nameof(subjectServices));
 			_lessonRepository = repository ?? throw new ArgumentNullException(nameof(repository));
 			_perquisiteServices = perquisiteServices ?? throw new ArgumentNullException(nameof(perquisiteServices));
+			_logger = logger ?? throw new ArgumentNullException(nameof(logger));
 			//_Uow = uow ?? throw new ArgumentNullException(nameof(uow));
 		}
 
@@ -92,7 +95,7 @@ namespace grad.Application.LessonFeatures.Services
 						Uploaded_by = videoDTO.Uploaded_by
 					};
 					string directory = $"subjects/{videoDTO.subjectID}/lessonContent/{lessonContent.Id}/Videos/";
-					string videoUrl = await _cloudinaryServices.UploadVideoAsync(videoDTO.VideoFile,directory, $"{lesson.Id}.mp4", cancellationToken);
+					string videoUrl = await _cloudinaryServices.UploadVideoAsync(videoDTO.VideoFile,directory, $"{lesson.Id}", cancellationToken);
 					if(!string.IsNullOrEmpty(videoUrl))
 					{
 						lesson.VideoPath = videoUrl;
@@ -470,8 +473,9 @@ namespace grad.Application.LessonFeatures.Services
 			}
 			else
 			{
-				int result = await _perquisiteServices.RemovePerquisite(deleteLesson.SubjectId,lesson.Perquisite ?? Guid.Empty,lesson.PerquisiteType, cancellationToken);
-				if(result == 0 || result == -1)
+				int result = 0;
+				result = await _perquisiteServices.removeDependency(deleteLesson.SubjectId, lesson, null , cancellationToken);
+				if (result != 1)
 				{
 					return new ResultDTO { Message = "Failed to update perquisites, lesson was not deleted", StatusCode = 500 };
 				}
@@ -492,9 +496,5 @@ namespace grad.Application.LessonFeatures.Services
 				}
 			}
 		}
-
-
-		
-
 	}
 }	

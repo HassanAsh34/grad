@@ -20,6 +20,17 @@ namespace Grad.Application.SubjectFeatures.DTOs
 
 		public int? levelsCount { get; set; } = 0;
 
+		public int? WordCount { get; set; } = 0;
+
 		public float? progress { get; set; } = 0;
+
+		public decimal? AvgerageGrades { get; set; } = 0;
+
+		public decimal? failure_rate { get; set; } = 0;
+
+		public decimal? success_rate { get; set; } = 0;
+
+		public int? submissionsCount { get; set; } = 0;
+
 	}
 }

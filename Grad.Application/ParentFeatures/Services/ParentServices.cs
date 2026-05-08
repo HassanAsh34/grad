@@ -133,6 +133,11 @@ namespace Grad.Application.ParentFeatures.Services
 			}
 		}
 
+		public async Task<ResultDTO> DeleteStudent(ProfileDTO profile,Guid pid,CancellationToken cancellationToken)
+		{
+			return await _userServices.DeleteProfile(profile, pid, false, false, cancellationToken);
+		}
+
 		public async Task<ResultDTO> viewProfile(Guid pid,Guid Sid, CancellationToken cancellationToken)
 		{
 			ProfileDTO profileDTO = new ProfileDTO

@@ -13,5 +13,7 @@ namespace Grad.Application.ExerciseFeatures.Interfaces
 		Task<List<Level>> viewLevels(Guid sid, CancellationToken CT);
 
 		Task<int> editLevel(Guid Sid, Guid? Lid, Level exercise, CancellationToken CT = default);
+
+		Task<int> DeleteQuiz(Guid sid, Guid? Lid, Guid LVLid, CancellationToken cancellationToken);
 	}
 }

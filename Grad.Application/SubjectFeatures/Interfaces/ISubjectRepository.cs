@@ -22,5 +22,6 @@ namespace Grad.Application.SubjectFeatures.Interfaces
 
         Task<bool> updateLessonCountAsync(Guid subjectId, CancellationToken ct = default);
 
+		Task<int> DeleteSubject(Subject subject, CancellationToken cancellationToken = default);
 	}
 }

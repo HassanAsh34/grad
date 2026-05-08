@@ -45,5 +45,7 @@ namespace Grad.Application.TeacherFeatures.Interfaces
 		public Task<ResultDTO> EditLevel(EditLevelDTO editLevel, CancellationToken CT = default);
 
 		public Task<ResultDTO> ListPerquisites(TeacherSubjectDTO teacherSubject, PerquisiteType type, CancellationToken cancellationToken = default);
+
+		public Task<ResultDTO> DeleteLevel(LevelDTO level, Guid Tid, CancellationToken CT = default);
 	}
 }

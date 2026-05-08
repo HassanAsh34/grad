@@ -11,6 +11,8 @@ namespace Grad.Application.AdminFeatures.Interfaces
 		public Task<ResultDTO> EndSession(Guid uid, CancellationToken cancellationToken = default);
 		public Task<ResultDTO> GetAllUsers(string scheme, string host,CancellationToken cancellationToken = default);
 
+		public Task<ResultDTO> DeleteUser(ProfileDTO profile, bool all = false, CancellationToken cancellationToken = default);
+
 		public Task<ResultDTO> ViewUser(ProfileDTO profileDTO, CancellationToken cancellationToken = default);
 
 		//public Task<ResultDTO> ActivateTeacher(ProfileDTO profileDTO, CancellationToken cancellationToken = default);

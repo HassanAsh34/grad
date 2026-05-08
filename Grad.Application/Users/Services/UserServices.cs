@@ -5,6 +5,7 @@ using Grad.Application.Users.Interfaces;
 using Grad.Domain.Enums;
 using Grad.Domain.Model;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 
 namespace Grad.Application.Users.Services
 {
@@ -13,12 +14,14 @@ namespace Grad.Application.Users.Services
 		private readonly IUserRepository _userRepository;
 		private readonly IUowServices _uow;
 		private readonly ICloudinaryServices _cloudinaryServices;
+		private readonly ILogger<UserServices> _logger;
 
-		public UserServices(IUserRepository userRepository, IUowServices uow, ICloudinaryServices cloudinaryServices)
+		public UserServices(IUserRepository userRepository, IUowServices uow, ICloudinaryServices cloudinaryServices, ILogger<UserServices> logger)
 		{
 			_userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
 			_uow = uow ?? throw new ArgumentNullException(nameof(uow));
 			_cloudinaryServices = cloudinaryServices ?? throw new ArgumentNullException(nameof(cloudinaryServices));
+			_logger = logger ?? throw new ArgumentNullException(nameof(logger));
 		}
 
 		public async Task<ResultDTO> EditProfile(EditProfileDTO editProfile, CancellationToken cancellationToken)
@@ -93,9 +96,9 @@ namespace Grad.Application.Users.Services
 				}
 
 				int res = await _uow.SaveChangesAsync();
-				
+
 				if (editProfile.Image != null)
-					await storeImage(user,editProfile.Image,$"{user.Id}.png", cancellationToken);
+					await storeImage(user, editProfile.Image, $"{user.Id}.png", cancellationToken);
 
 				return new ResultDTO
 				{
@@ -166,7 +169,7 @@ namespace Grad.Application.Users.Services
 							profile.FName = student.FName;
 							profile.Job = UserRole.Student.ToString();
 							profile.phone = student.phoneNumber;
-							
+
 							if (student.parent != null)
 							{
 								profile.LName = student.parent.FName;
@@ -177,13 +180,13 @@ namespace Grad.Application.Users.Services
 								profile.Address = student.Address;
 								profile.LName = student.LName;
 							}
-							
+
 							profile.subjectsCount = student.EnrolledSubjects?.Count() ?? 0;
 							profile.BirthDate = student.BirthDate;
 							profile.Disability = student.Disability.ToString();
 							profile.pfpURL = student.ProfilePicture;
 							profile.Status = adminview ? student.status : null;
-							
+
 							if (student.parent != null)
 							{
 								profile.ParentContactInfo = new ParentContactInfo
@@ -226,6 +229,141 @@ namespace Grad.Application.Users.Services
 			};
 		}
 
+		public async Task<ResultDTO> DeleteProfile(ProfileDTO profile, Guid? parentAccss, bool deleteAll,bool admin, CancellationToken cancellationToken)
+		{
+			if (profile == null)
+			{
+				return new ResultDTO
+				{
+					StatusCode = 500,
+					Message = "Something Went Wrong"
+				};
+			}
+			else
+			{
+				User user = await _userRepository.GetEntityAsync<User>(u => u.Id == profile.Id, cancellationToken: cancellationToken);
+				int res = 0;
+				if (user == null)
+				{
+					return new ResultDTO
+					{
+						StatusCode = 404,
+						Message = "User isn't found"
+					};
+				}
+				else
+				{
+					switch (user.Role)
+					{
+						case UserRole.Admin:
+							return new ResultDTO
+							{
+								StatusCode = 403,
+								Message = "You can't delete an admin account"
+							};
+						case UserRole.Parent:
+							Parent parent = await _userRepository.GetParentWithStudentsAsync(profile.Id, ct: cancellationToken);
+							_userRepository.DeleteEntityAsync<Parent>(parent, cancellationToken: cancellationToken);
+							if (deleteAll)
+							{
+								if (parent.students != null && parent.students.Count > 0)
+								{
+									foreach (Student std in parent.students)
+									{
+										_userRepository.DeleteEntityAsync<Student>(std, cancellationToken: cancellationToken);
+									}
+									await Task.WhenAll(parent.students.Select(s => deleteImage($"{s.Id}", cancellationToken)));
+								}
+							}
+							if (parent.ProfilePicture != null)
+							{
+								if (await deleteImage(parent.ProfilePicture, cancellationToken))
+								{
+									res = await _uow.SaveChangesAsync();
+								}
+							}
+							else
+							{
+								res = await _uow.SaveChangesAsync();
+							}
+							return new ResultDTO
+							{
+								StatusCode = 200,
+								Message = res != 0 ? "Profile was deleted successfully" : "No changes were made"
+							};
+						case UserRole.Student:
+							Student student = await _userRepository.GetEntityAsync<Student>(s => s.Id == profile.Id, cancellationToken: cancellationToken);
+							if (student.PID != null || admin)
+							{
+								if ((parentAccss != null && student.PID == parentAccss) || admin)
+								{ 
+									_userRepository.DeleteEntityAsync<Student>(student, cancellationToken: cancellationToken);
+									if (await deleteImage(student.ProfilePicture, cancellationToken))
+									{
+										res = await _uow.SaveChangesAsync();
+									}
+									return new ResultDTO
+									{
+										StatusCode = 200,
+										Message = res != 0 ? "Profile was deleted successfully" : "No changes were made"
+									};
+								}
+								else
+								{
+									return new ResultDTO
+									{
+										StatusCode = 403,
+										Message = "You don't have access to delete this account"
+									};
+								}
+							}
+							else
+							{
+								_userRepository.DeleteEntityAsync<Student>(student, cancellationToken: cancellationToken);
+								if (student.ProfilePicture != null)
+								{
+									if (await deleteImage(student.ProfilePicture, cancellationToken))
+									{
+										res = await _uow.SaveChangesAsync();
+									}
+								}
+								else
+									res = await _uow.SaveChangesAsync();
+								return new ResultDTO
+								{
+									StatusCode = 200,
+									Message = res != 0 ? "Profile was deleted successfully" : "No changes were made"
+								};
+							}
+						case UserRole.Teacher:
+							Teacher teacher = await _userRepository.GetEntityAsync<Teacher>(t => t.Id == profile.Id, cancellationToken: cancellationToken);
+							_userRepository.DeleteEntityAsync<Teacher>(teacher, cancellationToken: cancellationToken);
+							if (teacher.ProfilePicture != null)
+							{
+								if (await deleteImage(teacher.ProfilePicture, cancellationToken))
+								{
+									res = await _uow.SaveChangesAsync();
+								}
+							}
+							else
+								res = await _uow.SaveChangesAsync();
+			
+							return new ResultDTO
+							{
+								StatusCode = 200,
+								Message = res != 0 ? "Profile was deleted successfully" : "No changes were made"
+							};
+						default:
+							return new ResultDTO
+							{
+								StatusCode = 403,
+								Message = "Invalid action"
+							};
+					}
+				}
+			}
+		}
+
 		private async Task storeImage(User user, IFormFile file, string fileName, CancellationToken cancellationToken = default)
 		{
 			if (file != null && file.Length > 0)
@@ -235,6 +373,16 @@ namespace Grad.Application.Users.Services
 				_userRepository.UpdateEntityAsync<User>(user, cancellationToken: cancellationToken);
 				await _uow.SaveChangesAsync();
 			}
+		}
+
+		private async Task<bool> deleteImage(string publicId, CancellationToken cancellationToken = default)
+		{
+			string directory = $"user/{publicId}";
+			if (!string.IsNullOrEmpty(publicId))
+			{
+				return await _cloudinaryServices.DeleteAsync(directory, cancellationToken: cancellationToken);
+			}
+			return false;
 		}
 	}
 }

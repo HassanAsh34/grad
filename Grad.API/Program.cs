@@ -21,6 +21,7 @@ using Grad.Application.TeacherFeatures.Interfaces;
 using Grad.Application.TeacherFeatures.Services;
 using Grad.Application.Users.Interfaces;
 using Grad.Application.Users.Services;
+using Grad.API.Middleware;
 using Grad.Infrastructure.Cache;
 using Grad.Infrastructure.EmailServices;
 using Grad.Infrastructure.FilesServices;
@@ -34,6 +35,7 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
+using Serilog;
 using StackExchange.Redis;
 
 
@@ -45,6 +47,19 @@ namespace Grad.API
 		public static void Main(string[] args)
 		{
 			var builder = WebApplication.CreateBuilder(args);
+
+			// ================= SERILOG =================
+			builder.Host.UseSerilog((context, config) => config
+				.ReadFrom.Configuration(context.Configuration)
+				.Enrich.FromLogContext()
+				.WriteTo.Console()
+				.WriteTo.File(
+					path: "Logs/log-.txt",
+					rollingInterval: RollingInterval.Day,
+					retainedFileCountLimit: 30,
+					outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}"
+				)
+			);
 
 			// Add services to the container.
 			builder.Services.AddControllers();
@@ -265,6 +280,12 @@ namespace Grad.API
 
 			// ================= PIPELINE =================
 
+			// Global exception handling (catches + logs all unhandled errors)
+			app.UseMiddleware<ExceptionHandlingMiddleware>();
+
+			// Serilog HTTP request logging (logs method, path, status code, elapsed time)
+			app.UseSerilogRequestLogging();
+
 			//if (!app.Environment.IsDevelopment())
 			//{
 			//	app.UseHttpsRedirection();
@@ -274,33 +295,22 @@ namespace Grad.API
 			app.UseAuthentication();
 			app.UseAuthorization();
 
-
-			// Move cancellation middleware to wrap controller execution (must be registered before MapControllers)
-			app.Use(async (context, next) =>
-			{
-				try
-				{
-					await next();
-				}
-				catch (OperationCanceledException)
-				{
-					context.Response.StatusCode = 499; // Client Closed Request
-					await context.Response.WriteAsync("Request was cancelled.");
-				}
-			});
-
 			app.MapControllers();
 
 			// ================= RUN =================
 			try
 			{
+				Log.Information("Grad API starting up...");
 				app.Run();
 			}
 			catch (Exception ex)
 			{
-				Console.WriteLine("?? HOST CRASH");
-				Console.WriteLine(ex);
+				Log.Fatal(ex, "HOST CRASH — Application terminated unexpectedly");
 				throw;
+			}
+			finally
+			{
+				Log.CloseAndFlush();
 			}
 		}
 	}

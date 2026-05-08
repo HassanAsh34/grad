@@ -1,4 +1,4 @@
-﻿using Azure.Core;
+using Azure.Core;
 using Grad.Application.Common.DTOs;
 using Grad.Application.Common.Interfaces;
 using Grad.Application.ExerciseFeatures.DTOs;
@@ -19,11 +19,13 @@ namespace Grad.API.Controllers
 	{
 		private readonly ITokenServices _tokenServices;
 		private readonly IStudentServices _studentServices;
+		private readonly ILogger<StudentActions> _logger;
 
-		public StudentActions(IStudentServices studentServices, ITokenServices tokenServices)
+		public StudentActions(IStudentServices studentServices, ITokenServices tokenServices, ILogger<StudentActions> logger)
 		{
 			_tokenServices = tokenServices ?? throw new ArgumentNullException(nameof(tokenServices));
 			_studentServices = studentServices ?? throw new ArgumentNullException(nameof(studentServices));
+			_logger = logger ?? throw new ArgumentNullException(nameof(logger));
 		}
 
 		[HttpGet("View-Subjects")]

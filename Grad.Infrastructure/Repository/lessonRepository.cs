@@ -69,7 +69,7 @@ namespace Grad.Infrastructure.Repository
 				return 0;
 			else
 			{
-				int res = await base.DleteEntitiesAsync<StudentProgress>(filter: l => l.Id == lesson.Id, cancellationToken: CT);
+				int res = await base.DeleteEntitiesAsync<StudentProgress>(filter: l => l.Id == lesson.Id, cancellationToken: CT);
 				return res + (int)result.MatchedCount; 
 			}
 		}

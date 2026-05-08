@@ -22,7 +22,7 @@ namespace Grad.Application.ExerciseFeatures.DTOs
 
 
 		public string Name { get; set; }
-		public IEnumerable<ExerciseDTO> Exercise { get; set; }
+		public IEnumerable<ExerciseDTO> ?Exercise { get; set; }
 		public int PassingPercentage { get; set; }
 		public Difficulty levelDifficulty { get; set; }
 		public int total_score => Exercise?.Sum(e => e.total_score) ?? 0;

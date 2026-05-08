@@ -21,12 +21,14 @@ namespace Grad.API.Controllers
 	{
 		private readonly IAuthServices _authServices;
 		private readonly ITokenServices _tokenServices;
+		private readonly ILogger<Auth> _logger;
 		//private readonly UserServices _authServices;
 		//private readonly TokenServices _tokenServices;
-		public Auth(IAuthServices userService, ITokenServices tokenServices)
+		public Auth(IAuthServices userService, ITokenServices tokenServices, ILogger<Auth> logger)
 		{
 			_authServices = userService ?? throw new ArgumentNullException(nameof(userService));
 			_tokenServices = tokenServices ?? throw new ArgumentNullException(nameof(tokenServices));
+			_logger = logger ?? throw new ArgumentNullException(nameof(logger));
 		}
 		[AllowAnonymous]
 		[HttpPost("sign-in")]
@@ -97,7 +99,7 @@ namespace Grad.API.Controllers
 			//};
 			string refreshToken = Request.Cookies["refresh_token"];
 
-			Console.WriteLine(refreshToken);
+			_logger.LogDebug("Refresh token request received, token present: {HasToken}", !string.IsNullOrEmpty(refreshToken));
 			//Console.WriteLine(tokenDTO.AccessToken);
 			//Console.WriteLine(tokenDTO.RefreshToken);
 			if (string.IsNullOrEmpty(refreshToken))

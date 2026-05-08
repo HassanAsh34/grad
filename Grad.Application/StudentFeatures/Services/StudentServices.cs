@@ -12,6 +12,7 @@ using Grad.Application.SubmissionFeatures.DTOs;
 using Grad.Application.SubmissionFeatures.Interfaces;
 using Grad.Domain.Enums;
 using Grad.Domain.Model;
+using Microsoft.Extensions.Logging;
 
 namespace Grad.Application.StudentFeatures.Services
 {
@@ -24,6 +25,7 @@ namespace Grad.Application.StudentFeatures.Services
 		private readonly IExerciseServices _exerciseServices;
 		private readonly IlessonRepository _lessonRepository;
 		private readonly IUowServices _uow;
+		private readonly ILogger<StudentServices> _logger;
 
 		public StudentServices(
 			ISubjectServices subjectServices,
@@ -32,7 +34,8 @@ namespace Grad.Application.StudentFeatures.Services
 			IlessonRepository lessonRepository,
 			ISubmissionServices submissionServices,
 			IExerciseServices exerciseServices,
-			IUowServices uow)
+			IUowServices uow,
+			ILogger<StudentServices> logger)
 		{
 			_subjectServices = subjectServices ?? throw new ArgumentNullException(nameof(subjectServices));
 			_lessonServices = lessonServices ?? throw new ArgumentNullException(nameof(lessonServices));
@@ -41,21 +44,22 @@ namespace Grad.Application.StudentFeatures.Services
 			_submissionServices = submissionServices ?? throw new ArgumentNullException(nameof(submissionServices));
 			_exerciseServices = exerciseServices ?? throw new ArgumentNullException(nameof(exerciseServices));
 			_uow = uow ?? throw new ArgumentNullException(nameof(uow));
+			_logger = logger ?? throw new ArgumentNullException(nameof(logger));
 		}
 
 
-		public async Task<ResultDTO> ViewSubjects(Guid id,bool Enrolled,CancellationToken cancellationToken)
+		public async Task<ResultDTO> ViewSubjects(Guid id, bool Enrolled, CancellationToken cancellationToken)
 		{
-			int disability = await _studentRepository.GetDisablityTypeAsync(id,cancellationToken) switch
+			int disability = await _studentRepository.GetDisablityTypeAsync(id, cancellationToken) switch
 			{
 				DisablityType.Hearing => 2,
 				DisablityType.Speech => 3,
 				_ => 1
 			};
 			List<Enrollement> enrollements = await _studentRepository.GetEnrollementsAsync(id, cancellationToken);
-			List<Guid> guids = enrollements.Select(e=>e.SUBFK).ToList();
+			List<Guid> guids = enrollements.Select(e => e.SUBFK).ToList();
 			if (Enrolled)
-			{	
+			{
 				if (guids.Count == 0)
 					return new ResultDTO
 					{
@@ -64,12 +68,12 @@ namespace Grad.Application.StudentFeatures.Services
 					};
 				else
 				{
-					return await _subjectServices.ViewSubjectsAsync(guids: guids, disability: disability, cancellationToken: cancellationToken,enrollements: enrollements);
+					return await _subjectServices.ViewSubjectsAsync(guids: guids, disability: disability, cancellationToken: cancellationToken, enrollements: enrollements);
 				}
 			}
 			else
 			{
-				return await _subjectServices.ViewSubjectsAsync(guids: guids,disability: disability, cancellationToken: cancellationToken);
+				return await _subjectServices.ViewSubjectsAsync(guids: guids, disability: disability, cancellationToken: cancellationToken);
 			}
 		}
 
@@ -110,7 +114,7 @@ namespace Grad.Application.StudentFeatures.Services
 					StatusCode = 404
 				};
 			}
-			else if(await _studentRepository.IsEnrolled(enrollement.SUBFK,enrollement.STUFK,cancellationToken))
+			else if (await _studentRepository.IsEnrolled(enrollement.SUBFK, enrollement.STUFK, cancellationToken))
 			{
 				return new ResultDTO
 				{
@@ -139,7 +143,7 @@ namespace Grad.Application.StudentFeatures.Services
 				}
 			}
 		}
-		
+
 		public async Task<ResultDTO> viewLessons(EnrollSubjectDTO enrollSubject, CancellationToken cancellationToken)//Enhanced
 		{
 			Enrollement enrollement = await _studentRepository.GetEnrollementAsync(enrollSubject.subFK, enrollSubject.stdFK, cancellationToken);
@@ -156,15 +160,15 @@ namespace Grad.Application.StudentFeatures.Services
 				}
 				else
 				{
-					List<Guid> submittedLessons = enrollement.studentProgresses.Select(e => e.lid).ToList();	
-					foreach(Guid Lid in submittedLessons)
+					List<Guid> submittedLessons = enrollement.studentProgresses.Select(e => e.lid).ToList();
+					foreach (Guid Lid in submittedLessons)
 					{
-						LessonContentDTO lesson = lessons.TryGetValue(Lid,out var l) ? l : null;
-						if(lesson != null)
+						LessonContentDTO lesson = lessons.TryGetValue(Lid, out var l) ? l : null;
+						if (lesson != null)
 						{
 							Guid Nlid = lesson.Nlid ?? Guid.Empty;
 							LessonContentDTO Nlesson = Nlid != Guid.Empty ? lessons[Nlid] : null;
-							if(Nlesson != null)
+							if (Nlesson != null)
 							{
 								Nlesson.locked = false;
 								lessons[Nlid] = Nlesson;
@@ -192,14 +196,14 @@ namespace Grad.Application.StudentFeatures.Services
 		public async Task<ResultDTO> viewLesson(LessonContentDTO lessonDTO, CancellationToken cancellationToken)
 		{
 			//return null;
-			return	await _lessonServices.viewLesson(lessonDTO,cancellationToken: cancellationToken);
+			return await _lessonServices.viewLesson(lessonDTO, cancellationToken: cancellationToken);
 		}
 
-		public async Task<ResultDTO> ViewExerciseQuize(LevelDTO levelDTO,Guid stdID,CancellationToken cancellationToken)
+		public async Task<ResultDTO> ViewExerciseQuize(LevelDTO levelDTO, Guid stdID, CancellationToken cancellationToken)
 		{
-			if(await _studentRepository.IsEnrolled(levelDTO.Sid,stdID,cancellationToken))
+			if (await _studentRepository.IsEnrolled(levelDTO.Sid, stdID, cancellationToken))
 			{
-				return await _exerciseServices.viewLevel(levelDTO,false,cancellationToken);
+				return await _exerciseServices.viewLevel(levelDTO, false, cancellationToken);
 			}
 			else
 				return new ResultDTO
@@ -213,7 +217,34 @@ namespace Grad.Application.StudentFeatures.Services
 		{
 			if (await _studentRepository.IsEnrolled(createSubmission.SubjectFK, createSubmission.SubmittedBy, cancellationToken))
 			{
-				return await _submissionServices.createSubmission(createSubmission, cancellationToken);
+				ResultDTO res = await _submissionServices.createSubmission(createSubmission, cancellationToken);
+				if (res.StatusCode == 200)
+				{
+					if (res.result is Grade grade && grade.Passed && createSubmission.LessonID != null)
+					{
+						switch(await updatecompletion(new CompletelessonDTO
+						{
+							Lid = createSubmission.LessonID.Value,
+							Sid = createSubmission.SubjectFK,
+							uid = createSubmission.SubmittedBy
+						}, cancellationToken))
+						{
+							case -1:
+								_logger.LogWarning("User {UserId} is not enrolled in subject {SubjectId}", createSubmission.SubmittedBy, createSubmission.SubjectFK);
+								break;
+							case -2:
+								_logger.LogWarning("Lesson {LessonId} not found for subject {SubjectId}", createSubmission.LessonID, createSubmission.SubjectFK);
+								break;
+							case -3:
+								_logger.LogInformation("Lesson {LessonId} already marked as completed for user {UserId}", createSubmission.LessonID, createSubmission.SubmittedBy);
+								break;
+							default:
+								_logger.LogInformation("Lesson {LessonId} marked as completed successfully for user {UserId}", createSubmission.LessonID, createSubmission.SubmittedBy);
+								break;
+						}
+					}
+				}
+				return res;
 			}
 			else
 			{
@@ -239,35 +270,55 @@ namespace Grad.Application.StudentFeatures.Services
 		public async Task<ResultDTO> completeLesson(CompletelessonDTO completelesson, CancellationToken cancellationToken)
 		{
 			// Step 1: Verify lesson exists via IlessonRepository (Option A — no service-to-service call)
-			Enrollement enrollement = await _studentRepository.GetEnrollementAsync(completelesson.Sid, completelesson.uid, cancellationToken);
-			if(enrollement == null)
+			int result = await updatecompletion(completelesson, cancellationToken);
+
+			switch(result)
 			{
-				return new ResultDTO
-				{
-					Message = "You are not enrolled in this subject",
-					StatusCode = 403
-				};
+				case -1:
+					return new ResultDTO
+					{
+						Message = "You are not enrolled in this subject",
+						StatusCode = 403
+					};
+				case -2:
+					return new ResultDTO
+					{
+						Message = "Lesson not found",
+						StatusCode = 404
+					};
+				case -3:
+					return new ResultDTO
+					{
+						Message = "Lesson already marked as completed",
+						StatusCode = 400
+					};
+				default:
+					LessonContent lesson = await _lessonRepository.viewLesson(completelesson.Sid, completelesson.Lid, cancellationToken);
+					return result == 0
+					? new ResultDTO { Message = "Something went wrong", StatusCode = 500 }
+					: new ResultDTO { Message = "Lesson marked as completed successfully", StatusCode = 200, result = new { lesson.NextType, lesson.Next } };
+			}
+		}
+
+
+		private async Task<int> updatecompletion(CompletelessonDTO completelesson, CancellationToken cancellationToken)
+		{
+			Enrollement enrollement = await _studentRepository.GetEnrollementAsync(completelesson.Sid, completelesson.uid, cancellationToken);
+			if (enrollement == null)
+			{
+				return -1;
 			}
 			LessonContent lesson = await _lessonRepository.viewLesson(enrollement.SUBFK, completelesson.Lid, cancellationToken);
 			if (lesson == null)
 			{
-				return new ResultDTO
-				{
-					Message = "Lesson not found",
-					StatusCode = 404
-				};
+				return -2;
 			}
-			
 
 			// Step 3: Check if already completed
 			if (enrollement.studentProgresses?.FirstOrDefault
 				(s => s.lid == completelesson.Lid) != null)
 			{
-				return new ResultDTO
-				{
-					Message = "Lesson already marked as completed",
-					StatusCode = 400
-				};
+				return -3;
 			}
 
 			// Step 4: Create progress record
@@ -280,10 +331,7 @@ namespace Grad.Application.StudentFeatures.Services
 
 			_studentRepository.CreateEntityAsync(progress, cancellationToken);
 			int result = await _uow.SaveChangesAsync();
-
-			return result == 0
-				? new ResultDTO { Message = "Something went wrong", StatusCode = 500 }
-				: new ResultDTO { Message = "Lesson marked as completed successfully", StatusCode = 200 };
+			return result;
 		}
 	}
 }

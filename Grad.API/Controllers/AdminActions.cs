@@ -1,11 +1,12 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 using Grad.Application.AdminFeatures.Interfaces;
-using Grad.Application.Common.Interfaces;
 using Grad.Application.Common.DTOs;
-using Grad.Application.TeacherFeatures.DTOs;
+using Grad.Application.Common.Interfaces;
 using Grad.Application.SubjectFeatures.DTOs;
+using Grad.Application.TeacherFeatures.DTOs;
+using Grad.Domain.Model;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Grad.API.Controllers
 {
@@ -16,10 +17,12 @@ namespace Grad.API.Controllers
 	{
 		private readonly IAdminServices _adminServices;
 		private readonly ITokenServices _tokenServices;
-		public AdminActions(IAdminServices adminServices, ITokenServices tokenServices)
+		private readonly ILogger<AdminActions> _logger;
+		public AdminActions(IAdminServices adminServices, ITokenServices tokenServices, ILogger<AdminActions> logger)
 		{
 			_adminServices = adminServices ?? throw new ArgumentNullException(nameof(adminServices));
 			_tokenServices = tokenServices ?? throw new ArgumentNullException(nameof(tokenServices));
+			_logger = logger ?? throw new ArgumentNullException(nameof(logger));
 		}
 
 
@@ -240,13 +243,42 @@ namespace Grad.API.Controllers
 			return BadRequest();
 		} //not implemented yet
 
-		[HttpDelete("Remove-Subject/{sid}")]
+		[HttpDelete("Remove-Subject/")]
 		[Authorize(Roles = "Admin")]
-		public async Task<IActionResult> RemoveSubject(string sid, CancellationToken cancellationToken) //not implemented yet
+		public async Task<IActionResult> RemoveSubject([FromHeader] Guid sid, CancellationToken cancellationToken) //not implemented yet
 		{
-			throw new NotImplementedException();
+			string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
+			{
+				return Unauthorized();
+			}
+			if(sid != Guid.Empty)
+			{ 
+				ResultDTO res = await _adminServices.RemoveSubject(sid, cancellationToken);
+				return StatusCode(res.StatusCode, new { Message = res.Message });
+			}
+			else
+				return BadRequest();
 		}
 
+		[HttpDelete("delete-user/")]
+		public async Task<IActionResult> DeleteUser([FromBody] ProfileDTO profile, [FromHeader] bool all = false, CancellationToken cancellationToken = default)
+		{
+			string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
+			{
+				return Unauthorized();
+			}
+			if (profile.Id == Guid.Empty || string.IsNullOrEmpty(profile.Role))
+			{
+				return BadRequest(new { Message = "Invalid User" });
+			}
+			else
+			{
+				ResultDTO res = await _adminServices.DeleteUser(profile, all, cancellationToken);
+				return StatusCode(res.StatusCode, new { Message = res.Message });
+			}
+		}
 
 		[HttpPatch("Approve-teacher")]
 		public async Task<IActionResult> ApproveTeacher(TeacherSubjectDTO teacherDTO, CancellationToken cancellationToken)

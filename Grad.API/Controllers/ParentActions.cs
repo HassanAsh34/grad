@@ -1,4 +1,4 @@
-﻿using Grad.Application.Common.DTOs;
+using Grad.Application.Common.DTOs;
 using Grad.Application.ParentFeatures.DTOs;
 using Grad.Application.ParentFeatures.Interfaces;
 using Grad.Application.Common.Interfaces;
@@ -15,11 +15,13 @@ namespace grad.API.Controllers
 	{
 		private readonly IParentServices _parentServices;
 		private readonly ITokenServices _tokenServices;
+		private readonly ILogger<ParentActions> _logger;
 
-		public ParentActions(IParentServices parentServices, ITokenServices tokenServices)
+		public ParentActions(IParentServices parentServices, ITokenServices tokenServices, ILogger<ParentActions> logger)
 		{
 			_parentServices = parentServices ?? throw new ArgumentNullException(nameof(parentServices));
 			_tokenServices = tokenServices ?? throw new ArgumentNullException(nameof(parentServices));
+			_logger = logger ?? throw new ArgumentNullException(nameof(logger));
 		}
 
 
@@ -121,6 +123,24 @@ namespace grad.API.Controllers
 			{
 				return Unauthorized();
 			}
+		}
+
+		[HttpDelete("Delete-Student/")]
+		public async Task<IActionResult> DeleteStudent([FromBody] ProfileDTO studentDTO, CancellationToken cancellationToken)
+		{
+			string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
+			{
+				return Unauthorized();
+			}
+			string pid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+			if (!Guid.TryParse(pid, out Guid parentId))
+			{
+				ResultDTO result = await _parentServices.DeleteStudent(studentDTO, parentId, cancellationToken);
+				return StatusCode(result.StatusCode, new { message = result.Message });
+			}
+			else
+				return Unauthorized();
 		}
 
 		[HttpGet("View-Profile/{sid}")]

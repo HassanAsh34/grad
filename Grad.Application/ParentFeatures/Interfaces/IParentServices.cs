@@ -11,5 +11,7 @@ namespace Grad.Application.ParentFeatures.Interfaces
 		public Task<ResultDTO> ShowChildren(Guid pid, CancellationToken cancellationToken);
 
 		public Task<ResultDTO> viewProfile(Guid pid, Guid Sid, CancellationToken cancellationToken);
+
+		public Task<ResultDTO> DeleteStudent(ProfileDTO profile, Guid pid, CancellationToken cancellationToken);
 	}
 }

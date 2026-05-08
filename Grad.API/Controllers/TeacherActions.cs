@@ -1,4 +1,6 @@
+using System.Security.Claims;
 using System.Security.Cryptography;
+using Azure.Core;
 using Grad.Application.Common.DTOs;
 using Grad.Application.Common.Interfaces;
 using Grad.Application.ExerciseFeatures.DTOs;
@@ -23,12 +25,14 @@ namespace Grad.API.Controllers
 		//private readonly ISubjectServices _SubjectServices;
 		private readonly ITokenServices _tokenServices;
 		private readonly ITeacherServices _teacherServices;
+		private readonly ILogger<TeacherActions> _logger;
 
-		public TeacherActions(ISubjectServices subjectServices, ITokenServices tokenServices, ITeacherServices teacherServices)
+		public TeacherActions(ISubjectServices subjectServices, ITokenServices tokenServices, ITeacherServices teacherServices, ILogger<TeacherActions> logger)
 		{
 			//_SubjectServices = subjectServices ?? throw new ArgumentNullException(nameof(subjectServices));
 			_tokenServices = tokenServices ?? throw new ArgumentNullException(nameof(tokenServices));
 			_teacherServices = teacherServices ?? throw new ArgumentNullException(nameof(teacherServices));
+			_logger = logger ?? throw new ArgumentNullException(nameof(logger));
 		}
 
 
@@ -277,33 +281,7 @@ namespace Grad.API.Controllers
 				return Unauthorized();
 		}
 
-		//[HttpDelete("Remove-Lesson/{lid}")]
-		//public async Task<IActionResult> removeLesson(string lid, CancellationToken cancellationToken)
-		//{
-		//	string accesstoken = User.FindFirst("accessToken")?.Value ?? string.Empty;
-		//	if (!await _tokenServices.IsTokenBlacklisted(accesstoken))
-		//	{
-		//		return Unauthorized();
-		//	}
-		//	string sid = User.FindFirst("SubjectID")?.Value;
-		//	if (Guid.TryParse(sid, out Guid Id))
-		//	{
-		//		Guid gsid = Id;
-		//		Guid glid = Guid.Empty;
-		//		if (Guid.TryParse(lid, out Guid lguid))
-		//		{
-		//			glid = lguid;
-		//		}
-		//		else
-		//			return BadRequest(new { message = "invalid lesson id" });
-		//		ResultDTO res = await _teacherServices.DeleteLesson(gsid, glid, cancellationToken);
-		//		return StatusCode(res.StatusCode, new { res.Message, res.result });
-		//	}
-		//	else
-		//		return StatusCode(StatusCodes.Status400BadRequest, new { message = "You still have not been verified yet" });
-		//}
-
-		////public 
+	
 
 		[HttpPost("Add-words-to-Dictionary/{sid}")]
 		[Consumes("multipart/form-data")]
@@ -471,6 +449,26 @@ namespace Grad.API.Controllers
 			else
 				return Unauthorized();
 		}
-			//implement add exercises
+		//implement add exercises
+
+		[HttpDelete("Delete-Level")]
+		public async Task<IActionResult> DeleteExercise_quiz([FromBody] LevelDTO levelDTO,CancellationToken cancellationToken)
+		{
+			string token = User.FindFirst("accessToken")?.Value;
+			string Tid  = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+			if (string.IsNullOrEmpty(Tid))
+				return Unauthorized();
+			if (!await _tokenServices.IsTokenBlacklisted(token))
+				return Unauthorized();
+			if (Guid.TryParse(Tid, out Guid GTid))
+			{
+				ResultDTO res = await _teacherServices.DeleteLevel(levelDTO, GTid, cancellationToken);
+				return StatusCode(res.StatusCode, new { message = res.Message, result = res.result });
+			}
+			else
+				return Unauthorized();
+		}
+
+		//[HttpDelete()] //add reomve video
 	}
 }

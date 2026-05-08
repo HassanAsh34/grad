@@ -15,6 +15,6 @@ namespace Grad.Application.Common.Interfaces
 
 		public Task<int> UpdatePerquisite(Guid subjectId, PerquisiteType CperquisiteType, Guid CperquisiteID, Guid NperquisiteID, PerquisiteType NperquisiteType, Guid nextID, bool Create = false, CancellationToken cancellationToken = default);// we might copy it to a seperate services
 
-		public Task<int> RemovePerquisite(Guid subjectId, Guid perquisiteID, PerquisiteType perquisiteType, CancellationToken cancellationToken = default);
+		public Task<int> removeDependency(Guid subjectId, LessonContent? lesson =  null, Level? level =  null, CancellationToken cancellationToken = default);
 	}
 }

@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using Grad.Application.Users.DTOs;
 using Grad.Application.Users.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -18,10 +18,12 @@ namespace Grad.API.Controllers
 	{
 		private readonly IUserServices _userService;
 		private readonly ITokenServices _tokenServices;
-		public UserActions(IUserServices userService, ITokenServices tokenServices)
+		private readonly ILogger<UserActions> _logger;
+		public UserActions(IUserServices userService, ITokenServices tokenServices, ILogger<UserActions> logger)
 		{
 			_userService = userService ?? throw new ArgumentNullException(nameof(userService));
 			_tokenServices = tokenServices ?? throw new ArgumentNullException(nameof(tokenServices));
+			_logger = logger ?? throw new ArgumentNullException(nameof(logger));
 		}
 
 		[HttpGet("view-profile")]
@@ -81,6 +83,26 @@ namespace Grad.API.Controllers
 				editProfile.Id = ID;
 				editProfile.Role = roleClaim;
 				ResultDTO res = await _userService.EditProfile(editProfile, cancellationToken);
+				return StatusCode(res.StatusCode, new
+				{
+					Message = res.Message
+				});
+			}
+			else
+				return Unauthorized();
+		}
+
+		[HttpDelete("Delete-profile")]
+		public async Task<IActionResult> deleteProfile([FromHeader]bool all = false, CancellationToken cancellationToken = default)
+		{
+			string accesstoken = User.FindFirst("accessToken")?.Value;
+			if (!await _tokenServices.IsTokenBlacklisted(accesstoken))
+				return Unauthorized();
+			string id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+			string roleClaim = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+			if (Guid.TryParse(id, out Guid ID) && !string.IsNullOrEmpty(roleClaim))
+			{
+				ResultDTO res = await _userService.DeleteProfile(new ProfileDTO { Id = ID, Role = roleClaim },null,all,false, cancellationToken);
 				return StatusCode(res.StatusCode, new
 				{
 					Message = res.Message

@@ -14,5 +14,7 @@ namespace Grad.Application.ExerciseFeatures.Interfaces
 
 		public Task<ResultDTO> EditLevel(EditLevelDTO editLevel, CancellationToken cancellationToken = default);
 
+		public Task<ResultDTO> DeleteLevel(LevelDTO levelDTO, CancellationToken cancellationToken = default);
+
 	}
 }

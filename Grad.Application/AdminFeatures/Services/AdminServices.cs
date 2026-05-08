@@ -1,4 +1,4 @@
-﻿using Grad.Application.Users.Interfaces;
+using Grad.Application.Users.Interfaces;
 using Grad.Application.Common.Interfaces;
 using Grad.Application.Common.DTOs;
 using Grad.Application.TeacherFeatures.DTOs;
@@ -7,6 +7,7 @@ using Grad.Application.SubjectFeatures.DTOs;
 using Grad.Domain.Model;
 using Grad.Application.AdminFeatures.Interfaces;
 using Grad.Domain.Enums;
+using Microsoft.Extensions.Logging;
 
 namespace Grad.Application.AdminFeatures.Services
 {
@@ -16,17 +17,20 @@ namespace Grad.Application.AdminFeatures.Services
 		private readonly IUserServices _userServices;
 		private readonly ISubjectServices _subjectServices;
 		private readonly IUowServices _uowServices;
+		private readonly ILogger<AdminServices> _logger;
 
 		public AdminServices(
 			IAdminRepository adminRepository,
 			IUserServices userServices, 
 			ISubjectServices subjectServices, 
-			IUowServices uowServices)
+			IUowServices uowServices,
+			ILogger<AdminServices> logger)
 		{
 			_adminRepository = adminRepository ?? throw new ArgumentNullException(nameof(adminRepository));
 			_userServices = userServices ?? throw new ArgumentNullException(nameof(userServices));
 			_subjectServices = subjectServices ?? throw new ArgumentNullException(nameof(subjectServices));
 			_uowServices = uowServices ?? throw new ArgumentNullException(nameof(uowServices));	
+			_logger = logger ?? throw new ArgumentNullException(nameof(logger));
 		}
 
 		public async Task<ResultDTO> ToggleBan(Guid UID, CancellationToken cancellationToken)
@@ -201,9 +205,9 @@ namespace Grad.Application.AdminFeatures.Services
 			};
 		}
 
-		public Task<ResultDTO> RemoveSubject(Guid sid, CancellationToken cancellationToken)
+		public async Task<ResultDTO> RemoveSubject(Guid sid, CancellationToken cancellationToken)
 		{
-			throw new NotImplementedException();
+			return await _subjectServices.RemoveSubject(sid, cancellationToken);
 		}
 
 		public Task<ResultDTO> UpdateSubject(Guid sid, CancellationToken cancellationToken)
@@ -229,6 +233,12 @@ namespace Grad.Application.AdminFeatures.Services
 				StatusCode = 400
 			};
 		}
+
+		public async Task<ResultDTO> DeleteUser(ProfileDTO profile, bool all,CancellationToken cancellationToken)
+		{
+			return await _userServices.DeleteProfile(profile,null,all,true, cancellationToken);
+		}
+
 
 		public async Task<ResultDTO> ViewUser(ProfileDTO profileDTO, CancellationToken cancellationToken)
 		{

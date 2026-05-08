@@ -62,11 +62,53 @@ namespace Grad.Infrastructure.Repository
 				SubjectContent s = await _subjects.Find(filter).FirstOrDefaultAsync(CT);
 				if (s != null)
 				{
-					LessonContent lesson = s.Lessons.FirstOrDefault();
+					LessonContent lesson = s.Lessons.FirstOrDefault(l=>l.Id == Lid);
 					level = lesson != null ? lesson.Level != null ? lesson.Level : null : null;
 				}
 			}
 			return level;
+		}
+
+		public async Task<int> DeleteQuiz(Guid sid, Guid? Lid, Guid LVLid, CancellationToken cancellationToken)
+		{
+			if (Lid == null || Lid == Guid.Empty)
+			{
+				var filter = Builders<SubjectContent>.Filter.And(Builders<SubjectContent>.Filter.Eq(s => s.Id, sid), Builders<SubjectContent>.Filter.ElemMatch(s => s.Quizzes, q => q.ID == LVLid));
+				SubjectContent subject = await _subjects.Find(filter).FirstOrDefaultAsync(cancellationToken);
+				if (subject != null)
+				{
+					Level level = subject.Quizzes.FirstOrDefault(q => q.ID == LVLid);
+					if (level != null)
+					{
+						var update = Builders<SubjectContent>.Update.PullFilter(s => s.Quizzes, q => q.ID == LVLid);
+						var result = await _subjects.UpdateOneAsync(filter, update, cancellationToken: cancellationToken);
+						return (int)result.ModifiedCount;
+					}
+					else
+						return -1; // quiz wasnt found
+				}
+				else
+					return -1; // subject wasnt found
+			}
+			else
+			{
+				var filter = Builders<SubjectContent>.Filter.And(Builders<SubjectContent>.Filter.Eq(s => s.Id, sid), Builders<SubjectContent>.Filter.ElemMatch(s => s.Lessons, l => l.Id == Lid));
+				SubjectContent subject = await _subjects.Find(filter).FirstOrDefaultAsync(cancellationToken);
+				if (subject != null)
+				{
+					LessonContent lesson = subject.Lessons.FirstOrDefault(l => l.Id == Lid);
+					if (lesson != null && lesson.Level != null && lesson.Level.ID == LVLid)
+					{
+						var update = Builders<SubjectContent>.Update.Unset("Lessons.$.Level");
+						var result = await _subjects.UpdateOneAsync(filter, update, cancellationToken: cancellationToken);
+						return (int)result.ModifiedCount;
+					}
+					else
+						return -1; // quiz wasnt found
+				}
+				else
+					return -1; // subject wasnt found
+			}
 		}
 
 		//public async Task<int> editLevel(Guid Sid, Guid? Lid, Level exercise, CancellationToken CT)

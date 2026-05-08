@@ -3,6 +3,7 @@ using Grad.Application.Common.Interfaces;
 using Grad.Application.SubjectFeatures.DTOs;
 using Grad.Application.SubjectFeatures.Interfaces;
 using Grad.Domain.Model;
+using Microsoft.Extensions.Logging;
 
 namespace Grad.Application.SubjectFeatures.Services
 {
@@ -11,12 +12,14 @@ namespace Grad.Application.SubjectFeatures.Services
 		private readonly ISubjectRepository _subjectRepository;
 		private readonly IUowServices _uowServices;
 		private readonly ICloudinaryServices _cloudinary;
+		private readonly ILogger<SubjectServices> _logger;
 
-		public SubjectServices(ISubjectRepository subjectRepository, IUowServices uowServices, ICloudinaryServices cloudinary)
+		public SubjectServices(ISubjectRepository subjectRepository, IUowServices uowServices, ICloudinaryServices cloudinary, ILogger<SubjectServices> logger)
 		{
 			_subjectRepository = subjectRepository ?? throw new ArgumentNullException(nameof(subjectRepository));
 			_uowServices = uowServices ?? throw new ArgumentNullException(nameof(uowServices));
 			_cloudinary = cloudinary ?? throw new ArgumentNullException(nameof(cloudinary));
+			_logger = logger ?? throw new ArgumentNullException(nameof(logger));
 		}
 
 		public async Task<ResultDTO> AddSubject(SubjectDTO subject, CancellationToken cancellationToken)
@@ -118,16 +121,28 @@ namespace Grad.Application.SubjectFeatures.Services
 
 			var subjectContent = await _subjectRepository.GetSubjectContentAsync(sid, cancellationToken);
 			int lessonsCount = subjectContent?.Lessons?.Count() ?? 0;
+			int QuizCount = subjectContent?.Quizzes?.Count() ?? 0;
+			int WordsCount = subjectContent?.Dictionary?.wordItems?.Count() ?? 0;
+			int TotalSubmissions = subjectContent?.Lessons?.Count ?? 0;
+			decimal AvgerageGrades = subject?.Submissions?.Where(s => s.LessonID == null).Average(s => s.Percentage) ?? 0;
+			int failedSubmissions = subject?.Submissions?.Count(s => !s.Passed && s.LessonID == null) ?? 0;
+			int passedSubmissions = subject?.Submissions?.Count(s => s.Passed && s.LessonID == null) ?? 0;
+
 
 			var subjectDTO = new SubjectDTO
 			{
 				SubjectId = subject.Id,
 				SubjectName = subject.Name,
 				deaf_mute = subject.deaf_mute,
-				studentsCount = all ? (subject.Students?.Count() ?? 0) : 0,
+				studentsCount = subject.Students?.Count() ?? 0,
 				teachersCount = all ? (subject.AssignedSubjects?.Count() ?? 0) : 0,
 				lessonsCount = lessonsCount,
-				levelsCount = all ? lessonsCount : 0
+				levelsCount = all ? lessonsCount : 0,
+				WordCount = WordsCount,
+				submissionsCount = TotalSubmissions,
+				AvgerageGrades = AvgerageGrades,
+				failure_rate = TotalSubmissions > 0 ? failedSubmissions / (decimal)TotalSubmissions * 100 : 0,
+				success_rate = TotalSubmissions > 0 ? passedSubmissions / (decimal)TotalSubmissions * 100 : 0
 			};
 
 			return new ResultDTO
@@ -138,9 +153,38 @@ namespace Grad.Application.SubjectFeatures.Services
 			};
 		}
 
-		public Task<ResultDTO> RemoveSubject(Guid subjectid, CancellationToken cancellationToken)
+		public async Task<ResultDTO> RemoveSubject(Guid subjectid, CancellationToken cancellationToken)
 		{
-			throw new NotImplementedException();
+			Subject subject = await _subjectRepository.GetSubjectWithRelationsAsync(subjectid, cancellationToken);
+			if (subject == null)
+			{
+				return new ResultDTO
+				{
+					Message = "Subject not found",
+					StatusCode = 404
+				};
+			}
+			else
+			{
+				SubjectContent subjectContent = await _subjectRepository.GetSubjectContentAsync(subjectid, cancellationToken);
+				if(subjectContent != null)
+				{
+					if(!await _cloudinary.DeleteAsync($"subjects/{subjectid}", folder: true, cancellationToken: cancellationToken))
+					{
+						return new ResultDTO
+						{
+							Message = "Failed to delete subject media from cloud storage",
+							StatusCode = 500
+						};
+					}
+				}
+				int res = await _subjectRepository.DeleteSubject(subject, cancellationToken);
+				return new ResultDTO
+				{
+					Message = res != 0 ? "Subject deleted successfully" : "Failed to delete subject",
+					StatusCode = res != 0 ? 200 : 500
+				};
+			}
 		}
 
 		public async Task<ResultDTO> addwords(AddVocabDTO vocabDTO, CancellationToken cancellationToken)
@@ -155,10 +199,10 @@ namespace Grad.Application.SubjectFeatures.Services
 			}
 
 			string folder = $"subjects/{vocabDTO.sid}/vocabulary";
-			
+
 			// Zip streams and filenames for Cloudinary
-			
-			
+
+
 			var urls = await _cloudinary.UploadImagesAsync(vocabDTO.files, folder, vocabDTO.word, cancellationToken);
 			var vocab = new Vocabulary();
 			for (int i = 0; i < vocabDTO.word.Count; i++)

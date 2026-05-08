@@ -13,6 +13,9 @@ namespace Grad.Application.Users.Interfaces
 		//public Task<ResultDTO> refreshToken(string token, CancellationToken cancellationToken = default);
 		//public Task<ResultDTO> ResetPassword(ChangePasswordDTO changePassword, bool resetToken = false, CancellationToken cancellationToken = default);
 		public Task<ResultDTO> ViewProfile(ProfileDTO user,Guid ?pid = null,bool adminview = false,CancellationToken cancellationToken = default);
+
+		public Task<ResultDTO> DeleteProfile(ProfileDTO profile, Guid? parentAccss, bool deleteAll = false, bool admin = false, CancellationToken cancellationToken = default);
+
 		//public Task<ResultDTO> LogOut(LogoutDTO login, CancellationToken cancellationToken = default);
 		public Task<ResultDTO> EditProfile(EditProfileDTO editProfile, CancellationToken cancellationToken = default);
 		//public Task<bool> UserExists(string? EmailorUserName = "", Guid? uid = null, CancellationToken cancellationToken = default);

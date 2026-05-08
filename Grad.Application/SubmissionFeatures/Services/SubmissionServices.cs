@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,6 +12,8 @@ using Grad.Application.SubmissionFeatures.DTOs;
 using Grad.Application.SubmissionFeatures.Interfaces;
 using Grad.Domain.Enums;
 using Grad.Domain.Model;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 
 namespace Grad.Application.SubmissionFeatures.Services
 {
@@ -22,14 +24,16 @@ namespace Grad.Application.SubmissionFeatures.Services
 		private readonly IExerciseRepository _exerciseRepository;
 		private readonly IStudentRepository _studentRepository;
 		private readonly IUowServices _uow;
+		private readonly ILogger<SubmissionServices> _logger;
 
-		public SubmissionServices(ISubmissionRepository submissionRepository, ISubjectRepository subjectRepository,IUowServices uow,IExerciseRepository exerciseRepository,IStudentRepository studentRepository)
+		public SubmissionServices(ISubmissionRepository submissionRepository, ISubjectRepository subjectRepository,IUowServices uow,IExerciseRepository exerciseRepository,IStudentRepository studentRepository, ILogger<SubmissionServices> logger)
 		{
 			_subjectRepository = subjectRepository ?? throw new ArgumentNullException(nameof(subjectRepository));
 			_submissionRepository = submissionRepository ?? throw new ArgumentNullException(nameof(submissionRepository)); 
 			_uow = uow ?? throw new ArgumentNullException(nameof(uow));
 			_studentRepository = studentRepository ?? throw new ArgumentNullException(nameof(studentRepository));
 			_exerciseRepository = exerciseRepository ?? throw new ArgumentNullException(nameof(exerciseRepository));
+			_logger = logger ?? throw new ArgumentNullException(nameof(logger));
 		}
 
 		public async Task<ResultDTO> createSubmission(CreateSubmissionDTO createSubmission,CancellationToken CT)
@@ -59,6 +63,7 @@ namespace Grad.Application.SubmissionFeatures.Services
 					{
 						StatusCode = 400,
 						Message = "No Attempts Remaining"
+						//return right answers
 					};
 			}
 			else
@@ -73,16 +78,27 @@ namespace Grad.Application.SubmissionFeatures.Services
 			submission.AttemptsRemaining = AttemptsRemaining;
 			submission.Passed = grade.Passed;
 			_studentRepository.CreateEntityAsync(submission);
-			return await _uow.SaveChangesAsync() > 0 ? new ResultDTO
+			if(await _uow.SaveChangesAsync() > 0)
 			{
-				StatusCode = 200,
-				Message = submission.Passed ? "Yay! You did it!" : "Not this time, but that’s okay! Keep practicing—you’re getting closer!",
-				result = grade
-			} : new ResultDTO
+				if(!submission.Passed)
+				{
+					//send email to parent or guardian if exists
+				}
+				return new ResultDTO
+				{
+					StatusCode = 200,
+					Message = submission.Passed ? "Yay! You did it!" : "Not this time, but that’s okay! Keep practicing—you’re getting closer!",
+					result = grade
+				};
+			}
+			else
 			{
-				StatusCode = 400,
-				Message = "Failed to Complete Level"
-			};
+				return	new ResultDTO
+				{
+					StatusCode = 400,
+					Message = "Failed to Complete Level"
+				};
+			}
 		}
 			
 
