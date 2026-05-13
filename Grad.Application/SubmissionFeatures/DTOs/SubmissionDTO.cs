@@ -21,6 +21,10 @@ namespace Grad.Application.SubmissionFeatures.DTOs
 
 		public decimal Percentage { get; set; }
 
+		public decimal HighestPercentage { get; set; }
+
+		public int AttemptsUsed { get; set; }
+
 		public int RetakesRemaining { get; set; }
 
 		public int TimeTakenInMinutes { get; set; }

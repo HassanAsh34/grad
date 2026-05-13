@@ -109,7 +109,12 @@ namespace Grad.Application.SubjectFeatures.Services
 
 		public async Task<ResultDTO> ViewSubjectAsync(Guid sid, bool all, CancellationToken cancellationToken)
 		{
-			var subject = await _subjectRepository.GetSubjectWithRelationsAsync(sid, cancellationToken);
+
+			Subject subject;
+			if (all)
+				subject = await _subjectRepository.GetSubjectWithRelationsAsync(sid, cancellationToken);
+			else
+				subject = await _subjectRepository.GetEntityAsync<Subject>(s => s.Id == sid, cancellationToken: cancellationToken);
 			if (subject == null)
 			{
 				return new ResultDTO

@@ -41,7 +41,7 @@ namespace Grad.API.Controllers
 			if (Guid.TryParse(id, out Guid guid))
 			{
 				ResultDTO result = await _studentServices.ViewSubjects(guid,cancellationToken: cancellationToken);
-				return StatusCode(result.StatusCode, new { message = result.Message, result = result.result });
+				return StatusCode(result.StatusCode, new { Message = result.Message, Data = result.result });
 			}
 			else
 			{
@@ -62,7 +62,7 @@ namespace Grad.API.Controllers
 			if (Guid.TryParse(id, out Guid guid))
 			{
 				ResultDTO result = await _studentServices.viewSubmissions(guid, cancellationToken);
-				return StatusCode(result.StatusCode, new { message = result.Message, result = result.result });
+				return StatusCode(result.StatusCode, new { Message = result.Message, Data = result.result });
 			}
 			else
 			{
@@ -117,7 +117,7 @@ namespace Grad.API.Controllers
 					subFK = sidGuid
 				};
 				ResultDTO result = await _studentServices.EnrollSubject(enrollSubject, cancellationToken);
-				return StatusCode(result.StatusCode, new { Message = result.Message, result = result });
+				return StatusCode(result.StatusCode, new { Message = result.Message, Data = result });
 			}
 		}
 
@@ -133,7 +133,7 @@ namespace Grad.API.Controllers
 			if (Guid.TryParse(id, out Guid guid))
 			{
 				ResultDTO result = await _studentServices.ViewSubjects(guid,true,cancellationToken);
-				return StatusCode(result.StatusCode, new { message = result.Message, result = result.result });
+				return StatusCode(result.StatusCode, new { Message = result.Message, Data = result.result });
 			}
 			else
 			{
@@ -162,7 +162,7 @@ namespace Grad.API.Controllers
 						subFK = Gsid
 					};
 					ResultDTO result = await _studentServices.viewLessons(enroll, cancellationToken);
-					return StatusCode(result.StatusCode, new { message = result.Message, result = result.result });
+					return StatusCode(result.StatusCode, new { Message = result.Message, Data = result.result });
 				}
 				else
 				{
@@ -200,7 +200,7 @@ namespace Grad.API.Controllers
 					//	//lesson.videoUrl = $"{Request.Scheme}://{Request.Host}/{lesson.VideoPath}";
 					//	//Console.WriteLine(lesson.videoUrl);
 					//}
-					return StatusCode(result.StatusCode, new { message = result.Message, result = result.result });
+					return StatusCode(result.StatusCode, new { Message = result.Message, Data = result.result });
 				}
 				else
 				{
@@ -231,7 +231,7 @@ namespace Grad.API.Controllers
 					Sid = sid
 				};
 				ResultDTO result = await _studentServices.ViewExerciseQuize(level, guid, cancellationToken);
-				return StatusCode(result.StatusCode, new { message = result.Message, result = result.result });
+				return StatusCode(result.StatusCode, new { Message = result.Message, Data = result.result });
 			}
 			else
 			{
@@ -256,7 +256,7 @@ namespace Grad.API.Controllers
 					Sid = sid
 				};
 				ResultDTO result = await _studentServices.ViewExerciseQuize(level, guid, cancellationToken);
-				return StatusCode(result.StatusCode, new { message = result.Message, result = result.result });
+				return StatusCode(result.StatusCode, new { Message = result.Message, Data = result.result });
 			}
 			else
 			{
@@ -289,7 +289,7 @@ namespace Grad.API.Controllers
 					//	//lesson.videoUrl = $"{Request.Scheme}://{Request.Host}/{lesson.VideoPath}";
 					//	//Console.WriteLine(lesson.videoUrl);
 					//}
-					return StatusCode(result.StatusCode, new { message = result.Message, result = result.result });
+					return StatusCode(result.StatusCode, new { Message = result.Message, Data = result.result });
 				}
 				else
 				{
@@ -315,7 +315,7 @@ namespace Grad.API.Controllers
 			{
 				submitAnswers.SubmittedBy = guid;
 				ResultDTO result = await _studentServices.createSubmission(submitAnswers, cancellationToken);
-				return StatusCode(result.StatusCode, new { message = result.Message, result = result.result });
+				return StatusCode(result.StatusCode, new { Message = result.Message, Data = result.result });
 			}
 			else
 				return Unauthorized();

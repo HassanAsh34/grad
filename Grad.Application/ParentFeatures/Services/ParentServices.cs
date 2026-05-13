@@ -1,7 +1,12 @@
-﻿using Grad.Application.Auth.Interfaces;
+﻿using System.Security.Cryptography;
+using Grad.Application.Auth.Interfaces;
 using Grad.Application.Common.DTOs;
 using Grad.Application.ParentFeatures.DTOs;
 using Grad.Application.ParentFeatures.Interfaces;
+using Grad.Application.StudentFeatures.Interfaces;
+using Grad.Application.SubjectFeatures.Interfaces;
+using Grad.Application.SubmissionFeatures.DTOs;
+using Grad.Application.SubmissionFeatures.Interfaces;
 using Grad.Application.Users.Interfaces;
 using Grad.Domain.Model;
 
@@ -11,14 +16,18 @@ namespace Grad.Application.ParentFeatures.Services
 	{
 		private readonly IAuthServices _authServices;
 		private readonly IUserServices _userServices;
-		private readonly IParentRepository _repository;
+		private readonly IParentRepository _IParentRepository;
+		private readonly IStudentServices _IStudentServices;
+		private readonly ISubmissionServices _ISubmissionServices;
 		//private readonly IUowServices  _uowServices;
 
-		public ParentServices(IUserServices userServices,IAuthServices authServices,IParentRepository parentRepository)
+		public ParentServices(IUserServices userServices,IAuthServices authServices,IParentRepository parentRepository,IStudentServices studentServices,ISubmissionServices submissionServices)
 		{
 			_userServices = userServices ?? throw new ArgumentNullException(nameof(userServices));
 			_authServices = authServices ?? throw new ArgumentNullException(nameof(authServices));
-			_repository = parentRepository ?? throw new ArgumentNullException(nameof(parentRepository));
+			_IParentRepository = parentRepository ?? throw new ArgumentNullException(nameof(parentRepository));
+			_IStudentServices = studentServices ?? throw new ArgumentNullException(nameof(studentServices));
+			_ISubmissionServices = submissionServices ?? throw new ArgumentNullException(nameof(submissionServices));
 		}
 		public async Task<ResultDTO> registerStudent(RegisterStudentDTO studentDTO, CancellationToken cancellationToken)//need to be tested
 		{
@@ -52,7 +61,7 @@ namespace Grad.Application.ParentFeatures.Services
 		//{
 		//	//var res = await _authServices.login(login, cancellationToken);
 		//	string email = login.UsernameorEmail.ToLower().Trim();
-		//	Student student = await _repository.GetEntityAsync<Student>(u => u.EmailorUserName.Equals(email)
+		//	Student student = await _IParentRepository.GetEntityAsync<Student>(u => u.EmailorUserName.Equals(email)
 		//		&& u.PID == parentId, cancellationToken: cancellationToken);
 		//	if (student == null)
 		//	{
@@ -73,7 +82,7 @@ namespace Grad.Application.ParentFeatures.Services
 		//		else
 		//		{
 		//			student.Password = BCrypt.Net.BCrypt.HashPassword(login.password);
-		//			_repository.UpdateEntityAsync<Student>(student, cancellationToken: cancellationToken);
+		//			_IParentRepository.UpdateEntityAsync<Student>(student, cancellationToken: cancellationToken);
 		//			int res = await _uowServices.SaveChangesAsync();
 		//			if (res != 0)
 		//			{
@@ -99,7 +108,7 @@ namespace Grad.Application.ParentFeatures.Services
 
 		public async Task<ResultDTO> ShowChildren(Guid pid, CancellationToken cancellationToken)
 		{
-			IEnumerable<Student> children = await _repository.showChildren(pid, cancellationToken: cancellationToken);
+			IEnumerable<Student> children = await _IParentRepository.showChildren(pid, cancellationToken: cancellationToken);
 			IEnumerable<ProfileDTO> profileDTOs = new List<ProfileDTO>();
 			if (children == null || !children.Any())
 			{
@@ -148,6 +157,52 @@ namespace Grad.Application.ParentFeatures.Services
 			return await _userServices.ViewProfile(profileDTO, pid,cancellationToken: cancellationToken);
 		}
 
+		public async Task<ResultDTO> ViewSubjects(Guid sid, Guid pid, CancellationToken cancellationToken)
+		{
+			if (await _IParentRepository.isStudentExists(sid, pid, cancellationToken))
+			{
+				return await _IStudentServices.ViewSubjects(sid, true, cancellationToken);
+			}
+			else
+				return new ResultDTO
+				{
+					StatusCode = 404,
+					Message = "We couldn't find a student with this ID."
+				};
+		}
+
+		public async Task<ResultDTO> ViewSubjectStats(Guid stdid,Guid sid,Guid pid,CancellationToken cancellationToken)
+		{
+			if (await _IParentRepository.isStudentExists(sid,pid,cancellationToken))
+			{
+				List<SubmissionDTO> submissionDTOs = await _ISubmissionServices.GetSubmissions(stdid, sid, cancellationToken);
+				if (submissionDTOs != null && submissionDTOs.Count > 0)
+				{
+					SubjectStatsDTO subjectStatsDTO = new SubjectStatsDTO
+					{
+						submissionDTOs = submissionDTOs
+					};
+					return new ResultDTO
+					{
+						StatusCode = 200,
+						result = subjectStatsDTO
+
+					};
+				}
+				else
+					return new ResultDTO
+					{
+						StatusCode = 404,
+						Message = "No submissions where found."
+					};
+			}
+			else
+				return new ResultDTO
+				{
+					StatusCode = 404,
+					Message = "We couldn't find a student with this ID."
+				};
+		}
 
 		private void GenerateUserName(RegisterStudentDTO student)// need further improvement
 		{

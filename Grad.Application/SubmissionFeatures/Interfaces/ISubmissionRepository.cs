@@ -10,8 +10,8 @@ namespace Grad.Application.SubmissionFeatures.Interfaces
 {
 	public interface ISubmissionRepository : IRepository
 	{
-		public Task<List<Submission>> GetSubmissions(Guid STDid, CancellationToken cancellationToken);
+		public Task<List<Submission>> GetSubmissions(Guid STDid,Guid ?sid = null,CancellationToken cancellationToken = default);
 
-		public Task<int> RetakeAttempted(Guid STDid, Guid Lvlid, CancellationToken cancellationToken);
+		public Task<int> RetakeAttempted(Guid STDid, Guid Lvlid, CancellationToken cancellationToken = default);
 	}
 }

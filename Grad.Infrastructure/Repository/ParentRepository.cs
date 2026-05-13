@@ -14,5 +14,10 @@ namespace Grad.Infrastructure.Repository
 		{
 			return await base.GetEntitiesAsync<Student>((s => s.PID == id), cancellationToken: cancellationToken);
 		}
+
+		public async Task<bool> isStudentExists(Guid sid,Guid pid,CancellationToken cancellationToken)
+		{
+			return await base.GetEntityAsync<Student>(s => s.PID == pid && s.Id == sid, cancellationToken: cancellationToken) != null;
+		}
 	}
 }

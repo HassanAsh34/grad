@@ -47,5 +47,7 @@ namespace Grad.Application.TeacherFeatures.Interfaces
 		public Task<ResultDTO> ListPerquisites(TeacherSubjectDTO teacherSubject, PerquisiteType type, CancellationToken cancellationToken = default);
 
 		public Task<ResultDTO> DeleteLevel(LevelDTO level, Guid Tid, CancellationToken CT = default);
+
+		public Task<ResultDTO> DeleteVideo(VideoDTO videoDTO, Guid Tid, CancellationToken cancellationToken = default);
 	}
 }

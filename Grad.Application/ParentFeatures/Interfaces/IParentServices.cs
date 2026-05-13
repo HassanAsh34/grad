@@ -7,11 +7,15 @@ namespace Grad.Application.ParentFeatures.Interfaces
 	{
 		public Task<ResultDTO> registerStudent(RegisterStudentDTO student, CancellationToken cancellationToken = default);
 
-		//public Task<ResultDTO> activateAccount(LoginDTO login,Guid parentId, CancellationToken cancellationToken = default);
-		public Task<ResultDTO> ShowChildren(Guid pid, CancellationToken cancellationToken);
+		//public Task<ResultDTO> activateAccount(LoginDTO login,Guid parentId, CancellationToken cancellationToken = default = default);
+		public Task<ResultDTO> ShowChildren(Guid pid, CancellationToken cancellationToken = default);
 
-		public Task<ResultDTO> viewProfile(Guid pid, Guid Sid, CancellationToken cancellationToken);
+		public Task<ResultDTO> viewProfile(Guid pid, Guid Sid, CancellationToken cancellationToken = default);
 
-		public Task<ResultDTO> DeleteStudent(ProfileDTO profile, Guid pid, CancellationToken cancellationToken);
+		public Task<ResultDTO> DeleteStudent(ProfileDTO profile, Guid pid, CancellationToken cancellationToken = default);
+
+		public Task<ResultDTO> ViewSubjects(Guid sid, Guid pid, CancellationToken cancellationToken = default);
+
+		public Task<ResultDTO> ViewSubjectStats(Guid stdid, Guid sid, Guid pid, CancellationToken cancellationToken = default);
 	}
 }

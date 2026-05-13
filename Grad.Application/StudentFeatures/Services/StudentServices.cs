@@ -258,7 +258,7 @@ namespace Grad.Application.StudentFeatures.Services
 
 		public async Task<ResultDTO> viewSubmissions(Guid stdID, CancellationToken cancellationToken)
 		{
-			List<SubmissionDTO> submissionDTOs = await _submissionServices.GetSubmissions(stdID, cancellationToken);
+			List<SubmissionDTO> submissionDTOs = await _submissionServices.GetSubmissions(stdID,null,cancellationToken);
 			return new ResultDTO
 			{
 				Message = "Submissions retrieved successfully",

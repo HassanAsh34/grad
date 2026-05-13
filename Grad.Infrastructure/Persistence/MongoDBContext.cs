@@ -1,4 +1,4 @@
-﻿using Grad.Domain.Model;
+using Grad.Domain.Model;
 using Grad.Infrastructure.Persistence.Configurations;
 using Microsoft.Extensions.Options;
 using MongoDB.Bson;
@@ -21,6 +21,9 @@ namespace  Grad.Infrastructure.Persistence
 
 		public IMongoCollection<SubjectContent> Subjects => _database.GetCollection<SubjectContent>("Subjects");
 		//public IMongoCollection<StudentProgress> StudentProgress => _database.GetCollection<StudentProgress>("StudentProgress");
+		
+		//chat
+		//public IMongoCollection<SubjectThread> Threads => _database.GetCollection<SubjectThread>("SubjectThreads");
 		public static void ConfigureMappings()
 		{
 			BsonSerializer.RegisterSerializer(new GuidSerializer(GuidRepresentation.Standard));
@@ -87,7 +90,8 @@ namespace  Grad.Infrastructure.Persistence
 					cm.MapIdMember(v => v.Id);
 				});
 			}
+
+
 		}
-	// ... add others here ...
 	}
 }

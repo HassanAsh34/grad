@@ -206,7 +206,7 @@ namespace Grad.API.Controllers
 					Path = "/"
 				});
 			}
-			return StatusCode(result.StatusCode,result.Message);
+			return StatusCode(result.StatusCode,new { Message = result.Message });
 		}
 
 

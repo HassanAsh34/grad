@@ -11,8 +11,8 @@ namespace Grad.Application.SubmissionFeatures.Interfaces
 {
 	public interface ISubmissionServices
 	{
-		public Task<ResultDTO> createSubmission(CreateSubmissionDTO createSubmission, CancellationToken CT);
+		public Task<ResultDTO> createSubmission(CreateSubmissionDTO createSubmission, CancellationToken CT = default);
 
-		public Task<List<SubmissionDTO>> GetSubmissions(Guid STDid, CancellationToken cancellationToken);
+		public Task<List<SubmissionDTO>> GetSubmissions(Guid STDid,Guid ?sid = null,CancellationToken cancellationToken = default);
 	}
 }

@@ -102,25 +102,51 @@ namespace Grad.Application.SubmissionFeatures.Services
 		}
 			
 
-		public async Task<List<SubmissionDTO>> GetSubmissions(Guid STDid, CancellationToken cancellationToken)
+		public async Task<List<SubmissionDTO>> GetSubmissions(Guid STDid,Guid? Sid,CancellationToken cancellationToken)
 		{
-			List<Submission> submissions = await _submissionRepository.GetSubmissions(STDid, cancellationToken);
-			List<SubmissionDTO> submissionDTOs = new List<SubmissionDTO>();
-			foreach(Submission s in submissions)
+			List<Submission> submissions = await _submissionRepository.GetSubmissions(STDid, Sid, cancellationToken: cancellationToken);
+			List<SubmissionDTO> submissionDTOs = submissions.GroupBy(a => a.LevelFK)
+			.Select(g => new SubmissionDTO
 			{
-				submissionDTOs.Add(new SubmissionDTO
-				{
-					SubjectName = s.Subject != null ? s.Subject.Name : "Unknown Subject",
-					LevelName = s.quizName,
-					SubjectFK = s.SubjectFK,
-					LevelFK = s.LevelFK,
-					LessonID = s.LessonID ?? null,
-					Percentage = s.Percentage,
-					SubmittedAt = s.SubmittedAt,
-					RetakesRemaining = s.AttemptsRemaining, // This would require additional logic to calculate based on the student's history and the subject's retake policy
-					TimeTakenInMinutes = 0, // This would require additional logic to calculate based on the submission's start and end times
-				});
-			}
+				SubjectName = g.First().Subject != null
+					? g.First().Subject.Name
+					: "Unknown Subject",
+
+				LevelName = g.First().quizName,
+
+				SubjectFK = g.First().SubjectFK,
+
+				LevelFK = g.Key,
+
+				LessonID = g.First().LessonID,
+
+				HighestPercentage = g.Max(x => x.Percentage),
+
+				Percentage = g.Average(x => x.Percentage),
+
+				RetakesRemaining = g.Max(x => x.AttemptsRemaining) != -1 ? g.Min(x => x.AttemptsRemaining) : 0,
+
+				AttemptsUsed = g.Max(x => x.AttemptsRemaining) != -1 ?  g.Max(x => x.AttemptsRemaining) - g.Min(x => x.AttemptsRemaining) : 0,
+
+				SubmittedAt = g.Max(x => x.SubmittedAt)
+			})
+			.ToList();
+			//List<SubmissionDTO> submissionDTOs = new List<SubmissionDTO>();
+			//foreach(Submission s in submissions)
+			//{
+			//	submissionDTOs.Add(new SubmissionDTO
+			//	{
+			//		SubjectName = s.Subject != null ? s.Subject.Name : "Unknown Subject",
+			//		LevelName = s.quizName,
+			//		SubjectFK = s.SubjectFK,
+			//		LevelFK = s.LevelFK,
+			//		LessonID = s.LessonID ?? null,
+			//		Percentage = s.Percentage,
+			//		SubmittedAt = s.SubmittedAt,
+			//		RetakesRemaining = s.AttemptsRemaining, // This would require additional logic to calculate based on the student's history and the subject's retake policy
+			//		TimeTakenInMinutes = 0, // This would require additional logic to calculate based on the submission's start and end times
+			//	});
+			//}
 			return submissionDTOs;
 		}
 

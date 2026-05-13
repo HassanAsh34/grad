@@ -19,10 +19,15 @@ namespace Grad.Infrastructure.Repository
 			_Context = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
 		}
 
-		public async Task<List<Submission>> GetSubmissions(Guid STDid,CancellationToken cancellationToken)
+		public async Task<List<Submission>> GetSubmissions(Guid STDid,Guid ?Sid,CancellationToken cancellationToken)
 		{
-			return await _Context.submissions.Where(s => s.SubmittedBy == STDid).Include(s => s.Subject).ToListAsync(cancellationToken);
+			if(Sid != null)
+				return await _Context.submissions.Where(s => s.SubmittedBy == STDid && s.SubjectFK == Sid).Include(s => s.Subject).ToListAsync(cancellationToken);
+			else
+				return await _Context.submissions.Where(s => s.SubmittedBy == STDid).Include(s => s.Subject).ToListAsync(cancellationToken);
 		}
+
+		//public async Task<List<Submission>> 
 
 		public async Task<int> RetakeAttempted(Guid STDid, Guid Lvlid, CancellationToken cancellationToken)
 		{

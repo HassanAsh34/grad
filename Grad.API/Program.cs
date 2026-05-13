@@ -17,6 +17,7 @@ using Grad.Application.SubjectFeatures.Interfaces;
 using Grad.Application.SubjectFeatures.Services;
 using Grad.Application.SubmissionFeatures.Interfaces;
 using Grad.Application.SubmissionFeatures.Services;
+using Grad.Infrastructure.Repository;
 using Grad.Application.TeacherFeatures.Interfaces;
 using Grad.Application.TeacherFeatures.Services;
 using Grad.Application.Users.Interfaces;
@@ -250,6 +251,7 @@ namespace Grad.API
 			builder.Services.AddScoped<IAuthServices, AuthServices>();
 			builder.Services.AddScoped<ISubmissionServices, SubmissionServices>();
 			builder.Services.AddScoped<IPerquisiteServices, PerquisiteServices>();
+
 
 
 

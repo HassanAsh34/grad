@@ -27,7 +27,7 @@ namespace grad.API.Controllers
 
 		[HttpPost("register-student")]
 		[Consumes("multipart/form-data")]
-		public async Task<IActionResult> RegisterStudent([FromForm] RegisterStudentDTO studentDTO,CancellationToken cancellationToken)
+		public async Task<IActionResult> RegisterStudent([FromForm] RegisterStudentDTO studentDTO, CancellationToken cancellationToken)
 		{
 			//studentDTO.
 			string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
@@ -47,7 +47,7 @@ namespace grad.API.Controllers
 				return Unauthorized();
 			else
 			{
-				if(Guid.TryParse(pid,out Guid parentId))
+				if (Guid.TryParse(pid, out Guid parentId))
 				{
 					studentDTO.p_Id = parentId;
 				}
@@ -66,10 +66,10 @@ namespace grad.API.Controllers
 			}
 
 		}
-		
-		
-		
-		
+
+
+
+
 		//[HttpPost("Activate-student")]
 		//public async Task<IActionResult> ActivateStudent(LoginDTO login, CancellationToken cancellationToken)
 		//{
@@ -154,7 +154,7 @@ namespace grad.API.Controllers
 			string pid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 			if (Guid.TryParse(pid, out Guid parentId))
 			{
-				if(Guid.TryParse(sid, out Guid studentId))
+				if (Guid.TryParse(sid, out Guid studentId))
 				{
 					ResultDTO result = await _parentServices.viewProfile(parentId, studentId, cancellationToken);
 					return StatusCode(result.StatusCode, new
@@ -165,8 +165,44 @@ namespace grad.API.Controllers
 				}
 				else
 				{
-					return BadRequest(new {message = "Invalid Student ID"});
+					return BadRequest(new { message = "Invalid Student ID" });
 				}
+			}
+			else
+			{
+				return Unauthorized();
+			}
+		}
+
+		[HttpGet("View-Student-Subjects/")]
+		public async Task<IActionResult> ViewSubjects([FromHeader] Guid sid, CancellationToken cancellationToken)
+		{
+			string accessToken = User.FindFirst("acceessToken")?.Value ?? string.Empty;
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
+				return Unauthorized();
+			string pid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+			if (Guid.TryParse(pid, out Guid parentId))
+			{
+				ResultDTO res = await _parentServices.ViewSubjects(sid, parentId, cancellationToken);
+				return StatusCode(res.StatusCode, new { Message = res.Message, Data = res.result });
+			}
+			else
+			{
+				return Unauthorized();
+			}
+		}
+
+		[HttpGet("view-subject-report/")]
+		public async Task<IActionResult> ViewSubjectReport([FromHeader] Guid sid, [FromHeader] Guid studentId, CancellationToken cancellationToken)
+		{
+			string accessToken = User.FindFirst("acceessToken")?.Value ?? string.Empty;
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
+				return Unauthorized();
+			string pid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+			if (Guid.TryParse(pid, out Guid parentId))
+			{
+				ResultDTO res = await _parentServices.ViewSubjectStats(studentId, sid, parentId, cancellationToken);
+				return StatusCode(res.StatusCode, new { Message = res.Message, Data = res.result });
 			}
 			else
 			{
