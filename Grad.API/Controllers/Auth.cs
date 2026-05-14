@@ -32,59 +32,59 @@ namespace Grad.API.Controllers
 		}
 		[AllowAnonymous]
 		[HttpPost("sign-in")]
-		public async Task<IActionResult> login([FromBody] LoginDTO login,CancellationToken cancellationToken)
+		public async Task<IActionResult> login([FromBody] LoginDTO login, CancellationToken cancellationToken)
 		{
-				ResultDTO res = await _authServices.login(login,cancellationToken);
-				if(res.result != null && res.result is ResponseTokenDTO token)
+			ResultDTO res = await _authServices.login(login, cancellationToken);
+			if (res.result != null && res.result is ResponseTokenDTO token)
+			{
+
+				//for testing purposes
+				bool isHttps = Request.IsHttps; // Detect if the request is HTTPS
+
+				//Response.Cookies.Append("access_token", token.AccessToken, new CookieOptions
+				//{
+				//	HttpOnly = true,
+				//	Secure = isHttps, // Only secure if HTTPS
+				//	SameSite = isHttps ? SameSiteMode.None : SameSiteMode.Lax, // Lax works on HTTP
+				//	Expires = DateTimeOffset.UtcNow.AddMinutes(15),
+				//	Path = "/"
+				//});
+
+
+				//Response.Cookies.Append("refresh_token", token.RefreshToken, new CookieOptions
+				//{
+				//	HttpOnly = true,
+				//	Secure = isHttps,
+				//	SameSite = isHttps ? SameSiteMode.None : SameSiteMode.Lax,
+				//	Expires = DateTimeOffset.UtcNow.AddDays(7),
+				//	Path = "/"
+				//});
+
+
+				//for docker and production we use this when both backend and frontend are using https
+				Response.Cookies.Append("access_token", token.AccessToken, new CookieOptions
 				{
+					HttpOnly = true,
+					Secure = true,
+					SameSite = SameSiteMode.None,
+					Expires = DateTimeOffset.UtcNow.AddMinutes(15),
+					Path = "/"
+				});
 
-					//for testing purposes
-					bool isHttps = Request.IsHttps; // Detect if the request is HTTPS
-
-					//Response.Cookies.Append("access_token", token.AccessToken, new CookieOptions
-					//{
-					//	HttpOnly = true,
-					//	Secure = isHttps, // Only secure if HTTPS
-					//	SameSite = isHttps ? SameSiteMode.None : SameSiteMode.Lax, // Lax works on HTTP
-					//	Expires = DateTimeOffset.UtcNow.AddMinutes(15),
-					//	Path = "/"
-					//});
-
-
-					//Response.Cookies.Append("refresh_token", token.RefreshToken, new CookieOptions
-					//{
-					//	HttpOnly = true,
-					//	Secure = isHttps,
-					//	SameSite = isHttps ? SameSiteMode.None : SameSiteMode.Lax,
-					//	Expires = DateTimeOffset.UtcNow.AddDays(7),
-					//	Path = "/"
-					//});
-
-
-					//for docker and production we use this when both backend and frontend are using https
-					Response.Cookies.Append("access_token", token.AccessToken, new CookieOptions
-					{
-						HttpOnly = true,
-						Secure = true,
-						SameSite = SameSiteMode.None,
-						Expires = DateTimeOffset.UtcNow.AddMinutes(15),
-						Path = "/"
-					});
-
-					Response.Cookies.Append("refresh_token", token.RefreshToken, new CookieOptions
-					{
-						HttpOnly = true,
-						Secure = true,
-						SameSite = SameSiteMode.None,
-						Expires = DateTimeOffset.UtcNow.AddDays(7),
-						Path = "/"
-					});
-					return Ok(res.Message);
-				}
-				else
+				Response.Cookies.Append("refresh_token", token.RefreshToken, new CookieOptions
 				{
-					return StatusCode(res.StatusCode, new {Message = res.Message});
-				}
+					HttpOnly = true,
+					Secure = true,
+					SameSite = SameSiteMode.None,
+					Expires = DateTimeOffset.UtcNow.AddDays(7),
+					Path = "/"
+				});
+				return Ok(res.Message);
+			}
+			else
+			{
+				return StatusCode(res.StatusCode, new { Message = res.Message });
+			}
 		}
 
 
@@ -143,7 +143,7 @@ namespace Grad.API.Controllers
 		[AllowAnonymous]
 		[HttpPost("Sign-Up")]
 		[Consumes("multipart/form-data")] //add cloud storage instead of using local cloudinary
-		public async Task<IActionResult> register([FromForm] SignupDTO user,CancellationToken cancellationToken) //fix refresh token
+		public async Task<IActionResult> register([FromForm] SignupDTO user, CancellationToken cancellationToken) //fix refresh token
 		{
 			if (!ModelState.IsValid)
 			{
@@ -206,13 +206,13 @@ namespace Grad.API.Controllers
 					Path = "/"
 				});
 			}
-			return StatusCode(result.StatusCode,new { Message = result.Message });
+			return StatusCode(result.StatusCode, result.Message);
 		}
 
 
 		[Authorize(Roles = "ResetPassword")]
 		[HttpPatch("reset-password")]
-		public async Task<IActionResult> resetPassword(ChangePasswordDTO newpass,CancellationToken cancellationToken) //isnt completed yet when its done we need to configure the email right also dont forget to enable redis
+		public async Task<IActionResult> resetPassword(ChangePasswordDTO newpass, CancellationToken cancellationToken) //isnt completed yet when its done we need to configure the email right also dont forget to enable redis
 		{
 			if (string.IsNullOrEmpty(newpass.NewPassword))
 			{
@@ -227,7 +227,7 @@ namespace Grad.API.Controllers
 				if (!await _tokenServices.IsTokenBlacklisted(accsstoken))
 				{
 					string Id = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-					if(Guid.TryParse(Id, out Guid guid))
+					if (Guid.TryParse(Id, out Guid guid))
 					{
 						ChangePasswordDTO resetPass = new ChangePasswordDTO
 						{
@@ -273,18 +273,18 @@ namespace Grad.API.Controllers
 
 		[Authorize(Roles = "Admin,Teacher,Student,Parent")]
 		[HttpPatch("change-password")]
-		public async Task<IActionResult> changePassword(ChangePasswordDTO changePassword,CancellationToken cancellationToken)//Tested
+		public async Task<IActionResult> changePassword(ChangePasswordDTO changePassword, CancellationToken cancellationToken)//Tested
 		{
 			//_authServices.ResetPassword(changePassword);
 			changePassword.token = Request.Cookies["access_token"];
 			changePassword.refreshToken = Request.Cookies["refresh_token"];
-			if(!string.IsNullOrEmpty(changePassword.token)&&!string.IsNullOrEmpty(changePassword.refreshToken))
+			if (!string.IsNullOrEmpty(changePassword.token) && !string.IsNullOrEmpty(changePassword.refreshToken))
 			{
 				if (!await _tokenServices.IsTokenBlacklisted(changePassword.token))
 				{
 					string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-					
-					if(Guid.TryParse(userId, out Guid guid))
+
+					if (Guid.TryParse(userId, out Guid guid))
 					{
 						changePassword.Id = guid;
 						ResultDTO result = await _authServices.ResetPassword(changePassword, cancellationToken: cancellationToken);
@@ -333,7 +333,7 @@ namespace Grad.API.Controllers
 		{
 			string accesstoken = Request.Cookies["access_token"];
 			string refreshtoken = Request.Cookies["refresh_token"];
-			
+
 			// 1. ALWAYS clear cookies on the client side, regardless of token validity
 			var expiredOptions = new CookieOptions
 			{
@@ -354,7 +354,7 @@ namespace Grad.API.Controllers
 				accessToken = accesstoken,
 				RemainingTimeAcc = 20
 			};
-			
+
 			ResultDTO res = await _authServices.LogOut(logoutDTO, cancellationToken);
 			return StatusCode(res.StatusCode, new { Message = res.Message });
 		}

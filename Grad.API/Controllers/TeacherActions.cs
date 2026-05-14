@@ -101,7 +101,7 @@ namespace Grad.API.Controllers
 			if (Guid.TryParse(Uid, out Guid Id))
 			{
 				ResultDTO res = await _teacherServices.ViewSubjects(Id, cancellationToken);
-				return StatusCode(res.StatusCode, new { Message = res.Message, Data = res.result });
+				return StatusCode(res.StatusCode, new { res.Message, res.result });
 			}
 			else
 				return Unauthorized();
@@ -122,7 +122,7 @@ namespace Grad.API.Controllers
 				if (Guid.TryParse(sid, out Guid Id))
 				{
 					ResultDTO res = await _teacherServices.ViewSubject(new TeacherSubjectDTO { SubjectId = Id, TeacherId = Uguid }, cancellationToken);
-					return StatusCode(res.StatusCode, new { Message = res.Message, Data = res.result });
+					return StatusCode(res.StatusCode, new { message = res.Message, result = res.result });
 				}
 				else
 					return StatusCode(StatusCodes.Status400BadRequest, new { Message = "Invalid subject ID" });
@@ -175,7 +175,7 @@ namespace Grad.API.Controllers
 						SubjectId = Id,
 						TeacherId = Uguid
 					}, cancellationToken);
-					return StatusCode(res.StatusCode, new { Message = res.Message, Data = res.result });
+					return StatusCode(res.StatusCode, new { res.Message, res.result });
 				}
 				else
 					return NotFound(new { Message = "No lessons were found" });
@@ -185,7 +185,7 @@ namespace Grad.API.Controllers
 
 		}
 
-		[HttpGet("View-Lesson/{Sid}/{Lid}")]//done
+		[HttpGet("View-Lesson/{Sid}/{Lid}")]//done 
 		public async Task<IActionResult> viewLesson(string Sid, string Lid, CancellationToken cancellationToken)
 		{
 			string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
@@ -202,7 +202,7 @@ namespace Grad.API.Controllers
 				//if (Guid.TryParse(lid, out Guid lguid))
 				//{
 				ResultDTO res = await _teacherServices.ViewLesson(new LessonContentDTO { SubjectId = Id, Id = lguid }, cancellationToken);
-				return StatusCode(res.StatusCode, new { Message = res.Message, Data = res.result });
+				return StatusCode(res.StatusCode, new { res.Message, res.result });
 			}
 			else
 				return NotFound(new { Message = "No lessons were found" });
@@ -224,7 +224,7 @@ namespace Grad.API.Controllers
 			{
 				lessonDTO.UId = Id;
 				ResultDTO res = await _teacherServices.EditLesson(lessonDTO, cancellationToken);
-				return StatusCode(res.StatusCode, new { Message = res.Message, Data = res.result });
+				return StatusCode(res.StatusCode, new { res.Message, res.result });
 			}
 			else
 				return Unauthorized();
@@ -243,7 +243,7 @@ namespace Grad.API.Controllers
 			{
 				lessonDTO.UId = Id;
 				ResultDTO res = await _teacherServices.DeleteLesson(lessonDTO, cancellationToken);
-				return StatusCode(res.StatusCode, new { Message = res.Message, Data = res.result });
+				return StatusCode(res.StatusCode, new { res.Message, res.result });
 			}
 			else
 				return Unauthorized();
@@ -267,7 +267,7 @@ namespace Grad.API.Controllers
 				return BadRequest(new { ModelState });
 			}
 			ResultDTO res = await _teacherServices.UploadVideo(videoDTO, cancellationToken);
-			return StatusCode(res.StatusCode, new { Message = res.Message, Data = res.result });
+			return StatusCode(res.StatusCode, new { res.Message, res.result });
 			//}
 			//else
 			//	return StatusCode(StatusCodes.Status400BadRequest, new { message = "You still have not been verified yet" });
@@ -285,7 +285,7 @@ namespace Grad.API.Controllers
 			if (Guid.TryParse(Tid, out Guid GTid))
 			{
 				ResultDTO res = await _teacherServices.DeleteVideo(videoDTO, GTid, cancellationToken);
-				return StatusCode(res.StatusCode, new { Message = res.Message, Data = res.result });
+				return StatusCode(res.StatusCode, new { res.Message, res.result });
 			}
 			else
 				return Unauthorized();
@@ -317,7 +317,7 @@ namespace Grad.API.Controllers
 						vocabDTO.sid = gsid;
 						vocabDTO.Tid = Uguid;
 						ResultDTO res = await _teacherServices.addWords(vocabDTO, cancellationToken);
-						return StatusCode(res.StatusCode, new { Message = res.Message });
+						return StatusCode(res.StatusCode, new { res.Message });
 					}
 				}
 				else
@@ -342,7 +342,7 @@ namespace Grad.API.Controllers
 			{
 				createExercise.Tid = GTid;
 				ResultDTO res = await _teacherServices.CreateExercise(createExercise, cancellationToken);
-				return StatusCode(res.StatusCode, new { Message = res.Message });
+				return StatusCode(res.StatusCode, new { res.Message });
 			}
 			else
 				return Unauthorized();
@@ -366,7 +366,7 @@ namespace Grad.API.Controllers
 					Lid = lid
 				};
 				ResultDTO result = await _teacherServices.ViewLevel(levelDTO, GTid, cancellationToken);
-				return StatusCode(result.StatusCode, new { Message = result.Message, Data = result.result });
+				return StatusCode(result.StatusCode, new { result.Message, result.result });
 			}
 			else
 				return Unauthorized();
@@ -386,7 +386,7 @@ namespace Grad.API.Controllers
 				if (Guid.TryParse(sid, out Guid Id))
 				{
 					ResultDTO res = await _teacherServices.GetQuizes(new TeacherSubjectDTO { SubjectId = Id, TeacherId = GTid }, cancellationToken);
-					return StatusCode(res.StatusCode, new { Message = res.Message, Data = res.result });
+					return StatusCode(res.StatusCode, new { res.Message, res.result });
 				}
 				else
 					return StatusCode(StatusCodes.Status400BadRequest, new { Message = "Invalid subject ID" });
@@ -415,7 +415,7 @@ namespace Grad.API.Controllers
 					Sid = sid
 				};
 				ResultDTO result = await _teacherServices.ViewLevel(levelDTO, GTid, cancellationToken);
-				return StatusCode(result.StatusCode, new { Message = result.Message, Data = result.result });
+				return StatusCode(result.StatusCode, new { result.Message, result.result });
 			}
 			else
 				return Unauthorized();
@@ -454,7 +454,7 @@ namespace Grad.API.Controllers
 			if (Guid.TryParse(Tid, out Guid GTid))
 			{
 				ResultDTO res = await _teacherServices.ListPerquisites(new TeacherSubjectDTO { SubjectId = sid, TeacherId = GTid }, perquisiteType, cancellationToken);
-				return StatusCode(res.StatusCode, new { Message = res.Message, Data = res.result });
+				return StatusCode(res.StatusCode, new { res.Message, res.result });
 			}
 			else
 				return Unauthorized();
@@ -473,7 +473,7 @@ namespace Grad.API.Controllers
 			if (Guid.TryParse(Tid, out Guid GTid))
 			{
 				ResultDTO res = await _teacherServices.DeleteLevel(levelDTO, GTid, cancellationToken);
-				return StatusCode(res.StatusCode, new { Message = res.Message, Data = res.result });
+				return StatusCode(res.StatusCode, new { res.Message, res.result });
 			}
 			else
 				return Unauthorized();
@@ -481,7 +481,7 @@ namespace Grad.API.Controllers
 
 		//[HttpDelete()] //add reomve video
 
-		
+
 
 
 	}

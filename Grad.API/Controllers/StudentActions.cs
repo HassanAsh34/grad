@@ -40,8 +40,8 @@ namespace Grad.API.Controllers
 			//string role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value; leave for now
 			if (Guid.TryParse(id, out Guid guid))
 			{
-				ResultDTO result = await _studentServices.ViewSubjects(guid,cancellationToken: cancellationToken);
-				return StatusCode(result.StatusCode, new { Message = result.Message, Data = result.result });
+				ResultDTO result = await _studentServices.ViewSubjects(guid, cancellationToken: cancellationToken);
+				return StatusCode(result.StatusCode, new { message = result.Message, result = result.result });
 			}
 			else
 			{
@@ -49,7 +49,7 @@ namespace Grad.API.Controllers
 			}
 		}
 
-		
+
 		[HttpGet("View-Submissions")]
 		public async Task<IActionResult> viewSubmissions(CancellationToken cancellationToken)
 		{
@@ -62,7 +62,7 @@ namespace Grad.API.Controllers
 			if (Guid.TryParse(id, out Guid guid))
 			{
 				ResultDTO result = await _studentServices.viewSubmissions(guid, cancellationToken);
-				return StatusCode(result.StatusCode, new { Message = result.Message, Data = result.result });
+				return StatusCode(result.StatusCode, new { message = result.Message, result = result.result });
 			}
 			else
 			{
@@ -117,7 +117,7 @@ namespace Grad.API.Controllers
 					subFK = sidGuid
 				};
 				ResultDTO result = await _studentServices.EnrollSubject(enrollSubject, cancellationToken);
-				return StatusCode(result.StatusCode, new { Message = result.Message, Data = result });
+				return StatusCode(result.StatusCode, new { message = result.Message, result = result });
 			}
 		}
 
@@ -132,8 +132,8 @@ namespace Grad.API.Controllers
 			string id = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 			if (Guid.TryParse(id, out Guid guid))
 			{
-				ResultDTO result = await _studentServices.ViewSubjects(guid,true,cancellationToken);
-				return StatusCode(result.StatusCode, new { Message = result.Message, Data = result.result });
+				ResultDTO result = await _studentServices.ViewSubjects(guid, true, cancellationToken);
+				return StatusCode(result.StatusCode, new { message = result.Message, result = result.result });
 			}
 			else
 			{
@@ -144,7 +144,7 @@ namespace Grad.API.Controllers
 		//view lesson
 
 		[HttpGet("View-Lessons/{Sid}")]
-		public async Task<IActionResult> viewLessons(string Sid,CancellationToken cancellationToken)
+		public async Task<IActionResult> viewLessons(string Sid, CancellationToken cancellationToken)
 		{
 			string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
 			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
@@ -154,7 +154,7 @@ namespace Grad.API.Controllers
 			string id = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 			if (Guid.TryParse(id, out Guid guid))
 			{
-				if(Guid.TryParse(Sid, out Guid Gsid))
+				if (Guid.TryParse(Sid, out Guid Gsid))
 				{
 					EnrollSubjectDTO enroll = new EnrollSubjectDTO
 					{
@@ -162,7 +162,7 @@ namespace Grad.API.Controllers
 						subFK = Gsid
 					};
 					ResultDTO result = await _studentServices.viewLessons(enroll, cancellationToken);
-					return StatusCode(result.StatusCode, new { Message = result.Message, Data = result.result });
+					return StatusCode(result.StatusCode, new { message = result.Message, result = result.result });
 				}
 				else
 				{
@@ -177,7 +177,7 @@ namespace Grad.API.Controllers
 
 		//view lesson
 		[HttpGet("View-lesson/{sid}/{lid}")]
-		public async Task<IActionResult> viewLesson(string sid,string lid,CancellationToken cancellationToken)
+		public async Task<IActionResult> viewLesson(string sid, string lid, CancellationToken cancellationToken)
 		{
 			string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
 			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
@@ -187,7 +187,7 @@ namespace Grad.API.Controllers
 			string id = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 			if (Guid.TryParse(id, out Guid guid))
 			{
-				if(Guid.TryParse(sid, out Guid Gsid) && Guid.TryParse(lid, out Guid Glid))
+				if (Guid.TryParse(sid, out Guid Gsid) && Guid.TryParse(lid, out Guid Glid))
 				{
 					LessonContentDTO lessonDTO = new LessonContentDTO
 					{
@@ -200,7 +200,7 @@ namespace Grad.API.Controllers
 					//	//lesson.videoUrl = $"{Request.Scheme}://{Request.Host}/{lesson.VideoPath}";
 					//	//Console.WriteLine(lesson.videoUrl);
 					//}
-					return StatusCode(result.StatusCode, new { Message = result.Message, Data = result.result });
+					return StatusCode(result.StatusCode, new { message = result.Message, result = result.result });
 				}
 				else
 				{
@@ -231,7 +231,7 @@ namespace Grad.API.Controllers
 					Sid = sid
 				};
 				ResultDTO result = await _studentServices.ViewExerciseQuize(level, guid, cancellationToken);
-				return StatusCode(result.StatusCode, new { Message = result.Message, Data = result.result });
+				return StatusCode(result.StatusCode, new { message = result.Message, result = result.result });
 			}
 			else
 			{
@@ -256,7 +256,7 @@ namespace Grad.API.Controllers
 					Sid = sid
 				};
 				ResultDTO result = await _studentServices.ViewExerciseQuize(level, guid, cancellationToken);
-				return StatusCode(result.StatusCode, new { Message = result.Message, Data = result.result });
+				return StatusCode(result.StatusCode, new { message = result.Message, result = result.result });
 			}
 			else
 			{
@@ -281,7 +281,7 @@ namespace Grad.API.Controllers
 					{
 						Lid = Glid,
 						Sid = Gsid,
-						uid	= guid
+						uid = guid
 					};
 					ResultDTO result = await _studentServices.completeLesson(lessonDTO, cancellationToken);
 					//if(result.StatusCode == 200 && result.result is VideoDTO lesson)
@@ -289,7 +289,7 @@ namespace Grad.API.Controllers
 					//	//lesson.videoUrl = $"{Request.Scheme}://{Request.Host}/{lesson.VideoPath}";
 					//	//Console.WriteLine(lesson.videoUrl);
 					//}
-					return StatusCode(result.StatusCode, new { Message = result.Message, Data = result.result });
+					return StatusCode(result.StatusCode, new { message = result.Message, result = result.result });
 				}
 				else
 				{
@@ -315,7 +315,7 @@ namespace Grad.API.Controllers
 			{
 				submitAnswers.SubmittedBy = guid;
 				ResultDTO result = await _studentServices.createSubmission(submitAnswers, cancellationToken);
-				return StatusCode(result.StatusCode, new { Message = result.Message, Data = result.result });
+				return StatusCode(result.StatusCode, new { message = result.Message, result = result.result });
 			}
 			else
 				return Unauthorized();
