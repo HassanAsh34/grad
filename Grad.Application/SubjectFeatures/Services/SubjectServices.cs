@@ -129,11 +129,16 @@ namespace Grad.Application.SubjectFeatures.Services
 			int QuizCount = subjectContent?.Quizzes?.Count() ?? 0;
 			int WordsCount = subjectContent?.Dictionary?.wordItems?.Count() ?? 0;
 			int TotalSubmissions = subjectContent?.Lessons?.Count ?? 0;
-			decimal AvgerageGrades = subject?.Submissions?.Where(s => s.LessonID == null).Average(s => s.Percentage) ?? 0;
-			int failedSubmissions = subject?.Submissions?.Count(s => !s.Passed && s.LessonID == null) ?? 0;
-			int passedSubmissions = subject?.Submissions?.Count(s => s.Passed && s.LessonID == null) ?? 0;
-
-
+			List<Submission> submissions = subject?.Submissions?.Where(s => s.LessonID == null).ToList();
+			decimal AvgerageGrades = 0;
+			int failedSubmissions = 0;
+			int passedSubmissions = 0;
+			if (submissions.Count != 0)
+			{
+				AvgerageGrades = submissions.Select(s => s.Percentage).Average();
+				failedSubmissions = submissions.Where(s => !s.Passed && s.LessonID == null).Count();
+				passedSubmissions = submissions.Where(s => s.Passed && s.LessonID == null).Count();
+			}
 			var subjectDTO = new SubjectDTO
 			{
 				SubjectId = subject.Id,
