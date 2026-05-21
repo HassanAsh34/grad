@@ -17,6 +17,9 @@ using Grad.Application.SubjectFeatures.Interfaces;
 using Grad.Application.SubjectFeatures.Services;
 using Grad.Application.SubmissionFeatures.Interfaces;
 using Grad.Application.SubmissionFeatures.Services;
+using Grad.Application.ChatFeatures.Interfaces;
+using Grad.Application.ChatFeatures.Services;
+using Grad.Application.ChatFeatures.Hubs;
 using Grad.Infrastructure.Repository;
 using Grad.Application.TeacherFeatures.Interfaces;
 using Grad.Application.TeacherFeatures.Services;
@@ -38,6 +41,8 @@ using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
 using Serilog;
 using StackExchange.Redis;
+using Grad.Application.ParentFeatures.Interfaces;
+using Grad.Application.ParentFeatures.Services;
 
 
 
@@ -239,6 +244,7 @@ namespace Grad.API
 			builder.Services.AddScoped<IExerciseRepository, ExerciseRepository>();
 			builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 			builder.Services.AddScoped<ISubmissionRepository, SubmissionRepository>();
+			builder.Services.AddScoped<IParentRepository, ParentRepository>();
 
 			// 4. Setup Services (Application layer)
 			builder.Services.AddScoped<IUserServices, UserServices>();
@@ -251,9 +257,12 @@ namespace Grad.API
 			builder.Services.AddScoped<IAuthServices, AuthServices>();
 			builder.Services.AddScoped<ISubmissionServices, SubmissionServices>();
 			builder.Services.AddScoped<IPerquisiteServices, PerquisiteServices>();
+			builder.Services.AddScoped<IParentServices, ParentServices>();
 
-
-
+			// ─── Chat / Q&A Feature ───────────────────────────────────────────────────
+			builder.Services.AddScoped<IThreadRepository, ThreadRepository>();
+			builder.Services.AddScoped<IThreadServices, ThreadServices>();
+			builder.Services.AddSignalR();
 
 			var app = builder.Build();
 
@@ -298,6 +307,7 @@ namespace Grad.API
 			app.UseAuthorization();
 
 			app.MapControllers();
+			app.MapHub<ChatHub>("/chathub");
 
 			// ================= RUN =================
 			try
