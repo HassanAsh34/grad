@@ -14,7 +14,8 @@ namespace Grad.Application.Users.Services
 		private readonly IUserRepository _userRepository;
 		private readonly IUowServices _uow;
 		private readonly ICloudinaryServices _cloudinaryServices;
-		private readonly ILogger<UserServices> _logger;
+		private readonly ILogger<UserServices> 
+			;
 
 		public UserServices(IUserRepository userRepository, IUowServices uow, ICloudinaryServices cloudinaryServices, ILogger<UserServices> logger)
 		{

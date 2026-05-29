@@ -30,7 +30,8 @@ namespace Grad.Application.TeacherFeatures.Services
 
 		private readonly IExerciseServices _exerciseServices;
 
-		private readonly ILogger<TeacherServices> _logger;
+		private readonly ILogger<TeacherServices> 
+			;
 
 		public TeacherServices(ISubjectServices subjectServices, ITeacherRepository repository, ILessonServices lessonServices, IUserServices userServices, IExerciseServices exerciseServices, ILogger<TeacherServices> logger)
 		{

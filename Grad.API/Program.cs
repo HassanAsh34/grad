@@ -17,9 +17,6 @@ using Grad.Application.SubjectFeatures.Interfaces;
 using Grad.Application.SubjectFeatures.Services;
 using Grad.Application.SubmissionFeatures.Interfaces;
 using Grad.Application.SubmissionFeatures.Services;
-using Grad.Application.ChatFeatures.Interfaces;
-using Grad.Application.ChatFeatures.Services;
-using Grad.Application.ChatFeatures.Hubs;
 using Grad.Infrastructure.Repository;
 using Grad.Application.TeacherFeatures.Interfaces;
 using Grad.Application.TeacherFeatures.Services;
@@ -259,11 +256,6 @@ namespace Grad.API
 			builder.Services.AddScoped<IPerquisiteServices, PerquisiteServices>();
 			builder.Services.AddScoped<IParentServices, ParentServices>();
 
-			// ─── Chat / Q&A Feature ───────────────────────────────────────────────────
-			builder.Services.AddScoped<IThreadRepository, ThreadRepository>();
-			builder.Services.AddScoped<IThreadServices, ThreadServices>();
-			builder.Services.AddSignalR();
-
 			var app = builder.Build();
 
 			// Configure the HTTP request pipeline.
@@ -305,9 +297,7 @@ namespace Grad.API
 			app.UseCors("DefaultCors");
 			app.UseAuthentication();
 			app.UseAuthorization();
-
 			app.MapControllers();
-			app.MapHub<ChatHub>("/chathub");
 
 			// ================= RUN =================
 			try

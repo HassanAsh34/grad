@@ -35,6 +35,6 @@ namespace Grad.Domain.Model
 
 		public RefreshToken RefreshToken { get; set; }
 		
-		
+		public List<Inquery> Inqueries { get; set; } = new List<Inquery>();
 	}
 }
