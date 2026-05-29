@@ -14,8 +14,7 @@ namespace Grad.Application.Users.Services
 		private readonly IUserRepository _userRepository;
 		private readonly IUowServices _uow;
 		private readonly ICloudinaryServices _cloudinaryServices;
-		private readonly ILogger<UserServices> 
-			;
+		private readonly ILogger<UserServices> _logger;
 
 		public UserServices(IUserRepository userRepository, IUowServices uow, ICloudinaryServices cloudinaryServices, ILogger<UserServices> logger)
 		{
@@ -276,6 +275,17 @@ namespace Grad.Application.Users.Services
 									await Task.WhenAll(parent.students.Select(s => deleteImage($"{s.Id}", cancellationToken)));
 								}
 							}
+							else
+							{
+								if (parent.students != null && parent.students.Count > 0)
+								{
+									foreach (Student std in parent.students)
+									{
+										std.PID = null;
+										_userRepository.UpdateEntityAsync<Student>(std, cancellationToken);
+									}	
+								}
+							}
 							if (parent.ProfilePicture != null)
 							{
 								if (await deleteImage(parent.ProfilePicture, cancellationToken))
@@ -299,10 +309,15 @@ namespace Grad.Application.Users.Services
 								if ((parentAccss != null && student.PID == parentAccss) || admin)
 								{ 
 									_userRepository.DeleteEntityAsync<Student>(student, cancellationToken: cancellationToken);
-									if (await deleteImage(student.ProfilePicture, cancellationToken))
+									if (student.ProfilePicture != null)
 									{
-										res = await _uow.SaveChangesAsync();
+										if (await deleteImage(student.ProfilePicture, cancellationToken))
+										{
+											res = await _uow.SaveChangesAsync();
+										}
 									}
+									else
+										res = await _uow.SaveChangesAsync();
 									return new ResultDTO
 									{
 										StatusCode = 200,

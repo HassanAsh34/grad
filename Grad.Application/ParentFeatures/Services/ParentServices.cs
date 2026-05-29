@@ -1,13 +1,18 @@
 ﻿using System.Security.Cryptography;
 using Grad.Application.Auth.Interfaces;
 using Grad.Application.Common.DTOs;
+using Grad.Application.Common.Interfaces;
 using Grad.Application.ParentFeatures.DTOs;
 using Grad.Application.ParentFeatures.Interfaces;
+using Grad.Application.QAFeature.DTO;
+using Grad.Application.QAFeature.Interfaces;
 using Grad.Application.StudentFeatures.Interfaces;
 using Grad.Application.SubjectFeatures.Interfaces;
 using Grad.Application.SubmissionFeatures.DTOs;
 using Grad.Application.SubmissionFeatures.Interfaces;
+using Grad.Application.TeacherFeatures.Interfaces;
 using Grad.Application.Users.Interfaces;
+using Grad.Domain.Enums;
 using Grad.Domain.Model;
 
 namespace Grad.Application.ParentFeatures.Services
@@ -19,15 +24,19 @@ namespace Grad.Application.ParentFeatures.Services
 		private readonly IParentRepository _IParentRepository;
 		private readonly IStudentServices _IStudentServices;
 		private readonly ISubmissionServices _ISubmissionServices;
+		private readonly ICummunicationServices _inqueryServices;
+		private readonly IRedisServices _redisServices;
 		//private readonly IUowServices  _uowServices;
 
-		public ParentServices(IUserServices userServices,IAuthServices authServices,IParentRepository parentRepository,IStudentServices studentServices,ISubmissionServices submissionServices)
+		public ParentServices(IUserServices userServices,IAuthServices authServices,IParentRepository parentRepository,IStudentServices studentServices,ISubmissionServices submissionServices,IRedisServices redisServices,ICummunicationServices cummunicationServices)
 		{
 			_userServices = userServices ?? throw new ArgumentNullException(nameof(userServices));
 			_authServices = authServices ?? throw new ArgumentNullException(nameof(authServices));
 			_IParentRepository = parentRepository ?? throw new ArgumentNullException(nameof(parentRepository));
 			_IStudentServices = studentServices ?? throw new ArgumentNullException(nameof(studentServices));
 			_ISubmissionServices = submissionServices ?? throw new ArgumentNullException(nameof(submissionServices));
+			_inqueryServices = cummunicationServices ?? throw new ArgumentNullException(nameof(cummunicationServices));
+			_redisServices = redisServices ?? throw new ArgumentNullException(nameof(redisServices));
 		}
 		public async Task<ResultDTO> registerStudent(RegisterStudentDTO studentDTO, CancellationToken cancellationToken)//need to be tested
 		{
@@ -127,6 +136,7 @@ namespace Grad.Application.ParentFeatures.Services
 						Id = child.Id,
 						FName = child.FName,
 						LName = child.LName,
+						Role = UserRole.Student.ToString(),
 						Email = child.EmailorUserName,
 						pfpURL = child.ProfilePicture,
 						BirthDate = child.BirthDate,
@@ -209,6 +219,64 @@ namespace Grad.Application.ParentFeatures.Services
 			// Implement username generation logic here
 			string shortGuid = Guid.NewGuid().ToString("N")[..8];
 			student.Email = $"{student.FName.ToLower()[3]}.{shortGuid}@System.com";
+		}
+
+		public async Task<ResultDTO> listInqueries(Guid UId, CancellationToken CT)
+		{
+			IEnumerable<InqueryDTO> inqueries = await _inqueryServices.GetInqueries(UId,ct: CT);
+			if (inqueries.Count() > 0)
+				return new ResultDTO
+				{
+					StatusCode = 200,
+					Message = $"{inqueries.Count()} inqueries were found",
+					result = inqueries
+				};
+			else
+				return new ResultDTO
+				{
+					StatusCode = 400,
+					Message = "there are no inqueries at the moment"
+				};
+		}
+
+		public async Task<ResultDTO> viewInquery(Guid Id, CancellationToken cancellationToken)
+		{
+			InqueryDTO inquery = await _inqueryServices.ViewInquery(Id, cancellationToken);
+			if (inquery == null)
+				return new ResultDTO
+				{
+					StatusCode = 404,
+					Message = "Inquery wasnt found"
+				};
+			else
+			{
+				return new ResultDTO
+				{
+					StatusCode = 200,
+					Message = "Inquery retrieved successfully",
+					result = inquery
+				};
+			}
+		}
+
+		public async Task<ResultDTO> createInquery(InqueryDTO inquery, CancellationToken cancellationToken)
+		{
+			if (await _inqueryServices.createInquery(inquery,null, cancellationToken))
+			{
+				return new ResultDTO
+				{
+					StatusCode = 201,
+					Message = "Inquery created successfully"
+				};
+			}
+			else
+			{
+				return new ResultDTO
+				{
+					StatusCode = 500,
+					Message = "Failed to create inquery"
+				};
+			}
 		}
 
 	}

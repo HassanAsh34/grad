@@ -1,6 +1,8 @@
 ﻿using Grad.Application.Common.DTOs;
+using Grad.Application.Common.Interfaces;
 using Grad.Application.ExerciseFeatures.DTOs;
 using Grad.Application.LessonFeatures.DTOs;
+using Grad.Application.QAFeature.DTO;
 using Grad.Application.SubjectFeatures.DTOs;
 using Grad.Application.TeacherFeatures.DTOs;
 using Grad.Domain.Enums;
@@ -49,5 +51,9 @@ namespace Grad.Application.TeacherFeatures.Interfaces
 		public Task<ResultDTO> DeleteLevel(LevelDTO level, Guid Tid, CancellationToken CT = default);
 
 		public Task<ResultDTO> DeleteVideo(VideoDTO videoDTO, Guid Tid, CancellationToken cancellationToken = default);
+
+		public Task<ResultDTO> listInqueries(Guid TId, Guid Sid, CancellationToken CT = default);
+		public Task<ResultDTO> viewInquery(Guid Id, Guid TId, CancellationToken cancellationToken = default);
+		public Task<ResultDTO> createInquery(InqueryDTO inquery, Guid TId, CancellationToken cancellationToken = default);
 	}
 }

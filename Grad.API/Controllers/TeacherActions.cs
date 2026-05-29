@@ -1,330 +1,484 @@
-using System.Reflection.Emit;
+using System.Security.Claims;
 using System.Security.Cryptography;
-using System.Threading;
+using Azure.Core;
 using Grad.Application.Common.DTOs;
+using Grad.Application.Common.Interfaces;
 using Grad.Application.ExerciseFeatures.DTOs;
-using Grad.Application.ExerciseFeatures.Interfaces;
 using Grad.Application.LessonFeatures.DTOs;
-using Grad.Application.LessonFeatures.Interfaces;
 using Grad.Application.SubjectFeatures.DTOs;
 using Grad.Application.SubjectFeatures.Interfaces;
 using Grad.Application.TeacherFeatures.DTOs;
 using Grad.Application.TeacherFeatures.Interfaces;
-using Grad.Application.Users.Interfaces;
 using Grad.Domain.Enums;
-using Grad.Domain.Model;
-using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 
-
-namespace Grad.Application.TeacherFeatures.Services
+namespace Grad.API.Controllers
 {
-	public class TeacherServices : ITeacherServices
+	[ApiController]
+	[Route("/Teacher")]
+	[Authorize(Roles = "Teacher")]
+	public class TeacherActions : ControllerBase
 	{
-		private readonly ISubjectServices _subjectServices;
+		//private readonly ISubjectServices _SubjectServices;
+		private readonly ITokenServices _tokenServices;
+		private readonly ITeacherServices _teacherServices;
+		private readonly ILogger<TeacherActions> _logger;
 
-		private readonly ILessonServices _lessonServices;
-
-		private readonly ITeacherRepository _teacherRepository;
-
-		private readonly IUserServices _userServices;
-
-		private readonly IExerciseServices _exerciseServices;
-
-		private readonly ILogger<TeacherServices> 
-			;
-
-		public TeacherServices(ISubjectServices subjectServices, ITeacherRepository repository, ILessonServices lessonServices, IUserServices userServices, IExerciseServices exerciseServices, ILogger<TeacherServices> logger)
+		public TeacherActions(ISubjectServices subjectServices, ITokenServices tokenServices, ITeacherServices teacherServices, ILogger<TeacherActions> logger)
 		{
-			_subjectServices = subjectServices ?? throw new ArgumentNullException(nameof(subjectServices));
-			_teacherRepository = repository ?? throw new ArgumentNullException(nameof(repository));
-			_lessonServices = lessonServices ?? throw new ArgumentNullException(nameof(lessonServices));
-			_userServices = userServices ?? throw new ArgumentNullException(nameof(userServices));
-			_exerciseServices = exerciseServices ?? throw new ArgumentNullException(nameof(exerciseServices));
+			//_SubjectServices = subjectServices ?? throw new ArgumentNullException(nameof(subjectServices));
+			_tokenServices = tokenServices ?? throw new ArgumentNullException(nameof(tokenServices));
+			_teacherServices = teacherServices ?? throw new ArgumentNullException(nameof(teacherServices));
 			_logger = logger ?? throw new ArgumentNullException(nameof(logger));
 		}
 
-		public async Task<ResultDTO> ShowStudents(TeacherSubjectDTO teacherSubject, CancellationToken cancellationToken)
+
+		//private readonly;
+		[HttpGet("get-students/{sid}")]//done
+		public async Task<IActionResult> getStudents(string sid, CancellationToken cancellation)
 		{
-			if (!await _teacherRepository.CanAccess(teacherSubject.TeacherId, teacherSubject.SubjectId, cancellationToken))
-				return new ResultDTO
-				{
-					StatusCode = 400,
-					Message = "Subject wasnt found"
-				};
-			else
+			string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
+			string uid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
 			{
-				IEnumerable<Student> students = await _teacherRepository.showStudents(teacherSubject.SubjectId, cancellationToken);
-				IEnumerable<LISTStudentDTO> dtos = students.Select(e => new LISTStudentDTO
-				{
-					Id = e.Id,
-					name = $"{e.FName} {e.LName}",
-					email = e.EmailorUserName,
-				}).ToList();
-
-				int stdCount = students.Count();
-
-				return new ResultDTO
-				{
-					Message = $"{stdCount} students were found",
-					StatusCode = stdCount > 0 ? 200 : 204,
-					result = dtos
-				};
+				return Unauthorized();
 			}
-
-		}
-
-		public async Task<ResultDTO> ViewStudent(ProfileDTO profile, CancellationToken cancellationToken)
-		{
-			return await _userServices.ViewProfile(profile, cancellationToken: cancellationToken);
-		}
-
-		public async Task<ResultDTO> ViewSubjects(Guid teacherId, CancellationToken cancellationToken)
-		{
-			return await _subjectServices.ViewSubjectsAsync(Tid: teacherId, cancellationToken: cancellationToken);
-		} //done
-
-		public async Task<ResultDTO> ViewSubject(TeacherSubjectDTO teacherSubject, CancellationToken cancellationToken)
-		{
-			if (!await _teacherRepository.CanAccess(teacherSubject.TeacherId, teacherSubject.SubjectId, cancellationToken))
-				return new ResultDTO
-				{
-					StatusCode = 400,
-					Message = "Subject wasnt found"
-				};
-			else
-				return await _subjectServices.ViewSubjectAsync(teacherSubject.SubjectId, cancellationToken: cancellationToken);
-		}
-
-		public async Task<ResultDTO> ViewLessons(TeacherSubjectDTO teacherSubject, CancellationToken cancellationToken)
-		{
-			if (!await _teacherRepository.CanAccess(teacherSubject.TeacherId, teacherSubject.SubjectId, cancellationToken))
-				return new ResultDTO
-				{
-					StatusCode = 400,
-					Message = "Subject wasnt found"
-				};
-			else
+			//string sid = User.FindFirst("SubjectID")?.Value;
+			if (Guid.TryParse(uid, out Guid Uguid))
 			{
-				List<LessonContentDTO> lessons = await _lessonServices.ViewLessons(teacherSubject.SubjectId, cancellation: cancellationToken);
-				return new ResultDTO
+				if (Guid.TryParse(sid, out Guid Id))
 				{
-					Message = lessons.Any() ? "Lessons retrieved successfully" : "No result",
-					StatusCode = lessons.Any() ? 200 : 404,
-					result = lessons
-				};
-			}
-		}
-
-		public async Task<ResultDTO> ViewLesson(LessonContentDTO lessonContent, CancellationToken cancellationToken)
-		{
-			//AssignedSubject assignedSubject = await _teacherRepository.GetEntityAsync<AssignedSubject>(a => a.SubjectId == teacherSubject.SubjectId && a.TeacherId == teacherSubject.TeacherId, cancellationToken: cancellationToken);
-			//if (assignedSubject == null)
-			//	return new ResultDTO
-			//	{
-			//		StatusCode = StatusCodes.Status404NotFound,
-			//		Message = "Subject wasnt found"
-			//	};
-			//else
-			//return await _lessonServices.viewLesson(new LessonContentDTO { Id = lessonId,SubjectId = teacherSubject.SubjectId}, cancellationToken);
-			return await _lessonServices.viewLesson(lessonContent, true, cancellationToken);
-		}
-
-		public async Task<ResultDTO> UploadVideo(VideoDTO video, CancellationToken cancellationToken)
-		{
-			return await _lessonServices.UploadVideo(video, cancellationToken);
-		}
-
-		public async Task<ResultDTO> AddLesson(AddLessonDTO lesson, CancellationToken cancellationToken)
-		{
-			if (!await _teacherRepository.CanAccess(lesson.UId, lesson.SubjectId, cancellationToken))
-				return new ResultDTO
-				{
-					StatusCode = 400,
-					Message = "Subject wasnt found"
-				};
-			else
-				return await _lessonServices.AddLesson(lesson, cancellationToken);
-		}
-
-
-		public async Task<ResultDTO> EditLesson(EditLessonDTO lesson, CancellationToken cancellationToken)
-		{
-			if (!await _teacherRepository.CanAccess(lesson.UId, lesson.SubjectId, cancellationToken))
-				return new ResultDTO
-				{
-					StatusCode = 400,
-					Message = "Subject wasnt found"
-				};
-			else
-				return await _lessonServices.editLesson(lesson, cancellationToken);
-		}
-
-		public async Task<ResultDTO> DeleteLesson(DeleteLessonDTO lesson, CancellationToken cancellationToken)
-		{
-			if (!await _teacherRepository.CanAccess(lesson.UId, lesson.SubjectId, cancellationToken))
-				return new ResultDTO
-				{
-					StatusCode = 400,
-					Message = "Subject wasnt found"
-				};
-			else
-				return await _lessonServices.DeleteLesson(lesson, cancellationToken);
-		}
-
-		public async Task<ResultDTO> addWords(AddVocabDTO vocabDTO, CancellationToken cancellationToken) // needs enhancements
-		{
-			if (!await _teacherRepository.CanAccess(vocabDTO.Tid, vocabDTO.sid, cancellationToken))
-				return new ResultDTO
-				{
-					StatusCode = 400,
-					Message = "Subject wasnt found"
-				};
-			else
-			{
-				return await _subjectServices.addwords(vocabDTO, cancellationToken);
-			}
-		}
-
-
-
-		public async Task<ResultDTO> CreateExercise(CreateLevelDTO createExerciseDTO, CancellationToken cancellationToken)
-		{
-			if (!await _teacherRepository.CanAccess(createExerciseDTO.Tid, createExerciseDTO.Sid, cancellationToken))
-				return new ResultDTO
-				{
-					StatusCode = 400,
-					Message = "Subject wasnt found"
-				};
-			else
-			{
-				return await _exerciseServices.CreateExercise(createExerciseDTO, cancellationToken);
-			}
-		}
-
-		public async Task<ResultDTO> GetQuizes(TeacherSubjectDTO teacherSubject, CancellationToken cancellationToken)
-		{
-			if (!await _teacherRepository.CanAccess(teacherSubject.TeacherId, teacherSubject.SubjectId, cancellationToken))
-				return new ResultDTO
-				{
-					StatusCode = 400,
-					Message = "Subject wasnt found"
-				};
-			else
-			{
-				List<LevelDTO> levels = await _exerciseServices.GetQuizes(teacherSubject.SubjectId, cancellationToken);
-				return new ResultDTO
-				{
-					Message = levels.Any() ? "Quizes retrieved successfully" : "No result",
-					StatusCode = levels.Any() ? 200 : 404,
-					result = levels
-				};
-			}
-		}
-
-		public async Task<ResultDTO> ListPerquisites(TeacherSubjectDTO teacherSubject, PerquisiteType type, CancellationToken cancellationToken)
-		{
-			if (!await _teacherRepository.CanAccess(teacherSubject.TeacherId, teacherSubject.SubjectId, cancellationToken))
-				return new ResultDTO
-				{
-					StatusCode = 403,
-					Message = "Restricted Access"
-				};
-			else
-			{
-				List<Perquisite> perquisites = new();
-				switch (type)
-				{
-					case PerquisiteType.Lesson:
-						List<LessonContentDTO> lesson = await _lessonServices.ViewLessons(teacherSubject.SubjectId, cancellationToken);
-						perquisites = lesson.Select(l => new Perquisite
-						{
-							id = l.Id,
-							name = l.Title,
-						}).ToList();
-						return new ResultDTO
-						{
-							Message = perquisites.Any() ? "Perquisites retrieved successfully" : "No result",
-							StatusCode = perquisites.Any() ? 200 : 404,
-							result = perquisites
-						};
-					case PerquisiteType.Quiz:
-						List<LevelDTO> levels = await _exerciseServices.GetQuizes(teacherSubject.SubjectId, cancellationToken);
-						perquisites = levels.Select(l => new Perquisite
-						{
-							id = l.ID,
-							name = l.Name,
-						}).ToList();
-						return new ResultDTO
-						{
-							Message = perquisites.Any() ? "Perquisites retrieved successfully" : "No result",
-							StatusCode = perquisites.Any() ? 200 : 404,
-							result = perquisites
-						};
-					default:
-						return new ResultDTO
-						{
-							StatusCode = 400,
-							Message = "Invalid perquisite type"
-						};
+					ResultDTO result = await _teacherServices.ShowStudents(new TeacherSubjectDTO()
+					{
+						SubjectId = Id,
+						TeacherId = Uguid
+					}, cancellation);
+					return StatusCode(result.StatusCode, new { Message = result.Message, Data = result.result });
 				}
+				else
+					return NotFound("Subject wasn't found");
 			}
-		}
-
-
-		public async Task<ResultDTO> ViewLevel(LevelDTO level, Guid Tid, CancellationToken CT)
-		{
-			if (!await _teacherRepository.CanAccess(Tid, level.Sid, CT))
-				return new ResultDTO
-				{
-					StatusCode = 400,
-					Message = "Subject wasnt found"
-				};
 			else
-			{
-				return await _exerciseServices.viewLevel(level, true, CT);
-			}
+				return Unauthorized();
+
 		}
 
-		public async Task<ResultDTO> EditLevel(EditLevelDTO editLevel, CancellationToken CT)
+		[HttpGet("Get-Student/{sid}")]//done
+		public async Task<IActionResult> getStudent(string sid, CancellationToken cancellationToken)
 		{
-			if (!await _teacherRepository.CanAccess(editLevel.Tid, editLevel.Sid, CT))
-				return new ResultDTO
-				{
-					StatusCode = 400,
-					Message = "Subject wasnt found"
-				};
-			else
+			string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
 			{
-				return await _exerciseServices.EditLevel(editLevel, CT);
+				return Unauthorized();
 			}
+			if (Guid.TryParse(sid, out Guid Id))
+			{
+				ProfileDTO profile = new ProfileDTO
+				{
+					Id = Id,
+					Role = "Student"
+				};
+				ResultDTO res = await _teacherServices.ViewStudent(profile, cancellationToken);
+				return StatusCode(res.StatusCode, new { Message = res.Message, Data = res.result });
+			}
+			else
+				return NotFound(new { Message = "Student wasn't found" });
 		}
 
-		public async Task<ResultDTO> DeleteLevel(LevelDTO level, Guid Tid, CancellationToken CT)
+		[HttpGet("Home")]//done
+		public async Task<IActionResult> viewSubjects(CancellationToken cancellationToken)
 		{
-			if (!await _teacherRepository.CanAccess(Tid, level.Sid, CT))
-				return new ResultDTO
-				{
-					StatusCode = 400,
-					Message = "Subject wasnt found"
-				};
-			else
+			string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
+			string Uid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
 			{
-				return await _exerciseServices.DeleteLevel(level, CT);
+				return Unauthorized();
 			}
+			//string sid = User.FindFirst("SubjectID")?.Value;
+			if (Guid.TryParse(Uid, out Guid Id))
+			{
+				ResultDTO res = await _teacherServices.ViewSubjects(Id, cancellationToken);
+				return StatusCode(res.StatusCode, new { res.Message, res.result });
+			}
+			else
+				return Unauthorized();
 		}
 
-		public async Task<ResultDTO> DeleteVideo(VideoDTO videoDTO, Guid Tid, CancellationToken cancellationToken)
+		[HttpGet("view-subject/{sid}")]//done
+		public async Task<IActionResult> viewSubject(string sid, CancellationToken cancellationToken)
 		{
-			if (!await _teacherRepository.CanAccess(Tid, videoDTO.subjectID, cancellationToken))
-				return new ResultDTO
-				{
-					StatusCode = 400,
-					Message = "Subject wasnt found"
-				};
-			else
+			string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
+			string Uid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
 			{
-				return await _lessonServices.DeleteVideo(videoDTO, cancellationToken);
+				return Unauthorized();
 			}
+			//string sid = User.FindFirst("SubjectID")?.Value;
+			if (Guid.TryParse(Uid, out Guid Uguid))
+			{
+				if (Guid.TryParse(sid, out Guid Id))
+				{
+					ResultDTO res = await _teacherServices.ViewSubject(new TeacherSubjectDTO { SubjectId = Id, TeacherId = Uguid }, cancellationToken);
+					return StatusCode(res.StatusCode, new { message = res.Message, result = res.result });
+				}
+				else
+					return StatusCode(StatusCodes.Status400BadRequest, new { Message = "Invalid subject ID" });
+			}
+			else
+				return Unauthorized();
 		}
+
+		[HttpPost("Add-lesson")]//done//[Consumes("multipart/form-data")]//need to be fixed
+		public async Task<IActionResult> addlesson([FromForm] AddLessonDTO lessonDTO, CancellationToken cancellationToken)
+		{
+			//we might add a further role for the teacher to show who has the ability to add lessons to the website
+			string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
+			string uid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
+			{
+				return Unauthorized();
+			}
+			//string sid = User.FindFirst("SubjectID")?.Value;
+			if (Guid.TryParse(uid, out Guid Id))
+			{
+				lessonDTO.UId = Id;
+				if (ModelState.IsValid == false)
+				{
+					return BadRequest(new { ModelState });
+				}
+				ResultDTO res = await _teacherServices.AddLesson(lessonDTO, cancellationToken);
+				return StatusCode(res.StatusCode, new { res.Message, res.result });
+			}
+			else
+				return Unauthorized();
+		}
+
+		[HttpGet("get-lessons/{sid}")]//done
+		public async Task<IActionResult> viewLessons(string sid, CancellationToken cancellationToken)
+		{
+			string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
+			string uid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
+			{
+				return Unauthorized();
+			}
+			//string sid = User.FindFirst("SubjectID")?.Value;
+			if (Guid.TryParse(uid, out Guid Uguid))
+			{
+				if (Guid.TryParse(sid, out Guid Id))
+				{
+					ResultDTO res = await _teacherServices.ViewLessons(new TeacherSubjectDTO()
+					{
+						SubjectId = Id,
+						TeacherId = Uguid
+					}, cancellationToken);
+					return StatusCode(res.StatusCode, new { res.Message, res.result });
+				}
+				else
+					return NotFound(new { Message = "No lessons were found" });
+			}
+			else
+				return Unauthorized();
+
+		}
+
+		[HttpGet("View-Lesson/{Sid}/{Lid}")]//done 
+		public async Task<IActionResult> viewLesson(string Sid, string Lid, CancellationToken cancellationToken)
+		{
+			string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
+			//string Uid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
+			{
+				return Unauthorized();
+			}
+			//string sid = User.FindFirst("SubjectID")?.Value;
+			//if (Guid.TryParse(Uid, out Guid Uguid))
+			//{
+			if (Guid.TryParse(Sid, out Guid Id) && Guid.TryParse(Lid, out Guid lguid))
+			{
+				//if (Guid.TryParse(lid, out Guid lguid))
+				//{
+				ResultDTO res = await _teacherServices.ViewLesson(new LessonContentDTO { SubjectId = Id, Id = lguid }, cancellationToken);
+				return StatusCode(res.StatusCode, new { res.Message, res.result });
+			}
+			else
+				return NotFound(new { Message = "No lessons were found" });
+			//}
+			//else
+			//	return StatusCode(StatusCodes.Status400BadRequest, new { message = "You still have not been verified yet" });
+		}
+
+		[HttpPatch("Edit-Lesson")]
+		public async Task<IActionResult> editLesson([FromBody] EditLessonDTO lessonDTO, CancellationToken cancellationToken)
+		{
+			string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
+			string uid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
+			{
+				return Unauthorized();
+			}
+			if (Guid.TryParse(uid, out Guid Id))
+			{
+				lessonDTO.UId = Id;
+				ResultDTO res = await _teacherServices.EditLesson(lessonDTO, cancellationToken);
+				return StatusCode(res.StatusCode, new { res.Message, res.result });
+			}
+			else
+				return Unauthorized();
+		}
+
+		[HttpDelete("Remove-Lesson")]
+		public async Task<IActionResult> removeLesson([FromBody] DeleteLessonDTO lessonDTO, CancellationToken cancellationToken)
+		{
+			string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
+			string uid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
+			{
+				return Unauthorized();
+			}
+			if (Guid.TryParse(uid, out Guid Id))
+			{
+				lessonDTO.UId = Id;
+				ResultDTO res = await _teacherServices.DeleteLesson(lessonDTO, cancellationToken);
+				return StatusCode(res.StatusCode, new { res.Message, res.result });
+			}
+			else
+				return Unauthorized();
+		}
+
+		[HttpPost("Upload-Video")]
+		[Consumes("multipart/form-data")]
+		public async Task<IActionResult> uploadVideo([FromForm] VideoDTO videoDTO, CancellationToken cancellationToken)
+		{
+			string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
+			videoDTO.Uploaded_by = User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value;
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
+			{
+				return Unauthorized();
+			}
+			//if (Guid.TryParse(videoDTO.Sid, out Guid Id))
+			//{
+			//	videoDTO.SubjectId = Id;
+			if (ModelState.IsValid == false)
+			{
+				return BadRequest(new { ModelState });
+			}
+			ResultDTO res = await _teacherServices.UploadVideo(videoDTO, cancellationToken);
+			return StatusCode(res.StatusCode, new { res.Message, res.result });
+			//}
+			//else
+			//	return StatusCode(StatusCodes.Status400BadRequest, new { message = "You still have not been verified yet" });
+		}
+
+		[HttpDelete("Delete-Video")]
+		public async Task<IActionResult> DeleteVideo([FromBody] VideoDTO videoDTO, CancellationToken cancellationToken)
+		{
+			string token = User.FindFirst("accessToken")?.Value;
+			string Tid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+			if (string.IsNullOrEmpty(Tid))
+				return Unauthorized();
+			if (!await _tokenServices.IsTokenBlacklisted(token))
+				return Unauthorized();
+			if (Guid.TryParse(Tid, out Guid GTid))
+			{
+				ResultDTO res = await _teacherServices.DeleteVideo(videoDTO, GTid, cancellationToken);
+				return StatusCode(res.StatusCode, new { res.Message, res.result });
+			}
+			else
+				return Unauthorized();
+		}
+
+
+		[HttpPost("Add-words-to-Dictionary/{sid}")]
+		[Consumes("multipart/form-data")]
+		public async Task<IActionResult> addWordsToDictionary(string sid, [FromForm] AddVocabDTO vocabDTO, CancellationToken cancellationToken)
+		{
+			string accessToken = User.FindFirst("accessToken")?.Value;
+			string uid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
+			{
+				return Unauthorized();
+			}
+			//string sid = User.FindFirst("subjectID")?.Value;
+			if (Guid.TryParse(uid, out Guid Uguid))
+			{
+				if (Guid.TryParse(sid, out Guid gsid))
+				{
+					if (vocabDTO.word == null || vocabDTO.files == null)
+						return BadRequest("Invalid input");
+					if (vocabDTO.word.Count != vocabDTO.files.Count)
+						return BadRequest("Each word must have exactly one file");
+					//return BadRequest(new { message = vocabDTO.word.Count - vocabDTO.files.Count  > 1 ? $"{vocabDTO.word.Count - vocabDTO.files.Count} words are messing images" : "One word is messing an image" });
+					else
+					{
+						vocabDTO.sid = gsid;
+						vocabDTO.Tid = Uguid;
+						ResultDTO res = await _teacherServices.addWords(vocabDTO, cancellationToken);
+						return StatusCode(res.StatusCode, new { res.Message });
+					}
+				}
+				else
+					return BadRequest(new { Message = "Invalid subject ID" });
+			}
+			else
+				return Unauthorized();
+		}
+
+
+		[HttpPost("Create-Exercise")]
+		[Consumes("multipart/form-data")]
+		public async Task<IActionResult> CreateExercise([FromForm] CreateLevelDTO createExercise, CancellationToken cancellationToken)
+		{
+			string accessToken = User.FindFirst("accessToken")?.Value;
+			string Tid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+			if (string.IsNullOrEmpty(Tid))
+				return Unauthorized();
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
+				return Unauthorized();
+			if (Guid.TryParse(Tid, out Guid GTid))
+			{
+				createExercise.Tid = GTid;
+				ResultDTO res = await _teacherServices.CreateExercise(createExercise, cancellationToken);
+				return StatusCode(res.StatusCode, new { res.Message });
+			}
+			else
+				return Unauthorized();
+
+		}
+		[HttpGet("subjects/{sid}/lessons/{lid}/levels/{levelId}")]
+		public async Task<IActionResult> viewLessonLevel(Guid sid, Guid lid, Guid levelId, CancellationToken cancellationToken)
+		{
+			string accessToken = User.FindFirst("accessToken")?.Value;
+			string Tid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+			if (string.IsNullOrEmpty(Tid))
+				return Unauthorized();
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
+				return Unauthorized();
+			if (Guid.TryParse(Tid, out Guid GTid))
+			{
+				LevelDTO levelDTO = new LevelDTO
+				{
+					ID = levelId,
+					Sid = sid,
+					Lid = lid
+				};
+				ResultDTO result = await _teacherServices.ViewLevel(levelDTO, GTid, cancellationToken);
+				return StatusCode(result.StatusCode, new { result.Message, result.result });
+			}
+			else
+				return Unauthorized();
+		}
+
+		[HttpGet("List-Quizes/{sid}")]
+		public async Task<IActionResult> ListQuizes(string sid, CancellationToken cancellationToken)
+		{
+			string accessToken = User.FindFirst("accessToken")?.Value;
+			string Tid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+			if (string.IsNullOrEmpty(Tid))
+				return Unauthorized();
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
+				return Unauthorized();
+			if (Guid.TryParse(Tid, out Guid GTid))
+			{
+				if (Guid.TryParse(sid, out Guid Id))
+				{
+					ResultDTO res = await _teacherServices.GetQuizes(new TeacherSubjectDTO { SubjectId = Id, TeacherId = GTid }, cancellationToken);
+					return StatusCode(res.StatusCode, new { res.Message, res.result });
+				}
+				else
+					return StatusCode(StatusCodes.Status400BadRequest, new { Message = "Invalid subject ID" });
+			}
+			else
+				return Unauthorized();
+
+		}
+
+
+
+		[HttpGet("subjects/{sid}/levels/{levelId}")]
+		public async Task<IActionResult> ViewQuiz(Guid sid, Guid levelId, CancellationToken cancellationToken)
+		{
+			string accessToken = User.FindFirst("accessToken")?.Value;
+			string Tid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+			if (string.IsNullOrEmpty(Tid))
+				return Unauthorized();
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
+				return Unauthorized();
+			if (Guid.TryParse(Tid, out Guid GTid))
+			{
+				LevelDTO levelDTO = new LevelDTO
+				{
+					ID = levelId,
+					Sid = sid
+				};
+				ResultDTO result = await _teacherServices.ViewLevel(levelDTO, GTid, cancellationToken);
+				return StatusCode(result.StatusCode, new { result.Message, result.result });
+			}
+			else
+				return Unauthorized();
+		}
+
+		[HttpPatch("Edit-Level")]
+		[Consumes("multipart/form-data")]
+		public async Task<IActionResult> EditExercise([FromForm] EditLevelDTO editLevelDTO, CancellationToken cancellationToken)
+		{
+			string accessToken = User.FindFirst("accessToken")?.Value;
+			string Tid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+			if (string.IsNullOrEmpty(Tid))
+				return Unauthorized();
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
+				return Unauthorized();
+			if (Guid.TryParse(Tid, out Guid GTid))
+			{
+				editLevelDTO.Tid = GTid;
+				ResultDTO res = await _teacherServices.EditLevel(editLevelDTO, cancellationToken);
+				return StatusCode(res.StatusCode, new { Message = res.Message });
+			}
+			else
+				return Unauthorized();
+
+		}
+
+		[HttpGet("list-Perquisites")] //NEEDS SOME ENHANCEMENT TO THE ENDPOINT
+		public async Task<IActionResult> ListPerquisites([FromHeader] Guid sid, [FromHeader] PerquisiteType perquisiteType, CancellationToken cancellationToken)
+		{
+			string accessToken = User.FindFirst("accessToken")?.Value;
+			string Tid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+			if (string.IsNullOrEmpty(Tid))
+				return Unauthorized();
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
+				return Unauthorized();
+			if (Guid.TryParse(Tid, out Guid GTid))
+			{
+				ResultDTO res = await _teacherServices.ListPerquisites(new TeacherSubjectDTO { SubjectId = sid, TeacherId = GTid }, perquisiteType, cancellationToken);
+				return StatusCode(res.StatusCode, new { res.Message, res.result });
+			}
+			else
+				return Unauthorized();
+		}
+		//implement add exercises
+
+		[HttpDelete("Delete-Level")]
+		public async Task<IActionResult> DeleteExercise_quiz([FromBody] LevelDTO levelDTO, CancellationToken cancellationToken)
+		{
+			string token = User.FindFirst("accessToken")?.Value;
+			string Tid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+			if (string.IsNullOrEmpty(Tid))
+				return Unauthorized();
+			if (!await _tokenServices.IsTokenBlacklisted(token))
+				return Unauthorized();
+			if (Guid.TryParse(Tid, out Guid GTid))
+			{
+				ResultDTO res = await _teacherServices.DeleteLevel(levelDTO, GTid, cancellationToken);
+				return StatusCode(res.StatusCode, new { res.Message, res.result });
+			}
+			else
+				return Unauthorized();
+		}
+
+		//[HttpDelete()] //add reomve video
 	}
 }

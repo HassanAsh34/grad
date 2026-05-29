@@ -17,6 +17,8 @@ namespace Grad.Domain.Model
 
 		public User Submitted_By { get; set; }
 
+		public string SubmitterName { get; set; }
+
 		public InqueryType Type { get; set; }
 
 		public Guid? SubjectID { get; set; } = Guid.Empty;
@@ -30,6 +32,8 @@ namespace Grad.Domain.Model
 		//public Guid? RecipientID { get; set; } = Guid.Empty;
 
 		public DateTime Submitted_At { get; set; } = DateTime.UtcNow;
+
+		public DateTime? Resovled_AT { get; set; }
 
 		public InqueryStatus? Status { get; set; }
 

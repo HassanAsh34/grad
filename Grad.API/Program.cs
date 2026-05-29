@@ -40,6 +40,8 @@ using Serilog;
 using StackExchange.Redis;
 using Grad.Application.ParentFeatures.Interfaces;
 using Grad.Application.ParentFeatures.Services;
+using Grad.Application.QAFeature.Interfaces;
+using Grad.Application.QAFeature.Services;
 
 
 
@@ -242,6 +244,7 @@ namespace Grad.API
 			builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 			builder.Services.AddScoped<ISubmissionRepository, SubmissionRepository>();
 			builder.Services.AddScoped<IParentRepository, ParentRepository>();
+			builder.Services.AddScoped<IInqueryRepository, InqueryRepository>();
 
 			// 4. Setup Services (Application layer)
 			builder.Services.AddScoped<IUserServices, UserServices>();
@@ -255,6 +258,7 @@ namespace Grad.API
 			builder.Services.AddScoped<ISubmissionServices, SubmissionServices>();
 			builder.Services.AddScoped<IPerquisiteServices, PerquisiteServices>();
 			builder.Services.AddScoped<IParentServices, ParentServices>();
+			builder.Services.AddScoped<ICummunicationServices, CommunicationServices>();
 
 			var app = builder.Build();
 

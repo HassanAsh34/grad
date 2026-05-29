@@ -1,6 +1,7 @@
 using Grad.Application.AdminFeatures.Interfaces;
 using Grad.Application.Common.DTOs;
 using Grad.Application.Common.Interfaces;
+using Grad.Application.QAFeature.DTO;
 using Grad.Application.SubjectFeatures.DTOs;
 using Grad.Application.TeacherFeatures.DTOs;
 using Grad.Domain.Model;
@@ -42,7 +43,7 @@ namespace Grad.API.Controllers
 			{
 				return Unauthorized();
 			}
-			ResultDTO res = await _adminServices.GetAllUsers(Request.Scheme,$"{Request.Host}",cancellationToken);
+			ResultDTO res = await _adminServices.GetAllUsers(Request.Scheme, $"{Request.Host}", cancellationToken);
 			return StatusCode(res.StatusCode, new { Message = res.Message, Data = res.result });
 		}
 
@@ -73,7 +74,7 @@ namespace Grad.API.Controllers
 			{
 				return Unauthorized();
 			}
-			if(Guid.TryParse(id, out Guid guid))
+			if (Guid.TryParse(id, out Guid guid))
 			{
 				var dto = new ProfileDTO { Id = guid, Role = role };
 				ResultDTO res = await _adminServices.ViewUser(dto, cancellationToken);
@@ -119,7 +120,7 @@ namespace Grad.API.Controllers
 			{
 				return Unauthorized();
 			}
-			if (Guid.TryParse(id,out Guid guid))
+			if (Guid.TryParse(id, out Guid guid))
 			{
 				ResultDTO res = await _adminServices.EndSession(guid, cancellationToken);
 				return StatusCode(res.StatusCode, new { Message = res.Message });
@@ -181,7 +182,7 @@ namespace Grad.API.Controllers
 
 		[HttpGet("View-Subject/{sid}")]
 		[Authorize(Roles = "Admin")]
-		public async Task<IActionResult> ViewSubject(string sid,CancellationToken cancellationToken)
+		public async Task<IActionResult> ViewSubject(string sid, CancellationToken cancellationToken)
 		{
 			string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
 			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
@@ -209,14 +210,14 @@ namespace Grad.API.Controllers
 			{
 				return Unauthorized();
 			}
-			if (!ModelState.IsValid) 
+			if (!ModelState.IsValid)
 			{
 				return StatusCode(400, new { Message = ModelState });
 			}
 			else
 			{
 				ResultDTO res = await _adminServices.AddSubject(subject, cancellationToken);
-				return StatusCode(res.StatusCode,new {Message = res.Message,Data = res.result});
+				return StatusCode(res.StatusCode, new { Message = res.Message, Data = res.result });
 			}
 		}
 
@@ -252,8 +253,8 @@ namespace Grad.API.Controllers
 			{
 				return Unauthorized();
 			}
-			if(sid != Guid.Empty)
-			{ 
+			if (sid != Guid.Empty)
+			{
 				ResultDTO res = await _adminServices.RemoveSubject(sid, cancellationToken);
 				return StatusCode(res.StatusCode, new { Message = res.Message });
 			}
@@ -296,6 +297,68 @@ namespace Grad.API.Controllers
 			{
 				ResultDTO res = await _adminServices.AssignTeacherToSubject(teacherDTO, cancellationToken);
 				return StatusCode(res.StatusCode, new { Message = res.Message });
+			}
+		}
+
+		[HttpGet("list inqueries")]
+		public async Task<IActionResult> ListInqueries(CancellationToken cancellationToken)
+		{
+			string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
+			{
+				return Unauthorized();
+			}
+			if (!ModelState.IsValid)
+			{
+				return StatusCode(StatusCodes.Status400BadRequest, new { Message = "Invalid user or subject" });
+			}
+			else
+			{
+				ResultDTO res = await _adminServices.listInqueries(cancellationToken);
+				return StatusCode(res.StatusCode, new { Message = res.Message, Data = res.result });
+			}
+		}
+
+		[HttpGet("view inquery")]
+		public async Task<IActionResult> ViewInquery([FromHeader] Guid id, CancellationToken cancellationToken)
+		{
+			string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
+			{
+				return Unauthorized();
+			}
+			if (!ModelState.IsValid)
+			{
+				return StatusCode(StatusCodes.Status400BadRequest, new { Message = "Invalid user or subject" });
+			}
+			else
+			{
+				ResultDTO res = await _adminServices.viewInquery(id, cancellationToken);
+				return StatusCode(res.StatusCode, new { Message = res.Message, Data = res.result });
+			}
+		}
+
+		[HttpPost("Reply to inquery")]
+		public async Task<IActionResult> CreateInquery([FromHeader] Guid InqueryID ,InqueryDTO inquery, CancellationToken cancellationToken)
+		{
+			string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
+			string submitterId = User.FindFirst("id")?.Value ?? string.Empty;
+			string submitterName = User.FindFirst("name")?.Value ?? string.Empty;
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
+			{
+				return Unauthorized();
+			}
+			if (!ModelState.IsValid)
+			{
+				return StatusCode(StatusCodes.Status400BadRequest, new { Message = "Invalid user or subject" });
+			}
+			else
+			{
+				inquery.submitterId = Guid.Parse(submitterId);
+				inquery.Submitted_By = submitterName;
+				inquery.RepliedToId = InqueryID;
+				ResultDTO res = await _adminServices.createInquery(inquery, cancellationToken);
+				return StatusCode(res.StatusCode, new { Message = res.Message, Data = res.result });
 			}
 		}
 	}

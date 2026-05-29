@@ -1,5 +1,6 @@
 ﻿using Grad.Application.Common.DTOs;
 using Grad.Application.ParentFeatures.DTOs;
+using Grad.Application.QAFeature.DTO;
 
 namespace Grad.Application.ParentFeatures.Interfaces
 {
@@ -17,5 +18,10 @@ namespace Grad.Application.ParentFeatures.Interfaces
 		public Task<ResultDTO> ViewSubjects(Guid sid, Guid pid, CancellationToken cancellationToken = default);
 
 		public Task<ResultDTO> ViewSubjectStats(Guid stdid, Guid sid, Guid pid, CancellationToken cancellationToken = default);
+
+		public Task<ResultDTO> listInqueries(Guid UId, CancellationToken CT = default);
+
+		public Task<ResultDTO> viewInquery(Guid Id, CancellationToken cancellationToken = default);
+		public Task<ResultDTO> createInquery(InqueryDTO inquery, CancellationToken cancellationToken = default);
 	}
 }

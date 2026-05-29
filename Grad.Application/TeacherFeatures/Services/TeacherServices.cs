@@ -2,10 +2,13 @@ using System.Reflection.Emit;
 using System.Security.Cryptography;
 using System.Threading;
 using Grad.Application.Common.DTOs;
+using Grad.Application.Common.Interfaces;
 using Grad.Application.ExerciseFeatures.DTOs;
 using Grad.Application.ExerciseFeatures.Interfaces;
 using Grad.Application.LessonFeatures.DTOs;
 using Grad.Application.LessonFeatures.Interfaces;
+using Grad.Application.QAFeature.DTO;
+using Grad.Application.QAFeature.Interfaces;
 using Grad.Application.SubjectFeatures.DTOs;
 using Grad.Application.SubjectFeatures.Interfaces;
 using Grad.Application.TeacherFeatures.DTOs;
@@ -30,10 +33,13 @@ namespace Grad.Application.TeacherFeatures.Services
 
 		private readonly IExerciseServices _exerciseServices;
 
-		private readonly ILogger<TeacherServices> 
-			;
+		private readonly ILogger<TeacherServices> _logger;
 
-		public TeacherServices(ISubjectServices subjectServices, ITeacherRepository repository, ILessonServices lessonServices, IUserServices userServices, IExerciseServices exerciseServices, ILogger<TeacherServices> logger)
+		private readonly IRedisServices _redisServices;
+
+		private readonly ICummunicationServices _inqueryServices; //replace it with interface
+
+		public TeacherServices(ISubjectServices subjectServices, ITeacherRepository repository, ILessonServices lessonServices, IUserServices userServices, IExerciseServices exerciseServices, ILogger<TeacherServices> logger, IRedisServices redisServices,ICummunicationServices cummunicationServices)
 		{
 			_subjectServices = subjectServices ?? throw new ArgumentNullException(nameof(subjectServices));
 			_teacherRepository = repository ?? throw new ArgumentNullException(nameof(repository));
@@ -41,6 +47,8 @@ namespace Grad.Application.TeacherFeatures.Services
 			_userServices = userServices ?? throw new ArgumentNullException(nameof(userServices));
 			_exerciseServices = exerciseServices ?? throw new ArgumentNullException(nameof(exerciseServices));
 			_logger = logger ?? throw new ArgumentNullException(nameof(logger));
+			_redisServices = redisServices ?? throw new ArgumentNullException(nameof(redisServices));
+			_inqueryServices = cummunicationServices ?? throw new ArgumentNullException(nameof(cummunicationServices));
 		}
 
 		public async Task<ResultDTO> ShowStudents(TeacherSubjectDTO teacherSubject, CancellationToken cancellationToken)
@@ -324,6 +332,87 @@ namespace Grad.Application.TeacherFeatures.Services
 			else
 			{
 				return await _lessonServices.DeleteVideo(videoDTO, cancellationToken);
+			}
+		}
+
+		public async Task<ResultDTO> listInqueries(Guid TId,Guid Sid,CancellationToken CT)
+		{
+			if (!await _teacherRepository.CanAccess(TId, Sid, CT))
+				return new ResultDTO
+				{
+					StatusCode = 400,
+					Message = "Subject wasnt found"
+				};
+			else
+			{
+				IEnumerable<InqueryDTO> inqueries = await _inqueryServices.GetInqueries(Sid, false, true, CT);
+				if (inqueries.Count() > 0)
+					return new ResultDTO
+					{
+						StatusCode = 200,
+						Message = $"{inqueries.Count()} inqueries were found",
+						result = inqueries
+					};
+				else
+					return new ResultDTO
+					{
+						StatusCode = 400,
+						Message = "there are no inqueries at the moment"
+					};
+			}
+		}
+
+		public async Task<ResultDTO> viewInquery(Guid Id, Guid TId, CancellationToken cancellationToken)
+		{
+			InqueryDTO inquery = await _inqueryServices.ViewInquery(Id, cancellationToken);
+			if (inquery == null)
+				return new ResultDTO
+				{
+					StatusCode = 404,
+					Message = "Inquery wasnt found"
+				};
+			else
+			{
+				await _redisServices.store(Id.ToString(), TId.ToString(), TimeSpan.FromMinutes(50));
+				return new ResultDTO
+				{
+					StatusCode = 200,
+					Message = "Inquery retrieved successfully",
+					result = inquery
+				};
+			}
+		}
+
+		public async Task<ResultDTO> createInquery(InqueryDTO inquery, Guid TId, CancellationToken cancellationToken)
+		{
+			if(inquery.RepliedToId != Guid.Empty || inquery.RepliedToId !=  null)
+			{
+				string lockedBy = await _redisServices.get(inquery.RepliedToId.ToString());
+				if (lockedBy != null && lockedBy != TId.ToString())
+				{
+					return new ResultDTO
+					{
+						StatusCode = 409,
+						Message = "Inquery is currently being viewed or edited by another user"
+					};
+				}
+			}
+			InqueryStatus? status  = inquery.RepliedToId == null || inquery.RepliedToId == Guid.Empty ? null : InqueryStatus.Solved;
+			if (await _inqueryServices.createInquery(inquery,status,cancellationToken))
+			{
+				return new ResultDTO
+				{
+					StatusCode = 201,
+					Message = "Inquery created successfully"
+				};
+			}
+			else
+			{
+				return new ResultDTO
+				{
+					StatusCode = 500,
+					Message = "Failed to create inquery"
+				};
 			}
 		}
 	}

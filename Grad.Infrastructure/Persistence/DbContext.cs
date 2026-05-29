@@ -79,7 +79,7 @@ namespace  Grad.Infrastructure.Persistence
 
 			//modelBuilder.Entity<Inquery>().HasOne(i=>i.SubjectID).WithMany(s=>s.Inqueries).HasForeignKey(i=>i.SubjectFK).OnDelete(DeleteBehavior.Cascade);
 
-			modelBuilder.Entity<User>().HasMany(u=>u.Inqueries).WithOne(i=>i.Submitted_By).HasForeignKey(i=>i.Submitted_By).OnDelete(DeleteBehavior.Cascade);
+			modelBuilder.Entity<User>().HasMany(u=>u.Inqueries).WithOne(i=>i.Submitted_By).HasForeignKey(i=>i.submitterId).OnDelete(DeleteBehavior.Cascade);
 		}
 	}
 }

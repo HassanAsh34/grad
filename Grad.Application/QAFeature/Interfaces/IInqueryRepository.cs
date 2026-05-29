@@ -11,12 +11,11 @@ namespace Grad.Application.QAFeature.Interfaces
 {
 	public interface IInqueryRepository : IRepository
 	{
-		public Task<int> CreateInqueryAsync(Inquery inquery, CancellationToken CT = default);
-
-		public Task<IEnumerable<Inquery>> GetInquery(Guid Id, CancellationToken CT = default);
-		public Task<IEnumerable<Inquery>> GetInqueries(Guid? Id, bool Admin = false, bool teacher = false, CancellationToken CT = default);
-		public Task<int> updateInqueryStatusAsync(Guid Id, InqueryStatus status, CancellationToken CT = default);
-		public Task<bool> deleteInqueryAsync(Guid Id, CancellationToken CT = default);
-		public Task<bool> DeleteInqueryBySubject(Guid sid, CancellationToken CT = default);
+		Task<int> CreateInqueryAsync(Inquery inquery, CancellationToken CT = default);
+		Task<IEnumerable<Inquery>> GetInquery(Guid Id, CancellationToken CT = default);
+		Task<IEnumerable<Inquery>> GetInqueries(Guid? Id, bool Admin = false, bool teacher = false, CancellationToken CT = default);
+		Task<int> updateInqueryStatusAsync(Guid Id, InqueryStatus status, CancellationToken CT = default);
+		Task<bool> deleteInqueryAsync(Guid Id, CancellationToken CT = default);
+		Task<bool> DeleteInqueryBySubject(Guid sid, CancellationToken CT = default);
 	}
 }

@@ -333,6 +333,9 @@ namespace Grad.Application.StudentFeatures.Services
 			int result = await _uow.SaveChangesAsync();
 			return result;
 		}
+
+
+		//inquery for student need to be implemented
 	}
 }
 

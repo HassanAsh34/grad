@@ -1,6 +1,9 @@
 ﻿using Grad.Application.Common.DTOs;
+using Grad.Application.Common.Interfaces;
+using Grad.Application.QAFeature.DTO;
 using Grad.Application.SubjectFeatures.DTOs;
 using Grad.Application.TeacherFeatures.DTOs;
+using Grad.Domain.Enums;
 
 namespace Grad.Application.AdminFeatures.Interfaces
 {
@@ -30,6 +33,10 @@ namespace Grad.Application.AdminFeatures.Interfaces
 		public Task<ResultDTO> UpdateSubject(Guid sid, CancellationToken cancellationToken = default);
 
 		public Task<ResultDTO> AssignTeacherToSubject(TeacherSubjectDTO assignTeacherDTO, CancellationToken cancellationToken = default);
+
+		public Task<ResultDTO> listInqueries(CancellationToken CT = default);
+		public Task<ResultDTO> viewInquery(Guid Id, CancellationToken cancellationToken = default);
+		public Task<ResultDTO> createInquery(InqueryDTO inquery, CancellationToken cancellationToken = default);
 
 	}
 }

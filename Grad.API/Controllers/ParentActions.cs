@@ -134,7 +134,7 @@ namespace grad.API.Controllers
 				return Unauthorized();
 			}
 			string pid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-			if (!Guid.TryParse(pid, out Guid parentId))
+			if (Guid.TryParse(pid, out Guid parentId))
 			{
 				ResultDTO result = await _parentServices.DeleteStudent(studentDTO, parentId, cancellationToken);
 				return StatusCode(result.StatusCode, new { message = result.Message });

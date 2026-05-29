@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Grad.Domain.Enums;
+using Grad.Domain.Model;
 
 namespace Grad.Application.QAFeature.DTO
 {
@@ -12,6 +13,8 @@ namespace Grad.Application.QAFeature.DTO
 		public Guid Id { get; set; } = Guid.NewGuid();
 
 		public Guid? RepliedToId { get; set; }
+
+		public Guid submitterId { get; set; }
 
 		public string Submitted_By { get; set; }
 
@@ -29,6 +32,10 @@ namespace Grad.Application.QAFeature.DTO
 
 		public DateTime Submitted_At { get; set; } = DateTime.UtcNow;
 
-		public InqueryStatus? Status { get; set; } 
+		public DateTime? Resovled_AT { get; set; }
+
+		public InqueryStatus? Status { get; set; }
+
+		public List<InqueryDTO> Replies { get; set; } = new List<InqueryDTO>();
 	}
 }
