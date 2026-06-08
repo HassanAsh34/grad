@@ -126,7 +126,7 @@ namespace Grad.Application.SubmissionFeatures.Services
 
 				RetakesRemaining = g.Max(x => x.AttemptsRemaining) != -1 ? g.Min(x => x.AttemptsRemaining) : 0,
 
-				AttemptsUsed = g.Max(x => x.AttemptsRemaining) != -1 ?  g.Max(x => x.AttemptsRemaining) - g.Min(x => x.AttemptsRemaining) : 0,
+				AttemptsUsed = g.Max(x => x.AttemptsRemaining) != -1 ?  g.Max(x => x.AttemptsRemaining) - g.Min(x => x.AttemptsRemaining) : g.Count(),
 
 				SubmittedAt = g.Max(x => x.SubmittedAt)
 			})
