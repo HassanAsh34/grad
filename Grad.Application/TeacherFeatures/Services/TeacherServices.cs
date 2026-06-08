@@ -16,6 +16,7 @@ using Grad.Application.TeacherFeatures.Interfaces;
 using Grad.Application.Users.Interfaces;
 using Grad.Domain.Enums;
 using Grad.Domain.Model;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
 
@@ -39,7 +40,11 @@ namespace Grad.Application.TeacherFeatures.Services
 
 		private readonly ICummunicationServices _inqueryServices; //replace it with interface
 
-		public TeacherServices(ISubjectServices subjectServices, ITeacherRepository repository, ILessonServices lessonServices, IUserServices userServices, IExerciseServices exerciseServices, ILogger<TeacherServices> logger, IRedisServices redisServices,ICummunicationServices cummunicationServices)
+		private readonly ICloudinaryServices _cloudinaryServices;
+
+		private readonly IUowServices _uowServices;
+
+		public TeacherServices(ISubjectServices subjectServices, ITeacherRepository repository, ILessonServices lessonServices, IUserServices userServices, IExerciseServices exerciseServices, ILogger<TeacherServices> logger, IRedisServices redisServices,ICummunicationServices cummunicationServices, ICloudinaryServices cloudinaryServices,IUowServices uowServices)
 		{
 			_subjectServices = subjectServices ?? throw new ArgumentNullException(nameof(subjectServices));
 			_teacherRepository = repository ?? throw new ArgumentNullException(nameof(repository));
@@ -49,6 +54,8 @@ namespace Grad.Application.TeacherFeatures.Services
 			_logger = logger ?? throw new ArgumentNullException(nameof(logger));
 			_redisServices = redisServices ?? throw new ArgumentNullException(nameof(redisServices));
 			_inqueryServices = cummunicationServices ?? throw new ArgumentNullException(nameof(cummunicationServices));
+			_cloudinaryServices	= cloudinaryServices ?? throw new ArgumentNullException(nameof(cloudinaryServices));	
+			_uowServices = uowServices ?? throw new ArgumentNullException(nameof(uowServices));
 		}
 
 		public async Task<ResultDTO> ShowStudents(TeacherSubjectDTO teacherSubject, CancellationToken cancellationToken)
@@ -88,7 +95,19 @@ namespace Grad.Application.TeacherFeatures.Services
 
 		public async Task<ResultDTO> ViewSubjects(Guid teacherId, CancellationToken cancellationToken)
 		{
-			return await _subjectServices.ViewSubjectsAsync(Tid: teacherId, cancellationToken: cancellationToken);
+			List<Guid> AssignedSubjectIDs = await _teacherRepository.GetAssignedSubjectIDs(teacherId, cancellationToken);
+			if (AssignedSubjectIDs.Count > 0)
+			{
+				return await _subjectServices.ViewSubjectsAsync(true,AssignedSubjectIDs, cancellationToken: cancellationToken);
+			}
+			else
+			{
+				return new ResultDTO
+				{
+					StatusCode = 404,
+					Message = "You Are not assigned to any subjects at the moment"
+				};
+			}
 		} //done
 
 		public async Task<ResultDTO> ViewSubject(TeacherSubjectDTO teacherSubject, CancellationToken cancellationToken)
@@ -116,7 +135,7 @@ namespace Grad.Application.TeacherFeatures.Services
 				List<LessonContentDTO> lessons = await _lessonServices.ViewLessons(teacherSubject.SubjectId, cancellation: cancellationToken);
 				return new ResultDTO
 				{
-					Message = lessons.Any() ? "Lessons retrieved successfully" : "No result",
+					Message = lessons.Count != 0 ? "Lessons retrieved successfully" : "No result",
 					StatusCode = lessons.Any() ? 200 : 404,
 					result = lessons
 				};
@@ -415,5 +434,70 @@ namespace Grad.Application.TeacherFeatures.Services
 				};
 			}
 		}
+
+		public async Task<ResultDTO> uploadCV(CVDTO cv, CancellationToken cancellationToken)
+		{
+			if(cv.CV != null)
+			{
+				Teacher teacher = await _teacherRepository.GetEntityAsync<Teacher>(t=>t.Id == cv.Tid , cancellationToken);
+				if(teacher == null)
+				{
+					return new ResultDTO
+					{
+						StatusCode = 401,
+						Message = "Something went wrong"
+					};
+				}
+				string folder = $"teacher/{teacher.EmailorUserName}/";
+				string cvPath   = await _cloudinaryServices.UploadCV(cv.CV, folder, $"{teacher.EmailorUserName}_cv", cancellationToken);
+				if(string.IsNullOrEmpty(cvPath))
+					return new ResultDTO
+					{
+						StatusCode = 500,
+						Message = "Error uploading CV"
+					};
+				else
+				{
+					teacher.cvPath = cvPath;
+					int res = await _uowServices.SaveChangesAsync();
+					return new ResultDTO
+					{
+						Message = res > 0 ? "Cv was Updated Successfully" : "Failed to update CV",
+						StatusCode = res > 0 ? 200 : 500
+					};
+				}
+			}
+			else
+			{
+				return new ResultDTO
+				{
+					StatusCode = 400,
+					Message = "No CV file provided"
+				};
+			}
+		}
+
+		//public async Task<ResultDTO> ViewCV(CVDTO cv,CancellationToken cancellationToken)
+		//{
+		//	Teacher teacher = await _teacherRepository.GetEntityAsync<Teacher>(t => t.Id == cv.Tid, cancellationToken);
+		//	if (teacher == null)
+		//	{
+		//		return new ResultDTO
+		//		{
+		//			StatusCode = 401,
+		//			Message = "Something went wrong"
+		//		};
+		//	}
+		//	else
+		//	{
+		//		cv.cvPath = teacher.cvPath;
+		//		return new ResultDTO
+		//		{
+		//			StatusCode = 200,
+		//			Message = "CV retrieved successfully",
+		//			result = cv
+		//		};
+		//	}
+		//}
 	}
 }

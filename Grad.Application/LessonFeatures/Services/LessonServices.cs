@@ -318,7 +318,7 @@ namespace grad.Application.LessonFeatures.Services
 
 			IEnumerable<LessonContent> lessons = await _lessonRepository.viewLessons(sid, cancellation);
 			if (lessons == null || lessons.Count() == 0)
-				return null;
+				return new();
 			List<LessonContentDTO> lessonContentDTOs = new List<LessonContentDTO>();
 			foreach (LessonContent l in lessons)
 			{
@@ -473,17 +473,17 @@ namespace grad.Application.LessonFeatures.Services
 			}
 			else
 			{
+				string directory = $"uploads/subjects/{deleteLesson.SubjectId}/lessonContent/{lesson.Id}";
+				bool videoDeleted = await _cloudinaryServices.DeleteAsync(directory, true, true);
+				if (!videoDeleted)
+				{
+					return new ResultDTO { Message = "Failed to delete video from cloud storage", StatusCode = 500 };
+				}
 				int result = 0;
 				result = await _perquisiteServices.removeDependency(deleteLesson.SubjectId, lesson, null , cancellationToken);
 				if (result != 1)
 				{
 					return new ResultDTO { Message = "Failed to update perquisites, lesson was not deleted", StatusCode = 500 };
-				}
-				string directory = $"uploads/subjects/{deleteLesson.SubjectId}/lessonContent/{lesson.Id}";
-				bool videoDeleted = await _cloudinaryServices.DeleteAsync(directory, true,true);
-				if (!videoDeleted)
-				{
-					return new ResultDTO { Message = "Failed to delete video from cloud storage", StatusCode = 500 };
 				}
 				result = await _lessonRepository.DeleteLesson(deleteLesson.SubjectId, lesson, cancellationToken);
 				if (result == 0) 
@@ -492,6 +492,7 @@ namespace grad.Application.LessonFeatures.Services
 				}
 				else
 				{
+					await _subjectServices.updateCountAsync(deleteLesson.SubjectId, cancellationToken);
 					return new ResultDTO { Message = "Lesson deleted successfully", StatusCode = 200 };
 				}
 			}

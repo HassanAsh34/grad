@@ -4,6 +4,7 @@ using Grad.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Grad.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(Db_Context))]
-    partial class Db_ContextModelSnapshot : ModelSnapshot
+    [Migration("20260605140003_submissions_v3")]
+    partial class submissions_v3
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -48,7 +51,7 @@ namespace Grad.Infrastructure.Persistence.Migrations
                     b.ToTable("AssignedSubjects");
                 });
 
-            modelBuilder.Entity("Grad.Domain.Model.Enrollment", b =>
+            modelBuilder.Entity("Grad.Domain.Model.Enrollement", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -352,10 +355,6 @@ namespace Grad.Infrastructure.Persistence.Migrations
                     b.Property<int>("age")
                         .HasColumnType("int");
 
-                    b.Property<string>("cvPath")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.ToTable("Teachers", (string)null);
                 });
 
@@ -378,7 +377,7 @@ namespace Grad.Infrastructure.Persistence.Migrations
                     b.Navigation("Teacher");
                 });
 
-            modelBuilder.Entity("Grad.Domain.Model.Enrollment", b =>
+            modelBuilder.Entity("Grad.Domain.Model.Enrollement", b =>
                 {
                     b.HasOne("Grad.Domain.Model.Student", "Student")
                         .WithMany("EnrolledSubjects")
@@ -421,7 +420,7 @@ namespace Grad.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Grad.Domain.Model.StudentProgress", b =>
                 {
-                    b.HasOne("Grad.Domain.Model.Enrollment", "Enrollement")
+                    b.HasOne("Grad.Domain.Model.Enrollement", "Enrollement")
                         .WithMany("studentProgresses")
                         .HasForeignKey("Eid_fk")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -492,7 +491,7 @@ namespace Grad.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Grad.Domain.Model.Enrollment", b =>
+            modelBuilder.Entity("Grad.Domain.Model.Enrollement", b =>
                 {
                     b.Navigation("studentProgresses");
                 });

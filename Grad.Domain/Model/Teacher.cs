@@ -13,6 +13,8 @@
 		public DateOnly BirthDate { get; set; }
 		public int age { get; set; }
 
+		public string cvPath { get; set; }
+
 		//public string ?SubjectName { get; set; }
 
 		public ICollection<AssignedSubject> AssignedSubjects { get; set; } = new List<AssignedSubject>();

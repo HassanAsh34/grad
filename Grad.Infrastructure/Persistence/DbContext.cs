@@ -20,7 +20,7 @@ namespace  Grad.Infrastructure.Persistence
 
 		public DbSet<RefreshToken> RefreshTokens { get; set; }
 
-		public DbSet<Enrollement> Enrollents { get; set; }
+		public DbSet<Enrollment> Enrollents { get; set; }
 
 		public DbSet<AssignedSubject> AssignedSubjects { get; set; }
 
@@ -51,15 +51,15 @@ namespace  Grad.Infrastructure.Persistence
 
 			modelBuilder.Entity<Subject>().HasMany(s => s.AssignedSubjects).WithOne(a => a.Subject).HasForeignKey(a => a.SubjectId).OnDelete(DeleteBehavior.Cascade);
 
-			modelBuilder.Entity<Enrollement>().HasAlternateKey(es => new { es.STUFK, es.SUBFK });
+			modelBuilder.Entity<Enrollment>().HasAlternateKey(es => new { es.STUFK, es.SUBFK });
 
-			modelBuilder.Entity<Enrollement>().HasOne(S=>S.subject).WithMany(s => s.Students).HasForeignKey(S => S.SUBFK).OnDelete(DeleteBehavior.Cascade);
+			modelBuilder.Entity<Enrollment>().HasOne(S=>S.subject).WithMany(s => s.Students).HasForeignKey(S => S.SUBFK).OnDelete(DeleteBehavior.Cascade);
 
-			modelBuilder.Entity<Enrollement>().HasOne(S => S.Student).WithMany(s => s.EnrolledSubjects).HasForeignKey(S => S.STUFK).OnDelete(DeleteBehavior.Cascade);
+			modelBuilder.Entity<Enrollment>().HasOne(S => S.Student).WithMany(s => s.EnrolledSubjects).HasForeignKey(S => S.STUFK).OnDelete(DeleteBehavior.Cascade);
 
 			modelBuilder.Entity<StudentProgress>().HasAlternateKey(sp => new { sp.Eid_fk, sp.lid });
 
-			modelBuilder.Entity<Enrollement>().HasMany<StudentProgress>(e => e.studentProgresses).WithOne(sp => sp.Enrollement).HasForeignKey(sp => sp.Eid_fk).OnDelete(DeleteBehavior.Cascade);
+			modelBuilder.Entity<Enrollment>().HasMany<StudentProgress>(e => e.studentProgresses).WithOne(sp => sp.Enrollement).HasForeignKey(sp => sp.Eid_fk).OnDelete(DeleteBehavior.Cascade);
 
 			modelBuilder.Entity<Student>()
 			.HasOne(s => s.parent)

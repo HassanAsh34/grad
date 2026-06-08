@@ -292,6 +292,12 @@ namespace Grad.Application.AdminFeatures.Services
 			}
 		}
 
+		//public async Task<ResultDTO> ViewCV(Guid UID, CancellationToken cancellationToken)
+		//{
+		//	Teacher teacher = aw
+			
+		//}
+
 		public async Task<ResultDTO> createInquery(InqueryDTO inquery, CancellationToken cancellationToken)
 		{
 			if (inquery.RepliedToId != Guid.Empty || inquery.RepliedToId != null)

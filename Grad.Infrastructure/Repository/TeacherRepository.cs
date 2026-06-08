@@ -20,6 +20,14 @@ namespace Grad.Infrastructure.Repository
 			return res != null ? true : false;
 		}
 
+		public async Task<List<Guid>> GetAssignedSubjectIDs(Guid teacherId, CancellationToken cancellationToken)
+		{
+			return await _context.AssignedSubjects
+				.Where(a => a.TeacherId == teacherId)
+				.Select(a => a.SubjectId)
+				.ToListAsync(cancellationToken);
+		}
+
 		public async Task<List<Student>> showStudents(Guid Sid,CancellationToken CT)
 		{
 			return await _context.Enrollents.Where(e => e.SUBFK == Sid).Select(s=>s.Student!).ToListAsync();

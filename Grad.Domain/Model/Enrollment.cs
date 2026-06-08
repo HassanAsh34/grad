@@ -1,6 +1,6 @@
 ﻿namespace Grad.Domain.Model
 {
-	public class Enrollement
+	public class Enrollment
 	{
 		public Guid Id { get; private set; } = Guid.NewGuid();
 
@@ -14,7 +14,11 @@
 
 		public DateTime Enrolled_At { get; private set; } = DateTime.UtcNow;
 
+		public float Progress { get; set; } = 0;
+
 		public List<StudentProgress> studentProgresses { get; set; } = new List<StudentProgress>();
+
+
 
 		//public int progress { get; set; } = 0;
 	}

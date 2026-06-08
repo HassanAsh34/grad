@@ -37,10 +37,11 @@ namespace Grad.API.Controllers
 				return Unauthorized();
 			}
 			string id = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+			string Disability = User.FindFirst("Disability")?.Value ?? string.Empty;
 			//string role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value; leave for now
 			if (Guid.TryParse(id, out Guid guid))
 			{
-				ResultDTO result = await _studentServices.ViewSubjects(guid, cancellationToken: cancellationToken);
+				ResultDTO result = await _studentServices.ViewSubjects(guid,Disability,cancellationToken: cancellationToken);
 				return StatusCode(result.StatusCode, new { message = result.Message, result = result.result });
 			}
 			else
@@ -130,9 +131,10 @@ namespace Grad.API.Controllers
 				return Unauthorized();
 			}
 			string id = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+			string Disability = User.FindFirst("Disability")?.Value ?? string.Empty;
 			if (Guid.TryParse(id, out Guid guid))
 			{
-				ResultDTO result = await _studentServices.ViewSubjects(guid, true, cancellationToken);
+				ResultDTO result = await _studentServices.ViewSubjects(guid,Disability,true, cancellationToken);
 				return StatusCode(result.StatusCode, new { message = result.Message, result = result.result });
 			}
 			else

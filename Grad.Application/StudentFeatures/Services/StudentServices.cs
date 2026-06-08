@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Security.Cryptography;
 using Grad.Application.Common.DTOs;
 using Grad.Application.Common.Interfaces;
@@ -12,6 +13,8 @@ using Grad.Application.SubmissionFeatures.DTOs;
 using Grad.Application.SubmissionFeatures.Interfaces;
 using Grad.Domain.Enums;
 using Grad.Domain.Model;
+using Microsoft.AspNetCore.DataProtection.KeyManagement;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 
 namespace Grad.Application.StudentFeatures.Services
@@ -25,7 +28,9 @@ namespace Grad.Application.StudentFeatures.Services
 		private readonly IExerciseServices _exerciseServices;
 		private readonly IlessonRepository _lessonRepository;
 		private readonly IUowServices _uow;
+		private readonly IRedisServices _redisServices;
 		private readonly ILogger<StudentServices> _logger;
+		private readonly IMemoryCache _memoryCache;
 
 		public StudentServices(
 			ISubjectServices subjectServices,
@@ -35,7 +40,9 @@ namespace Grad.Application.StudentFeatures.Services
 			ISubmissionServices submissionServices,
 			IExerciseServices exerciseServices,
 			IUowServices uow,
-			ILogger<StudentServices> logger)
+			IRedisServices redisServices,
+			ILogger<StudentServices> logger,
+			IMemoryCache memoryCache)
 		{
 			_subjectServices = subjectServices ?? throw new ArgumentNullException(nameof(subjectServices));
 			_lessonServices = lessonServices ?? throw new ArgumentNullException(nameof(lessonServices));
@@ -45,35 +52,132 @@ namespace Grad.Application.StudentFeatures.Services
 			_exerciseServices = exerciseServices ?? throw new ArgumentNullException(nameof(exerciseServices));
 			_uow = uow ?? throw new ArgumentNullException(nameof(uow));
 			_logger = logger ?? throw new ArgumentNullException(nameof(logger));
+			_redisServices = redisServices ?? throw new ArgumentNullException(nameof(redisServices));
+			_memoryCache = memoryCache ?? throw new ArgumentNullException(nameof(memoryCache));
 		}
 
 
-		public async Task<ResultDTO> ViewSubjects(Guid id, bool Enrolled, CancellationToken cancellationToken)
+		//public async Task<ResultDTO> ViewSubjects(Guid id, bool Enrolled, CancellationToken cancellationToken) //without loggers
+		//{
+		//	int disability = await _studentRepository.GetDisablityTypeAsync(id, cancellationToken) switch
+		//	{
+		//		DisablityType.Hearing => 2,
+		//		DisablityType.Speech => 3,
+		//		_ => 1
+		//	};
+		//	List<Enrollement> enrollements = await _studentRepository.GetEnrollementsAsync(id, cancellationToken);
+		//	List<Guid> guids = enrollements.Select(e => e.SUBFK).ToList();
+		//	if (Enrolled)
+		//	{
+		//		if (guids.Count == 0)
+		//			return new ResultDTO
+		//			{
+		//				StatusCode = 200,
+		//				Message = "No subjects yet 😊 Let’s add one and start learning!"
+		//			};
+		//		else
+		//		{
+		//			return await _subjectServices.ViewSubjectsAsync(guids: guids, disability: disability, cancellationToken: cancellationToken, enrollements: enrollements);
+		//		}
+		//	}
+		//	else
+		//	{
+		//		return await _subjectServices.ViewSubjectsAsync(guids: guids, disability: disability, cancellationToken: cancellationToken);
+		//	}
+		//}
+
+		//studentServices
+		//public async Task<ResultDTO> ViewSubjects(Guid id, string Disability , bool Enrolled, CancellationToken cancellationToken)
+		//{
+		//	int disability = Disability switch
+		//	{
+		//		"Hearing" => 2,
+		//		"Speech" => 3,
+		//		_ => 1
+		//	};
+		//	// we will read enrollements out of redis
+		//	string Key = $"enrollements_{id}";
+		//	var sw = Stopwatch.StartNew();
+		//	Dictionary<Guid, EnrollmentDTO> enrollements = await _redisServices.getDeserialized<Dictionary<Guid, EnrollmentDTO>>(Key);
+		//	_logger.LogInformation("After enrollment Redis read: {ms}ms", sw.ElapsedMilliseconds);
+		//	sw.Restart();
+		//	if (enrollements == null)
+		//	{
+		//		List<Enrollement> enrollementList = await _studentRepository.GetEnrollementsAsync(id, cancellationToken);
+		//		_logger.LogInformation("After enrollment DB read: {ms}ms", sw.ElapsedMilliseconds);
+		//		sw.Restart();
+		//		enrollements = enrollementList.ToDictionary(e => e.SUBFK, e => new EnrollmentDTO
+		//		{
+		//			SubjectId = e.SUBFK,
+		//			Progress = e.Progress
+		//		});
+		//		if (enrollements != null)
+		//		{
+		//			if(!await _redisServices.storeSerialized(Key, enrollements, TimeSpan.FromHours(1)))
+		//			{
+		//				_logger.LogWarning("Failed to store enrollements in Redis for user {UserId}", id);
+		//			}
+		//		}
+		//		else
+		//		{
+		//			enrollements = new Dictionary<Guid, EnrollmentDTO>();
+		//		}
+		//	}
+
+		//	List<Guid> guids = enrollements.Keys.Count != null ? enrollements.Keys.ToList() : new List<Guid>();
+
+
+		//	if (Enrolled)
+		//	{
+		//		if (enrollements.Keys.Count == 0)
+		//			return new ResultDTO
+		//			{
+		//				StatusCode = 200,
+		//				Message = "No subjects yet 😊 Let’s add one and start learning!"
+		//			};
+		//		else
+		//		{
+		//			return await _subjectServices.ViewSubjectsAsync(false, guids: guids, disability: disability, enrollements: enrollements, cancellationToken: cancellationToken);
+		//		}
+		//	}
+		//	else
+		//	{
+		//		return await _subjectServices.ViewSubjectsAsync(false, guids: guids, disability: disability, cancellationToken: cancellationToken);
+		//	}
+		//}
+
+
+		public async Task<ResultDTO> ViewSubjects(Guid id, string Disability, bool Enrolled, CancellationToken cancellationToken)
 		{
-			int disability = await _studentRepository.GetDisablityTypeAsync(id, cancellationToken) switch
+			int disability = Disability switch
 			{
-				DisablityType.Hearing => 2,
-				DisablityType.Speech => 3,
+				"Hearing" => 2,
+				"Speech" => 3,
 				_ => 1
 			};
-			List<Enrollement> enrollements = await _studentRepository.GetEnrollementsAsync(id, cancellationToken);
-			List<Guid> guids = enrollements.Select(e => e.SUBFK).ToList();
+			// we will read enrollements out of redis
+			Dictionary<Guid, EnrollmentDTO> enrollements = await getAllEnrollmentsCached(id,cancellationToken);
+			List<Guid> guids = enrollements.Keys.Count != null ? enrollements.Keys.ToList() : new List<Guid>();
 			if (Enrolled)
 			{
-				if (guids.Count == 0)
+				if (enrollements.Keys.Count == 0)
 					return new ResultDTO
 					{
 						StatusCode = 200,
-						Message = "No subjects yet 😊 Let’s add one and start learning!"
+						Message = "No subjects yet 😊 Let's add one and start learning!"
 					};
 				else
 				{
-					return await _subjectServices.ViewSubjectsAsync(guids: guids, disability: disability, cancellationToken: cancellationToken, enrollements: enrollements);
+					var result = await _subjectServices.ViewSubjectsAsync(false, guids: guids, disability: disability, enrollements: enrollements, cancellationToken: cancellationToken);
+					//_logger.LogInformation("After ViewSubjectsAsync (enrolled): {ms}ms", sw.ElapsedMilliseconds);
+					return result;
 				}
 			}
 			else
 			{
-				return await _subjectServices.ViewSubjectsAsync(guids: guids, disability: disability, cancellationToken: cancellationToken);
+				var result = await _subjectServices.ViewSubjectsAsync(false, guids: guids, disability: disability, cancellationToken: cancellationToken);
+				//_logger.LogInformation("After ViewSubjectsAsync (not enrolled): {ms}ms", sw.ElapsedMilliseconds);
+				return result;
 			}
 		}
 
@@ -101,7 +205,7 @@ namespace Grad.Application.StudentFeatures.Services
 
 		public async Task<ResultDTO> EnrollSubject(EnrollSubjectDTO enrollSubject, CancellationToken cancellationToken)
 		{
-			Enrollement enrollement = new Enrollement
+			Enrollment enrollement = new Enrollment
 			{
 				STUFK = enrollSubject.stdFK,
 				SUBFK = enrollSubject.subFK
@@ -114,7 +218,8 @@ namespace Grad.Application.StudentFeatures.Services
 					StatusCode = 404
 				};
 			}
-			else if (await _studentRepository.IsEnrolled(enrollement.SUBFK, enrollement.STUFK, cancellationToken))
+			//else if (await _studentRepository.IsEnrolled(enrollement.SUBFK, enrollement.STUFK, cancellationToken))
+			else if(await IsEnrolled(enrollement.SUBFK, enrollement.STUFK, cancellationToken))
 			{
 				return new ResultDTO
 				{
@@ -127,6 +232,7 @@ namespace Grad.Application.StudentFeatures.Services
 				int res = await _studentRepository.EnrollSubject(enrollement, cancellationToken);
 				if (res > 0)
 				{
+					await bustCachedEnrollments(enrollement.STUFK, cancellationToken);
 					return new ResultDTO
 					{
 						StatusCode = 200,
@@ -146,7 +252,7 @@ namespace Grad.Application.StudentFeatures.Services
 
 		public async Task<ResultDTO> viewLessons(EnrollSubjectDTO enrollSubject, CancellationToken cancellationToken)//Enhanced
 		{
-			Enrollement enrollement = await _studentRepository.GetEnrollementAsync(enrollSubject.subFK, enrollSubject.stdFK, cancellationToken);
+			Enrollment enrollement = await _studentRepository.GetEnrollementAsync(enrollSubject.subFK, enrollSubject.stdFK, cancellationToken);
 			if (enrollement != null)
 			{
 				Dictionary<Guid, LessonContentDTO> lessons = (await _lessonServices.ViewLessons(enrollSubject.subFK, cancellationToken)).ToDictionary(l => l.Id, l => l);
@@ -201,7 +307,7 @@ namespace Grad.Application.StudentFeatures.Services
 
 		public async Task<ResultDTO> ViewExerciseQuize(LevelDTO levelDTO, Guid stdID, CancellationToken cancellationToken)
 		{
-			if (await _studentRepository.IsEnrolled(levelDTO.Sid, stdID, cancellationToken))
+			if (await IsEnrolled(levelDTO.Sid, stdID, cancellationToken))
 			{
 				return await _exerciseServices.viewLevel(levelDTO, false, cancellationToken);
 			}
@@ -215,7 +321,7 @@ namespace Grad.Application.StudentFeatures.Services
 
 		public async Task<ResultDTO> createSubmission(CreateSubmissionDTO createSubmission, CancellationToken cancellationToken)
 		{
-			if (await _studentRepository.IsEnrolled(createSubmission.SubjectFK, createSubmission.SubmittedBy, cancellationToken))
+			if (await IsEnrolled(createSubmission.SubjectFK, createSubmission.SubmittedBy, cancellationToken))
 			{
 				ResultDTO res = await _submissionServices.createSubmission(createSubmission, cancellationToken);
 				if (res.StatusCode == 200)
@@ -272,7 +378,7 @@ namespace Grad.Application.StudentFeatures.Services
 			// Step 1: Verify lesson exists via IlessonRepository (Option A — no service-to-service call)
 			int result = await updatecompletion(completelesson, cancellationToken);
 
-			switch(result)
+			switch (result)
 			{
 				case -1:
 					return new ResultDTO
@@ -294,16 +400,24 @@ namespace Grad.Application.StudentFeatures.Services
 					};
 				default:
 					LessonContent lesson = await _lessonRepository.viewLesson(completelesson.Sid, completelesson.Lid, cancellationToken);
-					return result == 0
-					? new ResultDTO { Message = "Something went wrong", StatusCode = 500 }
-					: new ResultDTO { Message = "Lesson marked as completed successfully", StatusCode = 200, result = new { lesson.NextType, lesson.Next } };
+					if (result == 0)
+					{
+						_logger.LogCritical("Failed to save changes to the database when marking lesson {LessonId} as completed for user {UserId}", completelesson.Lid, completelesson.uid);
+						return new ResultDTO { Message = "Something went wrong", StatusCode = 500 };
+					}
+					else
+					{
+						await bustCachedEnrollments(completelesson.uid, cancellationToken);
+						_logger.LogInformation("Lesson {LessonId} marked as completed successfully for user {UserId}", completelesson.Lid, completelesson.uid);
+						return new ResultDTO { Message = "Lesson marked as completed successfully", StatusCode = 200, result = new { lesson.NextType, lesson.Next } };
+					} 
 			}
 		}
 
 
-		private async Task<int> updatecompletion(CompletelessonDTO completelesson, CancellationToken cancellationToken)
+		private async Task<int> updatecompletion(CompletelessonDTO completelesson, CancellationToken cancellationToken)//===============need to be fixed
 		{
-			Enrollement enrollement = await _studentRepository.GetEnrollementAsync(completelesson.Sid, completelesson.uid, cancellationToken);
+			Enrollment enrollement = await _studentRepository.GetEnrollementAsync(completelesson.Sid, completelesson.uid, cancellationToken);
 			if (enrollement == null)
 			{
 				return -1;
@@ -315,11 +429,12 @@ namespace Grad.Application.StudentFeatures.Services
 			}
 
 			// Step 3: Check if already completed
-			if (enrollement.studentProgresses?.FirstOrDefault
-				(s => s.lid == completelesson.Lid) != null)
+
+			if (enrollement.studentProgresses?.FirstOrDefault(p=>p.lid == completelesson.Lid) != null)
 			{
 				return -3;
 			}
+
 
 			// Step 4: Create progress record
 			StudentProgress progress = new StudentProgress
@@ -328,12 +443,125 @@ namespace Grad.Application.StudentFeatures.Services
 				Eid_fk = enrollement.Id,
 				Completed_At = DateTime.UtcNow
 			};
+			_studentRepository.CreateEntityAsync<StudentProgress>(progress, cancellationToken);
 
-			_studentRepository.CreateEntityAsync(progress, cancellationToken);
+
+			int count = enrollement.studentProgresses?.Count ?? 0;
+			enrollement.Progress =  count + 1;
+			_studentRepository.UpdateEntityAsync(enrollement, cancellationToken);
 			int result = await _uow.SaveChangesAsync();
 			return result;
 		}
 
+		private async Task<bool> IsEnrolled(Guid Sid, Guid StdId, CancellationToken CT)
+		{
+			Dictionary<Guid, EnrollmentDTO> enrollements = await getAllEnrollmentsCached(StdId, CT);
+			return enrollements.TryGetValue(Sid, out EnrollmentDTO e);
+		}
+
+		private async Task bustCachedEnrollments(Guid Sid, CancellationToken cancellationToken = default)
+		{
+			string Key = $"enrollements_{Sid}";
+			_memoryCache.Remove(Key);                  // clear L1
+			await _redisServices.delete(Key);          // clear L2
+		}
+
+		private async Task<Dictionary<Guid, EnrollmentDTO>> getAllEnrollmentsCached(Guid Sid, CancellationToken cancellationToken = default)
+		{
+			string Key = $"enrollements_{Sid}";
+			var sw = Stopwatch.StartNew();
+
+			// L1 — MemoryCache, nanoseconds, no network
+			if (_memoryCache.TryGetValue(Key, out Dictionary<Guid, EnrollmentDTO> enrollements))
+			{
+				_logger.LogInformation("After enrollment MemoryCache read: {ms}ms", sw.ElapsedMilliseconds);
+				return enrollements;
+			}
+
+			// L2 — Redis
+			enrollements = await _redisServices.getDeserialized<Dictionary<Guid, EnrollmentDTO>>(Key);
+			_logger.LogInformation("After enrollment Redis read: {ms}ms", sw.ElapsedMilliseconds);
+			sw.Restart();
+
+			if (enrollements != null)
+			{
+				// warm L1 from Redis
+				_memoryCache.Set(Key, enrollements, TimeSpan.FromMinutes(2));
+				return enrollements;
+			}
+
+			// L3 — DB
+			List<Enrollment> enrollementList = await _studentRepository.GetEnrollementsAsync(Sid, cancellationToken);
+			_logger.LogInformation("After enrollment DB read: {ms}ms", sw.ElapsedMilliseconds);
+			sw.Restart();
+
+			enrollements = enrollementList.ToDictionary(e => e.SUBFK, e => new EnrollmentDTO
+			{
+				SubjectId = e.SUBFK,
+				Progress = e.Progress
+			});
+
+			if (enrollements != null)
+			{
+				if (!await _redisServices.storeSerialized(Key, enrollements, TimeSpan.FromHours(1)))
+				{
+					_logger.LogWarning("Failed to store enrollements in Redis for user {UserId}", Sid);
+				}
+				_logger.LogInformation("After enrollment Redis store: {ms}ms", sw.ElapsedMilliseconds);
+				sw.Restart();
+
+				// warm L1
+				_memoryCache.Set(Key, enrollements, TimeSpan.FromMinutes(2));
+			}
+			else
+			{
+				enrollements = new Dictionary<Guid, EnrollmentDTO>();
+			}
+
+			return enrollements;
+		}
+
+		//private async Task<Dictionary<Guid, EnrollmentDTO>> getAllEnrollmentsCached(Guid Sid,CancellationToken cancellationToken = default)
+		//{
+		//	string Key = $"enrollements_{Sid}";
+		//	var sw = Stopwatch.StartNew();
+		//	Dictionary<Guid, EnrollmentDTO> enrollements = await _redisServices.getDeserialized<Dictionary<Guid, EnrollmentDTO>>(Key);
+		//	_logger.LogInformation("After enrollment Redis read: {ms}ms", sw.ElapsedMilliseconds);
+		//	sw.Restart();
+		//	if (enrollements == null)
+		//	{
+		//		List<Enrollment> enrollementList = await _studentRepository.GetEnrollementsAsync(Sid, cancellationToken);
+		//		_logger.LogInformation("After enrollment DB read: {ms}ms", sw.ElapsedMilliseconds);
+		//		sw.Restart();
+		//		enrollements = enrollementList.ToDictionary(e => e.SUBFK, e => new EnrollmentDTO
+		//		{
+		//			SubjectId = e.SUBFK,
+		//			Progress = e.Progress
+		//		});
+		//		if (enrollements != null)
+		//		{
+		//			if (!await _redisServices.storeSerialized(Key, enrollements, TimeSpan.FromHours(1)))
+		//			{
+		//				_logger.LogWarning("Failed to store enrollements in Redis for user {UserId}", Sid);
+		//			}
+		//			_logger.LogInformation("After enrollment Redis store: {ms}ms", sw.ElapsedMilliseconds);
+		//			sw.Restart();
+		//		}
+		//		else
+		//		{
+		//			enrollements = new Dictionary<Guid, EnrollmentDTO>();
+		//		}
+		//	}
+		//	return enrollements;
+		//}
+
+
+
+		//private async Task bustCachedEnrollments(Guid Sid,CancellationToken cancellationToken = default)
+		//{
+		//	string Key = $"enrollements_{Sid}";
+		//	await _redisServices.delete(Key);
+		//}
 
 		//inquery for student need to be implemented
 	}

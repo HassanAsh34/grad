@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Text.Json;
 using BCrypt.Net;
 using Grad.Application.Common.Interfaces;
 using StackExchange.Redis;
@@ -11,6 +12,11 @@ namespace Grad.Infrastructure.Cache
 	{
 		private readonly StackExchange.Redis.IDatabase _redis;
 		private readonly bool _enabled;
+		private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions
+		{
+			PropertyNameCaseInsensitive = true
+		};
+
 		public RedisServices(IConnectionMultiplexer connection)
 		{
 			if (connection is NoOpConnectionMultiplexer)
@@ -36,6 +42,17 @@ namespace Grad.Infrastructure.Cache
 			return await _redis.StringSetAsync(key, value, expire);
 		}
 
+		public async Task<bool> storeSerialized<T>(string key, T value ,TimeSpan expire)
+		{
+			if (!_enabled)
+				return false;
+			var res = get(key);
+			if (res != null)
+				await delete(key);
+			string serializedValue = System.Text.Json.JsonSerializer.Serialize(value, _jsonOptions);
+			return await _redis.StringSetAsync(key, serializedValue, expire);
+		}
+
 		public async Task<string> get(string key)
 		{
 			//string keyHashed = BCrypt.Net.BCrypt.HashPassword(key);
@@ -43,6 +60,17 @@ namespace Grad.Infrastructure.Cache
 				return null;
 			string stored = await _redis.StringGetAsync(key);
 			return stored;
+		}
+
+		public async Task<T> getDeserialized<T>(string key) where T : class
+		{
+			if (!_enabled)
+				return null;
+			string stored = await _redis.StringGetAsync(key);
+			if (stored == null)
+				return null;
+			T deserializedValue = System.Text.Json.JsonSerializer.Deserialize<T>(stored, _jsonOptions);
+			return deserializedValue;
 		}
 
 

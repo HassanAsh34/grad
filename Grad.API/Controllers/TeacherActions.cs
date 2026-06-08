@@ -479,6 +479,31 @@ namespace Grad.API.Controllers
 				return Unauthorized();
 		}
 
+		[HttpPatch("Update-CV")]
+		[Consumes("multipart/form-data")]
+		public async Task<IActionResult> updateCV([FromForm] UploadCVDTO upload) // we need to link it with frontend
+		{
+			string token = User.FindFirst("accessToken")?.Value;
+			string Tid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+			//string email = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? string.Empty;
+			if (string.IsNullOrEmpty(Tid))
+				return Unauthorized();
+			if (!await _tokenServices.IsTokenBlacklisted(token))
+				return Unauthorized();
+			if (Guid.TryParse(Tid, out Guid GTid))
+			{
+				CVDTO cv = new CVDTO
+				{
+					CV = upload.file,
+					Tid = GTid
+				};
+				ResultDTO res = await _teacherServices.uploadCV(cv);
+				return StatusCode(res.StatusCode, new { res.Message, res.result });
+			}
+			else
+				return Unauthorized();
+		}
+
 		//[HttpDelete()] //add reomve video
 	}
 }

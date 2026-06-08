@@ -18,19 +18,22 @@ namespace Grad.Infrastructure.Repository
 			_UowServices = uow ?? throw new ArgumentNullException(nameof(uow));
 		}
 
-		public async Task<List<Enrollement>> GetEnrollementsAsync(Guid Sid,CancellationToken CT)
+		public async Task<List<Enrollment>> GetEnrollementsAsync(Guid Sid, CancellationToken ct)
 		{
-			return	await _context.Set<Enrollement>().Where(e=>e.STUFK == Sid).Include(e=>e.studentProgresses).ToListAsync();
+			return await _context.Set<Enrollment>()
+			.AsNoTracking()
+			.Where(e => e.STUFK == Sid)
+			.ToListAsync(ct);
 		}
 
-		public async Task<bool> IsEnrolled(Guid Sid,Guid StdId,CancellationToken CT)
-		{
-			return await base.GetEntityAsync<Enrollement>(e => e.STUFK == StdId && e.SUBFK == Sid, CT) != null;
-		}
+		//public async Task<bool> IsEnrolled(Guid Sid,Guid StdId,CancellationToken CT)
+		//{
+		//	return await base.GetEntityAsync<Enrollement>(e => e.STUFK == StdId && e.SUBFK == Sid, CT) != null;
+		//}
 
-		public async Task<int> EnrollSubject(Enrollement enrollement,CancellationToken CT)
+		public async Task<int> EnrollSubject(Enrollment enrollement,CancellationToken CT)
 		{
-			base.CreateEntityAsync<Enrollement>(enrollement, CT);
+			base.CreateEntityAsync<Enrollment>(enrollement, CT);
 			return await _UowServices.SaveChangesAsync();
 		}
 
@@ -40,9 +43,9 @@ namespace Grad.Infrastructure.Repository
 			return s != null ? s.Disability : DisablityType.None;
 		}
 
-		public async Task<Enrollement> GetEnrollementAsync(Guid SID, Guid STDID,CancellationToken CT = default)
+		public async Task<Enrollment> GetEnrollementAsync(Guid SID, Guid STDID,CancellationToken CT = default)
 		{
-			return await _context.Set<Enrollement>().Where(e => e.STUFK == STDID && e.SUBFK == SID).Include(e => e.studentProgresses).FirstOrDefaultAsync();
+			return await _context.Set<Enrollment>().Where(e => e.STUFK == STDID && e.SUBFK == SID).Include(e => e.studentProgresses).FirstOrDefaultAsync();
 		}
 		//public async Task<List>
 	}

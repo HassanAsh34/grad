@@ -55,5 +55,11 @@ namespace Grad.Application.TeacherFeatures.Interfaces
 		public Task<ResultDTO> listInqueries(Guid TId, Guid Sid, CancellationToken CT = default);
 		public Task<ResultDTO> viewInquery(Guid Id, Guid TId, CancellationToken cancellationToken = default);
 		public Task<ResultDTO> createInquery(InqueryDTO inquery, Guid TId, CancellationToken cancellationToken = default);
+
+		public Task<ResultDTO> uploadCV(CVDTO cv, CancellationToken cancellationToken = default);
+
+
+
+		//public Task<ResultDTO> viewCV(CVDTO cv, CancellationToken cancellationToken = default);
 	}
 }

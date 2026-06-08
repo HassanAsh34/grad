@@ -47,38 +47,38 @@ namespace Grad.Infrastructure.Repository
 				return 0;
 		}
 
-		public async Task<List<Subject>> GetSubjectsByTeacherAsync(Guid teacherId, CancellationToken ct = default)
-		{
-			return await _context.AssignedSubjects
-				.Where(a => a.TeacherId == teacherId)
-				.Include(a => a.Subject)
-				.Select(a => a.Subject)
-				.ToListAsync(ct);
-		}
+		//public async Task<List<Subject>> GetSubjectsByTeacherAsync(Guid teacherId, CancellationToken ct = default)
+		//{
+		//	return await _context.AssignedSubjects
+		//		.Where(a => a.TeacherId == teacherId)
+		//		.Include(a => a.Subject)
+		//		.Select(a => a.Subject)
+		//		.ToListAsync(ct);
+		//}
 
-		public async Task<List<Subject>> GetSubjectsByIdsAsync(IEnumerable<Guid> ids, CancellationToken ct = default)
-		{
-			return await _context.subjects
-				.Where(s => ids.Contains(s.Id))
-				.ToListAsync(ct);
-		}
+		//public async Task<List<Subject>> GetSubjectsByIdsAsync(IEnumerable<Guid> ids, CancellationToken ct = default)
+		//{
+		//	return await _context.subjects
+		//		.Where(s => ids.Contains(s.Id))
+		//		.ToListAsync(ct);
+		//}
 
-		public async Task<List<Subject>> GetSubjectsFilteredAsync(bool? deafMute, IEnumerable<Guid>? excludeIds = null, CancellationToken ct = default)
-		{
-			var query = _context.subjects.AsQueryable();
+		//public async Task<List<Subject>> GetSubjectsFilteredAsync(bool? deafMute, IEnumerable<Guid>? excludeIds = null, CancellationToken ct = default)
+		//{
+		//	var query = _context.subjects.AsQueryable();
 
-			if (deafMute.HasValue)
-			{
-				query = query.Where(s => s.deaf_mute == deafMute.Value);
-			}
+		//	if (deafMute.HasValue)
+		//	{
+		//		query = query.Where(s => s.deaf_mute == deafMute.Value);
+		//	}
 
-			if (excludeIds != null && excludeIds.Any())
-			{
-				query = query.Where(s => !excludeIds.Contains(s.Id));
-			}
+		//	if (excludeIds != null && excludeIds.Any())
+		//	{
+		//		query = query.Where(s => !excludeIds.Contains(s.Id));
+		//	}
 
-			return await query.ToListAsync(ct);
-		}
+		//	return await query.ToListAsync(ct);
+		//}
 
 		public async Task<List<Subject>> GetAllSubjectsAsync(CancellationToken ct = default)
 		{

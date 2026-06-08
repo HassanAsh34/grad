@@ -339,7 +339,7 @@ namespace Grad.API.Controllers
 		}
 
 		[HttpPost("Reply to inquery")]
-		public async Task<IActionResult> CreateInquery([FromHeader] Guid InqueryID ,InqueryDTO inquery, CancellationToken cancellationToken)
+		public async Task<IActionResult> CreateInquery([FromHeader] Guid InqueryID, InqueryDTO inquery, CancellationToken cancellationToken)
 		{
 			string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
 			string submitterId = User.FindFirst("id")?.Value ?? string.Empty;
@@ -361,5 +361,19 @@ namespace Grad.API.Controllers
 				return StatusCode(res.StatusCode, new { Message = res.Message, Data = res.result });
 			}
 		}
+
+		//[HttpGet("View-CV/{id}")]
+		//public async Task<IActionResult> ViewCV(Guid id, CancellationToken cancellationToken)
+		//{
+		//	string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
+		//	if (!await _tokenServices.IsTokenBlacklisted(accessToken))
+		//	{
+		//		return Unauthorized();
+		//	}
+		//	if (!ModelState.IsValid)
+		//		return Unauthorized();
+		//	ResultDTO res = await _adminServices.ViewCV(id, cancellationToken);
+		//	return StatusCode(res.StatusCode, new { Message = res.Message, Data = res.result });
+		//}
 	}
 }

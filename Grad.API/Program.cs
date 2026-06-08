@@ -205,15 +205,22 @@ namespace Grad.API
 
 			// ================= REDIS =================
 			bool redisEnabled = builder.Configuration.GetValue<bool>("Redis:Enabled");
-
 			if (redisEnabled)
 			{
 				string key = hosted ? "Hosted" : "Local";
 				string conn = builder.Configuration[$"Redis:{key}"]
 					?? throw new InvalidOperationException("Redis connection missing");
-
-				builder.Services.AddSingleton<IConnectionMultiplexer>(
-					ConnectionMultiplexer.Connect(conn));
+				try
+				{
+					builder.Services.AddSingleton<IConnectionMultiplexer>(
+						ConnectionMultiplexer.Connect(conn));
+				}
+				catch (RedisConnectionException ex)
+				{
+					Console.WriteLine($"Redis unavailable, falling back to NoOp: {ex.Message}");
+					builder.Services.AddSingleton<IConnectionMultiplexer>(
+						NoOpConnectionMultiplexer.Instance);
+				}
 			}
 			else
 			{
@@ -231,6 +238,7 @@ namespace Grad.API
 			builder.Services.AddScoped<ITokenServices, TokenServices>();
 			builder.Services.AddScoped<IRedisServices, RedisServices>();
 			builder.Services.AddHostedService<SeedHostedService>();
+			builder.Services.AddMemoryCache();
 
 			// 3. Setup Repositories (Infrastructure layer)
 			builder.Services.AddScoped<IRepository, Repository>();

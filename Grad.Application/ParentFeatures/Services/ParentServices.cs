@@ -169,9 +169,10 @@ namespace Grad.Application.ParentFeatures.Services
 
 		public async Task<ResultDTO> ViewSubjects(Guid sid, Guid pid, CancellationToken cancellationToken)
 		{
-			if (await _IParentRepository.isStudentExists(sid, pid, cancellationToken))
+			Student s = await _IParentRepository.isStudentExists(sid, pid, cancellationToken);
+			if (s != null)
 			{
-				return await _IStudentServices.ViewSubjects(sid, true, cancellationToken);
+				return await _IStudentServices.ViewSubjects(sid,s.Disability.ToString(),true, cancellationToken);
 			}
 			else
 				return new ResultDTO
@@ -183,7 +184,7 @@ namespace Grad.Application.ParentFeatures.Services
 
 		public async Task<ResultDTO> ViewSubjectStats(Guid stdid,Guid sid,Guid pid,CancellationToken cancellationToken)
 		{
-			if (await _IParentRepository.isStudentExists(sid,pid,cancellationToken))
+			if (await _IParentRepository.isStudentExists(sid, pid, cancellationToken) != null)
 			{
 				List<SubmissionDTO> submissionDTOs = await _ISubmissionServices.GetSubmissions(stdid, sid, cancellationToken);
 				if (submissionDTOs != null && submissionDTOs.Count > 0)

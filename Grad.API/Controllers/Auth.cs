@@ -79,11 +79,11 @@ namespace Grad.API.Controllers
 					Expires = DateTimeOffset.UtcNow.AddDays(7),
 					Path = "/"
 				});
-				return Ok(res.Message);
+				return Ok(new { Message = res.Message, AccessToken = token.AccessToken });
 			}
 			else
 			{
-				return StatusCode(res.StatusCode, new { Message = res.Message });
+				return StatusCode(res.StatusCode, new { Message = res.Message });// remove token from bearer
 			}
 		}
 

@@ -20,7 +20,7 @@
 		public List<AssignedSubject> AssignedSubjects { get; set; } = new();
 
 			//public ICollection<Teacher> Teachers { get; set; } = new List<Teacher>(); //resposible teachers
-			public List<Enrollement> Students { get; set; } = new();
+			public List<Enrollment> Students { get; set; } = new();
 		
 			public List<Submission> Submissions { get; set; } = new();//students enrolled in the class
 

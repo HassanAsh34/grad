@@ -11,6 +11,8 @@ namespace Grad.Application.Auth.DTOs
 
 		public IFormFile? file { get; set; }
 
+		public IFormFile? cv { get; set; }
+
 		[JsonIgnore]
 		public string? filePath { get; set; }
 

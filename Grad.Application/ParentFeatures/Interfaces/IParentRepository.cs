@@ -5,6 +5,6 @@ namespace Grad.Application.ParentFeatures.Interfaces
 	{
 		Task<IEnumerable<Student>> showChildren(Guid id, CancellationToken cancellationToken = default);
 
-		Task<bool> isStudentExists(Guid sid, Guid pid, CancellationToken cancellationToken = default);
+		Task<Student> isStudentExists(Guid sid, Guid pid, CancellationToken cancellationToken = default);
 	}
 }

@@ -215,6 +215,7 @@ namespace Grad.Application.Users.Services
 							profile.pfpURL = teacher.ProfilePicture;
 							profile.phone = teacher.phoneNumber;
 							profile.Status = adminview ? teacher.status : null;
+							profile.cvPath = teacher.cvPath;
 							profile.Job = "Teacher";
 							return new ResultDTO { Message = "Found", StatusCode = 200, result = profile };
 						}
@@ -360,6 +361,11 @@ namespace Grad.Application.Users.Services
 								{
 									res = await _uow.SaveChangesAsync();
 								}
+							}
+							if(!string.IsNullOrEmpty(teacher.cvPath))
+							{
+								if (await _cloudinaryServices.DeleteAsync($"teacher/{teacher.EmailorUserName}/", false, true, cancellationToken))
+									res = await _uow.SaveChangesAsync();
 							}
 							else
 								res = await _uow.SaveChangesAsync();

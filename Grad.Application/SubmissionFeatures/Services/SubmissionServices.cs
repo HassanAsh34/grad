@@ -170,7 +170,7 @@ namespace Grad.Application.SubmissionFeatures.Services
 			}
 			decimal total_score = level.Exercise.SelectMany(e => e.questions).Sum(q => q.score);
 			grade.Percentage = total_score != 0 ? (score / total_score) * 100 : 0;
-			if(grade.Percentage > level.PassingPercentage)
+			if(grade.Percentage >= level.PassingPercentage)
 				grade.Passed = true;
 			return grade;
 		}

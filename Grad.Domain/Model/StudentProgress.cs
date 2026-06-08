@@ -13,6 +13,7 @@ namespace Grad.Domain.Model
 
 		public DateTime Completed_At { get; set; }
 
-		public Enrollement Enrollement { get; set; }
+		public Enrollment Enrollement { get; set; }
+
 	}
 }

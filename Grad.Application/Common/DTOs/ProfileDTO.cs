@@ -39,6 +39,8 @@ namespace Grad.Application.Common.DTOs
 
 		public int? subjectsCount { get; set; } = 0;
 
+		public string ?cvPath { get; set; }
+
 		public ParentContactInfo ? ParentContactInfo { get; set; }
 		//public Student Student { get; set; }
 

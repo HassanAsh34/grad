@@ -131,6 +131,28 @@ namespace Grad.Application.Auth.Services
 							gender = user.Gender == 1 ? Gender.Male : user.Gender == 2 ? Gender.Female : 0,
 							status = Status.Pending
 						};
+						string cvPath = string.Empty;
+						if (user.cv != null)
+						{
+							cvPath = await _cloudinaryServices.UploadCV(user.cv, $"teacher/{teacher.EmailorUserName}/", $"{teacher.EmailorUserName}_cv", cancellationToken);
+						}
+						else
+						{
+							return new ResultDTO
+							{
+								StatusCode = 400,
+								Message = "CV is required for teacher registration"
+							};
+						}
+						if (string.IsNullOrEmpty(cvPath))
+						{
+							return new ResultDTO
+							{
+								StatusCode = 500,
+								Message = "Error uploading CV"
+							};
+						}
+						teacher.cvPath = cvPath;
 						_repository.CreateEntityAsync<Teacher>(teacher, cancellationToken: cancellationToken);
 						u = teacher;
 						break;
