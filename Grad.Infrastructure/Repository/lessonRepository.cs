@@ -82,7 +82,7 @@ namespace Grad.Infrastructure.Repository
 			{
 				var filter = Builders<SubjectContent>.Filter.And(Builders<SubjectContent>.Filter.Eq(s => s.Id, sid), Builders<SubjectContent>.Filter.ElemMatch(s => s.Lessons, l => l.Id == lid));
 				lesson.Videos.Remove(Vid);
-				var update = Builders<SubjectContent>.Update.Set("Lessons.$.Lessons", lesson.Videos);
+				var update = Builders<SubjectContent>.Update.Set("Lessons.$.Videos", lesson.Videos);
 				var result = await _subjects.UpdateOneAsync(filter, update, cancellationToken: CT);
 				return (int)result.ModifiedCount;
 			}

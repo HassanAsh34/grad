@@ -789,9 +789,11 @@ namespace Grad.Application.SubjectFeatures.Services
 		{
 			var allSubjects = await GetAllSubjectsCachedAsync(cancellationToken);
 			return allSubjects.Any(s =>
-				(subjectId == null || s.Id == subjectId) &&
-				(string.IsNullOrEmpty(subjectName) || s.SubjectName.Equals(subjectName, StringComparison.OrdinalIgnoreCase)) &&
-				(deaf_mute == null || s.deaf_mute == deaf_mute.Value));
+				(!subjectId.HasValue || s.Id == subjectId.Value) ||
+				(!string.IsNullOrWhiteSpace(subjectName) &&
+					s.SubjectName.Equals(subjectName, StringComparison.OrdinalIgnoreCase)) ||
+				(deaf_mute.HasValue && s.deaf_mute == deaf_mute.Value)
+			);
 			//return await _subjectRepository.IsSubjectExistAsync(subjectName, deaf_mute, subjectId, cancellationToken);
 		}
 
