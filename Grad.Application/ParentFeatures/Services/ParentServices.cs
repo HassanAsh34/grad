@@ -184,7 +184,7 @@ namespace Grad.Application.ParentFeatures.Services
 
 		public async Task<ResultDTO> ViewSubjectStats(Guid stdid,Guid sid,Guid pid,CancellationToken cancellationToken)
 		{
-			if (await _IParentRepository.isStudentExists(sid, pid, cancellationToken) != null)
+			if (await _IParentRepository.isStudentExists(stdid, pid, cancellationToken) != null)
 			{
 				List<SubmissionDTO> submissionDTOs = await _ISubmissionServices.GetSubmissions(stdid, sid, cancellationToken);
 				if (submissionDTOs != null && submissionDTOs.Count > 0)

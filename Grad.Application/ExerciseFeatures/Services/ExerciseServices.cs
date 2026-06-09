@@ -362,6 +362,9 @@ namespace Grad.Application.ExerciseFeatures.Services
 				List<QuestionDTO> questionDTOs = new List<QuestionDTO>();
 				switch (exercise.Type)
 				{
+					case ExerciseType.AI:
+						exerciseDTO.AI_letters = exercise.AI_letters;
+						break;
 					case ExerciseType.Matching:
 						List<AnswerDTO> answerDTOs = new List<AnswerDTO>();
 						foreach (Question question in exercise.questions)
@@ -605,28 +608,44 @@ namespace Grad.Application.ExerciseFeatures.Services
 					return null;
 				}
 			}
-			Dictionary<Guid, Question> Questions = exercise != null ? exercise.questions.ToDictionary(q => q.Qid, q => q) : new Dictionary<Guid, Question>();
-			foreach (QuestionDTO questionDTO in exerciseDTO.questions)
+			if(exercise.Type == ExerciseType.AI)
 			{
+				Dictionary<string,int> letters = exercise?.AI_letters?.ToDictionary(k => k.Key, v => v.Value) ?? new Dictionary<string, int>();
+				foreach(var letter in exerciseDTO.AI_letters)
+				{
+					if (!letters.ContainsKey(letter.Key))
+						letters.Add(letter.Key, letter.Value);
+					else
+						letters[letter.Key] = letter.Value;
+				}
+				Nexercise.AI_letters = letters;
+			}
+			else
+			{
+				Dictionary<Guid, Question> Questions = exercise != null ? exercise.questions.ToDictionary(q => q.Qid, q => q) : new Dictionary<Guid, Question>();
+				foreach (QuestionDTO questionDTO in exerciseDTO.questions)
+				{
 
-				Question question = Questions.TryGetValue(questionDTO.Qid, out var q) ? q : null;
-				if (question == null)
-				{
-					question = await editQuestion(questionDTO, null, Nexercise.Type, directoryPath, cancellationToken);
-				}
-				else
-				{
-					exercise.questions.Remove(question);
-					question = await editQuestion(questionDTO, question, Nexercise.Type, directoryPath, cancellationToken);
-				}
-				if (question != null)
-				{
-					Nexercise.questions.Add(question);
-				}
-				else
-				{
-					_logger.LogWarning("Failed to update or add question {QuestionId}", questionDTO.Qid);
-					continue;
+					Question question = Questions.TryGetValue(questionDTO.Qid, out var q) ? q : null;
+					if (question == null)
+					{
+						question = await editQuestion(questionDTO, null, Nexercise.Type, directoryPath, cancellationToken);
+					}
+					else
+					{
+						exercise.questions.Remove(question);
+						question = await editQuestion(questionDTO, question, Nexercise.Type, directoryPath, cancellationToken);
+					}
+					if (question != null)
+					{
+						Nexercise.questions.Add(question);
+					}
+					else
+					{
+						_logger.LogWarning("Failed to update or add question {QuestionId}", questionDTO.Qid);
+						continue;
+					}
+
 				}
 			}
 			return Nexercise;

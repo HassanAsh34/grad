@@ -9,6 +9,7 @@ namespace Grad.Domain.Enums
 	public enum ExerciseType
 	{
 		MCQ = 1,
-		Matching = 2
+		Matching = 2,
+		AI = 3
 	}
 }

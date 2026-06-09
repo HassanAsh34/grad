@@ -16,6 +16,8 @@ namespace Grad.Application.SubjectFeatures.DTOs
 
 		public bool deaf_mute { get; set; }
 
+		public bool AI_supported { get; set; } = false;
+
 		public int? lessonsCount { get; set; } = 0;
 
 		public int? levelsCount { get; set; } = 0;

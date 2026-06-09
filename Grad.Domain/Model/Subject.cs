@@ -9,6 +9,8 @@
 
 			public bool deaf_mute { get; set; }
 
+			public bool AI_supported { get; set; } = false;
+
 			public int LessonCount { get; set; } = 0;
 
 			public DateOnly CreatedAt { get; private set; } = DateOnly.FromDateTime(DateTime.Now);
