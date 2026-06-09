@@ -58,8 +58,10 @@ namespace Grad.Application.TeacherFeatures.Interfaces
 
 		public Task<ResultDTO> uploadCV(CVDTO cv, CancellationToken cancellationToken = default);
 
+		public Task<ResultDTO> viewStudentProgress(Guid stdID, TeacherSubjectDTO teacherSubjectDTO , CancellationToken cancellationToken = default);
 
+		public Task<ResultDTO> viewStudentsProgress(TeacherSubjectDTO teacherSubjectDTO, CancellationToken cancellationToken);
 
-		//public Task<ResultDTO> viewCV(CVDTO cv, CancellationToken cancellationToken = default);
-	}
+        //public Task<ResultDTO> viewCV(CVDTO cv, CancellationToken cancellationToken = default);
+    }
 }

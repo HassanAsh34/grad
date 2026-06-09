@@ -11,6 +11,8 @@ using Grad.Application.QAFeature.DTO;
 using Grad.Application.QAFeature.Interfaces;
 using Grad.Application.SubjectFeatures.DTOs;
 using Grad.Application.SubjectFeatures.Interfaces;
+using Grad.Application.SubmissionFeatures.DTOs;
+using Grad.Application.SubmissionFeatures.Interfaces;
 using Grad.Application.TeacherFeatures.DTOs;
 using Grad.Application.TeacherFeatures.Interfaces;
 using Grad.Application.Users.Interfaces;
@@ -44,7 +46,9 @@ namespace Grad.Application.TeacherFeatures.Services
 
 		private readonly IUowServices _uowServices;
 
-		public TeacherServices(ISubjectServices subjectServices, ITeacherRepository repository, ILessonServices lessonServices, IUserServices userServices, IExerciseServices exerciseServices, ILogger<TeacherServices> logger, IRedisServices redisServices,ICummunicationServices cummunicationServices, ICloudinaryServices cloudinaryServices,IUowServices uowServices)
+		private readonly ISubmissionServices _submissionServices;
+
+		public TeacherServices(ISubjectServices subjectServices, ITeacherRepository repository, ILessonServices lessonServices, IUserServices userServices, IExerciseServices exerciseServices, ILogger<TeacherServices> logger, IRedisServices redisServices,ICummunicationServices cummunicationServices, ICloudinaryServices cloudinaryServices,IUowServices uowServices, ISubmissionServices submissionServices)
 		{
 			_subjectServices = subjectServices ?? throw new ArgumentNullException(nameof(subjectServices));
 			_teacherRepository = repository ?? throw new ArgumentNullException(nameof(repository));
@@ -56,7 +60,8 @@ namespace Grad.Application.TeacherFeatures.Services
 			_inqueryServices = cummunicationServices ?? throw new ArgumentNullException(nameof(cummunicationServices));
 			_cloudinaryServices	= cloudinaryServices ?? throw new ArgumentNullException(nameof(cloudinaryServices));	
 			_uowServices = uowServices ?? throw new ArgumentNullException(nameof(uowServices));
-		}
+			_submissionServices = submissionServices ?? throw new ArgumentNullException(nameof(submissionServices));
+        }
 
 		public async Task<ResultDTO> ShowStudents(TeacherSubjectDTO teacherSubject, CancellationToken cancellationToken)
 		{
@@ -74,6 +79,7 @@ namespace Grad.Application.TeacherFeatures.Services
 					Id = e.Id,
 					name = $"{e.FName} {e.LName}",
 					email = e.EmailorUserName,
+					parent = e.PID != null ? true : false
 				}).ToList();
 
 				int stdCount = students.Count();
@@ -110,7 +116,49 @@ namespace Grad.Application.TeacherFeatures.Services
 			}
 		} //done
 
-		public async Task<ResultDTO> ViewSubject(TeacherSubjectDTO teacherSubject, CancellationToken cancellationToken)
+		public async Task<ResultDTO> viewStudentProgress(Guid stdID,TeacherSubjectDTO teacherSubjectDTO,CancellationToken cancellationToken)
+		{
+            if (!await _teacherRepository.CanAccess(teacherSubjectDTO.TeacherId,teacherSubjectDTO.SubjectId, cancellationToken))
+                return new ResultDTO
+                {
+                    StatusCode = 400,
+                    Message = "Subject wasnt found"
+                };
+            else
+			{
+                List<SubmissionDTO> submissionDTOs = await _submissionServices.GetSubmissions(stdID, teacherSubjectDTO.SubjectId,false, cancellationToken);
+				
+				return new ResultDTO
+				{
+					Message = submissionDTOs != null ? submissionDTOs.Count != 0 ? "Progress retrieved successfully" : "No result" : "Either Student or Subject doesnt exist",
+					StatusCode = submissionDTOs != null ? submissionDTOs.Count != 0 ? 200 : 404 : 400,
+					result = submissionDTOs
+				};
+            }
+        }
+
+        public async Task<ResultDTO> viewStudentsProgress(TeacherSubjectDTO teacherSubjectDTO, CancellationToken cancellationToken)
+        {
+            if (!await _teacherRepository.CanAccess(teacherSubjectDTO.TeacherId, teacherSubjectDTO.SubjectId, cancellationToken))
+                return new ResultDTO
+                {
+                    StatusCode = 400,
+                    Message = "Subject wasnt found"
+                };
+            else
+            {
+                List<SubmissionDTO> submissionDTOs = await _submissionServices.GetSubmissions(Sid: teacherSubjectDTO.SubjectId,teacher: true,cancellationToken: cancellationToken);
+
+                return new ResultDTO
+                {
+                    Message = submissionDTOs != null ? submissionDTOs.Count != 0 ? "Progress retrieved successfully" : "No result" : "invalid subject id",
+                    StatusCode = submissionDTOs != null ? submissionDTOs.Count != 0 ? 200 : 404 : 400,
+                    result = submissionDTOs
+                };
+            }
+        }
+
+        public async Task<ResultDTO> ViewSubject(TeacherSubjectDTO teacherSubject, CancellationToken cancellationToken)
 		{
 			if (!await _teacherRepository.CanAccess(teacherSubject.TeacherId, teacherSubject.SubjectId, cancellationToken))
 				return new ResultDTO
