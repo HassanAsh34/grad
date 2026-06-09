@@ -75,7 +75,7 @@ namespace  Grad.Infrastructure.Persistence
 
 			modelBuilder.Entity<Submission>().HasOne(s=>s.Student).WithMany(s=>s.Submissions).HasForeignKey(s=>s.SubmittedBy).OnDelete(DeleteBehavior.Cascade);
 
-			modelBuilder.Entity<Submission>().HasOne(s => s.Subject).WithMany(s => s.Submissions).HasForeignKey(s => s.SubjectFK).OnDelete(DeleteBehavior.SetNull);
+			modelBuilder.Entity<Submission>().HasOne(s => s.Subject).WithMany(s => s.Submissions).HasForeignKey(s => s.SubjectFK).OnDelete(DeleteBehavior.Cascade);
 
 			//modelBuilder.Entity<Inquery>().HasOne(i=>i.SubjectID).WithMany(s=>s.Inqueries).HasForeignKey(i=>i.SubjectFK).OnDelete(DeleteBehavior.Cascade);
 

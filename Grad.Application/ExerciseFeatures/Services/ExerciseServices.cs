@@ -474,6 +474,7 @@ namespace Grad.Application.ExerciseFeatures.Services
 			}
 			directoryPath += $"exercise/{level.ID}/";
 			Dictionary<Guid, Exercise> Exercises = level.Exercise.ToDictionary(e => e.Id, e => e);
+			List<Exercise> exercises = new();
 			if (editLevel.ExerciseDTOs != null && editLevel.ExerciseDTOs.Count > 0)
 			{
 				foreach(ExerciseDTO exerciseDTO in editLevel.ExerciseDTOs)
@@ -489,7 +490,7 @@ namespace Grad.Application.ExerciseFeatures.Services
 						exercise = await editExercise(exerciseDTO, null, directoryPath, cancellationToken);
 					}
 					if (exercise != null)
-						level.Exercise.Add(exercise);
+						exercises.Add(exercise);
 					else
 					{
 						_logger.LogWarning("Failed to update or add exercise {ExerciseId}", exerciseDTO.Id);
@@ -497,6 +498,7 @@ namespace Grad.Application.ExerciseFeatures.Services
 					}
 				}
 			}
+			level.Exercise = exercises;
 			int res = await _exerciseRepository.editLevel(editLevel.Sid,editLevel.Lid,level, cancellationToken);
 			if (res == 0)
 			{
@@ -624,13 +626,18 @@ namespace Grad.Application.ExerciseFeatures.Services
 			}
 			if(exerciseDTO.Type == ExerciseType.AI)
 			{
-				Dictionary<string,int> letters = exercise?.AI_letters?.ToDictionary(k => k.Key, v => v.Value) ?? new Dictionary<string, int>();
+				//Dictionary<string,int> letters = exercise?.AI_letters?.ToDictionary(k => k.Key, v => v.Value) ?? new Dictionary<string, int>();
+				//foreach(var letter in exerciseDTO.AI_letters)
+				//{
+				//	if (!letters.ContainsKey(letter.Key))
+				//		letters.Add(letter.Key, letter.Value);
+				//	else
+				//		letters[letter.Key] = letter.Value;
+				//}
+				Dictionary<string, int> letters = new Dictionary<string, int>();
 				foreach(var letter in exerciseDTO.AI_letters)
 				{
-					if (!letters.ContainsKey(letter.Key))
-						letters.Add(letter.Key, letter.Value);
-					else
-						letters[letter.Key] = letter.Value;
+					letters[letter.Key] = letter.Value;
 				}
 				Nexercise.AI_letters = letters;
 			}

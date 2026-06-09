@@ -320,6 +320,7 @@ namespace Grad.Application.SubjectFeatures.Services
 		public async Task<ResultDTO> RemoveSubject(Guid subjectid, CancellationToken cancellationToken)
 		{
 			Subject subject = await _subjectRepository.GetSubjectWithRelationsAsync(subjectid, cancellationToken);
+
 			if (subject == null)
 			{
 				return new ResultDTO
