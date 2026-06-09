@@ -4,6 +4,7 @@ using Grad.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Grad.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(Db_Context))]
-    partial class Db_ContextModelSnapshot : ModelSnapshot
+    [Migration("20260609091541_AI_v1")]
+    partial class AI_v1
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -45,7 +48,7 @@ namespace Grad.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("SubjectId");
 
-                    b.ToTable("AssignedSubjects", (string)null);
+                    b.ToTable("AssignedSubjects");
                 });
 
             modelBuilder.Entity("Grad.Domain.Model.Enrollment", b =>
@@ -72,7 +75,7 @@ namespace Grad.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("SUBFK");
 
-                    b.ToTable("Enrollents", (string)null);
+                    b.ToTable("Enrollents");
                 });
 
             modelBuilder.Entity("Grad.Domain.Model.Inquery", b =>
@@ -120,7 +123,7 @@ namespace Grad.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("submitterId");
 
-                    b.ToTable("Inquery", (string)null);
+                    b.ToTable("Inquery");
                 });
 
             modelBuilder.Entity("Grad.Domain.Model.RefreshToken", b =>
@@ -147,7 +150,7 @@ namespace Grad.Infrastructure.Persistence.Migrations
                     b.HasIndex("CreatedById")
                         .IsUnique();
 
-                    b.ToTable("RefreshTokens", (string)null);
+                    b.ToTable("RefreshTokens");
                 });
 
             modelBuilder.Entity("Grad.Domain.Model.StudentProgress", b =>
@@ -169,7 +172,7 @@ namespace Grad.Infrastructure.Persistence.Migrations
 
                     b.HasAlternateKey("Eid_fk", "lid");
 
-                    b.ToTable("studentProgresses", (string)null);
+                    b.ToTable("studentProgresses");
                 });
 
             modelBuilder.Entity("Grad.Domain.Model.Subject", b =>
@@ -199,7 +202,7 @@ namespace Grad.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("subjects", (string)null);
+                    b.ToTable("subjects");
                 });
 
             modelBuilder.Entity("Grad.Domain.Model.Submission", b =>
@@ -242,7 +245,7 @@ namespace Grad.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("SubmittedBy");
 
-                    b.ToTable("submissions", (string)null);
+                    b.ToTable("submissions");
                 });
 
             modelBuilder.Entity("Grad.Domain.Model.User", b =>
@@ -342,7 +345,7 @@ namespace Grad.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("PID");
 
-                    b.ToTable("Students", (string)null);
+                    b.ToTable("Students");
                 });
 
             modelBuilder.Entity("Grad.Domain.Model.Teacher", b =>

@@ -19,7 +19,7 @@
 
 		//public IEnumerable<Lesson> Lessons { get; set; } //lessons related to the subject
 
-		public List<AssignedSubject> AssignedSubjects { get; set; } = new();
+			public List<AssignedSubject> AssignedSubjects { get; set; } = new();
 
 			//public ICollection<Teacher> Teachers { get; set; } = new List<Teacher>(); //resposible teachers
 			public List<Enrollment> Students { get; set; } = new();

@@ -244,7 +244,8 @@ namespace Grad.Application.SubjectFeatures.Services
 					SubjectId = s.Id,
 					SubjectName = s.SubjectName,
 					deaf_mute = s.deaf_mute,
-					progress = progress
+					progress = progress,
+					AI_supported = s.AI_supported
 				});
 			}
 			_logger.LogInformation("After DTO mapping: {ms}ms", sw.ElapsedMilliseconds);

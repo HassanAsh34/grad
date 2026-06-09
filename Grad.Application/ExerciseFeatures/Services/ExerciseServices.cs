@@ -608,7 +608,7 @@ namespace Grad.Application.ExerciseFeatures.Services
 					return null;
 				}
 			}
-			if(exercise.Type == ExerciseType.AI)
+			if(exerciseDTO.Type == ExerciseType.AI)
 			{
 				Dictionary<string,int> letters = exercise?.AI_letters?.ToDictionary(k => k.Key, v => v.Value) ?? new Dictionary<string, int>();
 				foreach(var letter in exerciseDTO.AI_letters)

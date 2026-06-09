@@ -12,8 +12,8 @@ namespace Grad.Application.ExerciseFeatures.DTOs
 		public Guid Sid { get; set; }
 
 
-		[Required(ErrorMessage = "Title field is required")]
-		[MinLength(3, ErrorMessage = "the Title must be at least 3 characters long")]
+		//[Required(ErrorMessage = "Title field is required")]
+		//[MinLength(3, ErrorMessage = "the Title must be at least 3 characters long")]
 		public string Name { get; set; }
 
 		public List<ExerciseDTO> ExerciseDTOs { get; set; } 
