@@ -13,6 +13,7 @@ namespace Grad.Application.SubmissionFeatures.Interfaces
 	{
 		public Task<ResultDTO> createSubmission(CreateSubmissionDTO createSubmission, CancellationToken CT = default);
 
-		public Task<List<SubmissionDTO>> GetSubmissions(Guid STDid,Guid ?sid = null,CancellationToken cancellationToken = default);
-	}
+        public Task<List<SubmissionDTO>> GetSubmissions(Guid? STDid = null, Guid? Sid = null, bool teacher = false, CancellationToken cancellationToken = default);
+        //public Task<List<SubmissionDTO>> GetSubmissions(Guid STDid,Guid ?sid = null,CancellationToken cancellationToken = default);
+    }
 }

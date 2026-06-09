@@ -88,7 +88,54 @@ namespace Grad.API.Controllers
 				return NotFound(new { Message = "Student wasn't found" });
 		}
 
-		[HttpGet("Home")]//done
+		[HttpGet("Get-Student-Progress/{sid}/{stdID}")]
+		public async Task<IActionResult> getStudentProgress(Guid sid,Guid stdID, CancellationToken cancellationToken)
+		{
+            string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
+            string Uid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+            if (!await _tokenServices.IsTokenBlacklisted(accessToken))
+            {
+                return Unauthorized();
+            }
+			//string sid = User.FindFirst("SubjectID")?.Value;
+			if (Guid.TryParse(Uid, out Guid Id))
+			{
+				ResultDTO res = await _teacherServices.viewStudentProgress(stdID, new TeacherSubjectDTO()
+                {
+                    SubjectId = sid,
+                    TeacherId = Id
+                }, cancellationToken);
+				return StatusCode(res.StatusCode, new { res.Message, res.result });
+			}
+			else
+				return Unauthorized();
+        }
+
+		[HttpGet("Get-students-progress/{sid}")]
+		public async Task<IActionResult> getStudentsProgress(Guid sid, CancellationToken cancellationToken)
+		{
+            string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
+            string Uid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+            if (!await _tokenServices.IsTokenBlacklisted(accessToken))
+            {
+                return Unauthorized();
+            }
+            //string sid = User.FindFirst("SubjectID")?.Value;
+            if (Guid.TryParse(Uid, out Guid Id))
+            {
+                ResultDTO res = await _teacherServices.viewStudentsProgress(new TeacherSubjectDTO()
+                {
+                    SubjectId = sid,
+                    TeacherId = Id
+                }, cancellationToken);
+                return StatusCode(res.StatusCode, new { res.Message, res.result });
+            }
+            else
+                return Unauthorized();
+        }
+
+
+        [HttpGet("Home")]//done
 		public async Task<IActionResult> viewSubjects(CancellationToken cancellationToken)
 		{
 			string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;

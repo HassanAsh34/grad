@@ -5,5 +5,7 @@
 		public Guid Id { get; set; }
 		public string name { get; set; }
 		public string email { get; set; }
-	}
+
+		public bool parent { get; set; } = false;
+    }
 }
