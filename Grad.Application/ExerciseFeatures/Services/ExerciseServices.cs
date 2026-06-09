@@ -9,6 +9,7 @@ using Grad.Domain.Enums;
 using Grad.Domain.Model;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Extensions.Logging;
+using Grad.Application.SubjectFeatures.DTOs;
 
 namespace Grad.Application.ExerciseFeatures.Services
 {
@@ -17,15 +18,17 @@ namespace Grad.Application.ExerciseFeatures.Services
 		private readonly ICloudinaryServices _cloudinaryServices;
 		private readonly IExerciseRepository _exerciseRepository;
 		private readonly ISubjectRepository _subjectRepository;
+		private readonly ISubjectServices _subjectServices;
 		private readonly IPerquisiteServices _perquisiteServices;
 		private readonly ILogger<ExerciseServices> _logger;
 		//private readonly IlessonRepository _IlessonRepository;
 
-		public ExerciseServices(ICloudinaryServices cloudinaryServices, ISubjectRepository subjectRepository, IExerciseRepository exerciseRepository,IPerquisiteServices perquisiteServices, ILogger<ExerciseServices> logger)
+		public ExerciseServices(ICloudinaryServices cloudinaryServices, ISubjectRepository subjectRepository, IExerciseRepository exerciseRepository, ISubjectServices subjectServices, IPerquisiteServices perquisiteServices, ILogger<ExerciseServices> logger)
 		{
 			_cloudinaryServices = cloudinaryServices ?? throw new ArgumentNullException(nameof(cloudinaryServices));
 			_exerciseRepository = exerciseRepository ?? throw new ArgumentNullException(nameof(exerciseRepository));
 			_subjectRepository = subjectRepository ?? throw new ArgumentNullException(nameof(subjectRepository));
+			_subjectServices = subjectServices ?? throw new ArgumentNullException(nameof(subjectServices));
 			_perquisiteServices = perquisiteServices ?? throw new ArgumentNullException(nameof(perquisiteServices));
 			_logger = logger ?? throw new ArgumentNullException(nameof(logger));
 		}
@@ -344,6 +347,16 @@ namespace Grad.Application.ExerciseFeatures.Services
 		public async Task<ResultDTO> viewLevel(LevelDTO levelDTO, bool teacher, CancellationToken CT)
 		{
 			Level level = await _exerciseRepository.GetLevel(levelDTO.Sid, levelDTO.Lid, levelDTO.ID, CT);
+			var res =  await _subjectServices.ViewSubjectAsync(levelDTO.Sid,false,CT);
+			if(res.StatusCode != 200)
+			{ 	
+				return new ResultDTO
+				{
+					Message = "Subject wasnt found",
+					StatusCode = 404
+				};
+			}
+			SubjectDTO subject = (SubjectDTO)res.result;
 			if (level == null)
 				return new ResultDTO
 				{
@@ -433,6 +446,7 @@ namespace Grad.Application.ExerciseFeatures.Services
 			levelDTO.Name = level.Name;
 			levelDTO.PassingPercentage = level.PassingPercentage;
 			levelDTO.levelDifficulty = level.levelDifficulty;
+			levelDTO.SubjectName = subject.SubjectName;
 			return new ResultDTO
 			{
 				Message = $"{levelDTO.Exercise.Count()} Exercises were found",

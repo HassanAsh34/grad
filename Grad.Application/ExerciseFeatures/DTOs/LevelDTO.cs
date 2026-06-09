@@ -20,7 +20,7 @@ namespace Grad.Application.ExerciseFeatures.DTOs
 		public int AttemptsAllowed { get; set; } = 0;	
 
 
-
+		public string SubjectName { get; set; }
 		public string Name { get; set; }
 		public IEnumerable<ExerciseDTO> ?Exercise { get; set; }
 		public int PassingPercentage { get; set; }
