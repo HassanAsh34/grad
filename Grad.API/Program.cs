@@ -1,7 +1,9 @@
+using System.Diagnostics;
 using System.Security.Claims;
 using System.Text;
 using grad.Application.Auth.Services;
 using grad.Application.LessonFeatures.Services;
+using Grad.API.Middleware;
 using Grad.Application.AdminFeatures.Interfaces;
 using Grad.Application.AdminFeatures.Services;
 using Grad.Application.Auth.Interfaces;
@@ -11,26 +13,30 @@ using Grad.Application.Common.Services;
 using Grad.Application.ExerciseFeatures.Interfaces;
 using Grad.Application.ExerciseFeatures.Services;
 using Grad.Application.LessonFeatures.Interfaces;
+using Grad.Application.ParentFeatures.Interfaces;
+using Grad.Application.ParentFeatures.Services;
+using Grad.Application.QAFeature.Interfaces;
+using Grad.Application.QAFeature.Services;
 using Grad.Application.StudentFeatures.Interfaces;
 using Grad.Application.StudentFeatures.Services;
 using Grad.Application.SubjectFeatures.Interfaces;
 using Grad.Application.SubjectFeatures.Services;
 using Grad.Application.SubmissionFeatures.Interfaces;
 using Grad.Application.SubmissionFeatures.Services;
-using Grad.Infrastructure.Repository;
 using Grad.Application.TeacherFeatures.Interfaces;
 using Grad.Application.TeacherFeatures.Services;
 using Grad.Application.Users.Interfaces;
 using Grad.Application.Users.Services;
-using Grad.API.Middleware;
 using Grad.Infrastructure.Cache;
 using Grad.Infrastructure.EmailServices;
 using Grad.Infrastructure.FilesServices;
 using Grad.Infrastructure.Persistence;
 using Grad.Infrastructure.Persistence.Configurations;
 using Grad.Infrastructure.Repository;
+using Grad.Infrastructure.Repository;
 using Grad.Infrastructure.UnitOfWork;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
@@ -38,10 +44,6 @@ using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
 using Serilog;
 using StackExchange.Redis;
-using Grad.Application.ParentFeatures.Interfaces;
-using Grad.Application.ParentFeatures.Services;
-using Grad.Application.QAFeature.Interfaces;
-using Grad.Application.QAFeature.Services;
 
 
 
@@ -268,6 +270,34 @@ namespace Grad.API
 			builder.Services.AddScoped<IParentServices, ParentServices>();
 			builder.Services.AddScoped<ICummunicationServices, CommunicationServices>();
 
+
+
+			/// diagnosis
+			builder.Services.Configure<ApiBehaviorOptions>(options =>
+			{
+				options.InvalidModelStateResponseFactory = context =>
+				{
+					Debugger.Break();
+
+					Console.WriteLine("=== MODEL VALIDATION FAILED ===");
+
+					foreach (var modelState in context.ModelState)
+					{
+						var field = modelState.Key;
+						var errors = modelState.Value.Errors;
+
+						foreach (var error in errors)
+						{
+							Console.WriteLine(
+								$"Field: {field}, Error: " +
+								$"{(string.IsNullOrWhiteSpace(error.ErrorMessage) ? error.Exception?.Message : error.ErrorMessage)}");
+						}
+					}
+
+					return new BadRequestObjectResult(context.ModelState);
+				};
+			});
+			//////
 			var app = builder.Build();
 
 			// Configure the HTTP request pipeline.

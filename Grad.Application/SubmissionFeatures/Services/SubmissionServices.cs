@@ -162,14 +162,22 @@ namespace Grad.Application.SubmissionFeatures.Services
 			foreach (SEDTO se in SEDTOs)
 			{
 				Exercise e = exerciseDict.TryGetValue(se.Eid, out var ex) ? ex : null;
-				foreach (SADTO sa in se.SADTO)
+				if (e.Type == ExerciseType.AI)
 				{
-					Question q = questionDict.TryGetValue(sa.Qid, out var ques) ? ques : null;
-					if (q != null && q.CorrectAnswer == sa.Aid)
-						score += q.score;
+					score += se.Score;
+				}
+				else
+				{
+					foreach (SADTO sa in se.SADTO)
+					{
+						Question q = questionDict.TryGetValue(sa.Qid, out var ques) ? ques : null;
+						if (q != null && q.CorrectAnswer == sa.Aid)
+							score += q.score;
+					}
 				}
 			}
-			decimal total_score = level.Exercise.SelectMany(e => e.questions).Sum(q => q.score);
+			//decimal total_score = level.Exercise.SelectMany(e => e.questions).Sum(q => q.score);//needs some adjustments for AI exercises======================================
+			decimal total_score = level.Exercise.Sum(e => e.total_score);
 			grade.Percentage = total_score != 0 ? (score / total_score) * 100 : 0;
 			if(grade.Percentage >= level.PassingPercentage)
 				grade.Passed = true;

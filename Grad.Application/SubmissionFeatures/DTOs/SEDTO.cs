@@ -10,6 +10,8 @@ namespace Grad.Application.SubmissionFeatures.DTOs
 	{
 		public Guid Eid { get; set; }
 
+		public decimal Score { get; set; } = 0; //Ai score for the exercise
+
 		public List<SADTO> SADTO { get; set; } = new List<SADTO>();
 	}
 }
