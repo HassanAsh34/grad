@@ -26,15 +26,6 @@ namespace Grad.API.Controllers
 			_logger = logger ?? throw new ArgumentNullException(nameof(logger));
 		}
 
-
-		//[HttpPost("Show-Active-sessions")]
-
-		//public async Task<IActionResult> ShowActiveSessions(CancellationToken cancellationToken)
-		//{
-		//	throw new NotImplementedException();
-		//}
-
-
 		[HttpGet("Show-Users")]
 		public async Task<IActionResult> ShowUsers(CancellationToken cancellationToken)
 		{
@@ -46,25 +37,6 @@ namespace Grad.API.Controllers
 			ResultDTO res = await _adminServices.GetAllUsers(Request.Scheme, $"{Request.Host}", cancellationToken);
 			return StatusCode(res.StatusCode, new { Message = res.Message, Data = res.result });
 		}
-
-		//[HttpPost("view-user")]
-		//public async Task<IActionResult> ViewUser(ProfileDTO profileDTO, CancellationToken cancellationToken)
-		//{
-		//	if (profileDTO.Id.IsNullOrEmpty() && profileDTO.Role.IsNullOrEmpty() && profileDTO != null)
-		//	{
-		//		return Unauthorized(new { Message = "Invalid User" });
-		//	}
-		//	else
-		//	{
-		//		ResultDTO res = await _adminServices.ViewUser(profileDTO, cancellationToken);
-		//		if (res.StatusCode == StatusCodes.Status200OK && res.result is ProfileDTO profile)
-		//		{
-		//			profile.pfpURL = $"{Request.Scheme}://{Request.Host}/{profile.pfpPath}";
-		//			Console.WriteLine(profile.pfpURL);
-		//		}
-		//		return StatusCode(res.StatusCode, new { Message = res.Message, Data = res.result });
-		//	}
-		//}
 
 		[HttpGet("view-user/{id}")]
 		public async Task<IActionResult> ViewUser(string id, [FromQuery] string role, CancellationToken cancellationToken)
@@ -78,11 +50,6 @@ namespace Grad.API.Controllers
 			{
 				var dto = new ProfileDTO { Id = guid, Role = role };
 				ResultDTO res = await _adminServices.ViewUser(dto, cancellationToken);
-				//if (res.StatusCode == StatusCodes.Status200OK && res.result is ProfileDTO profile)
-				//{
-				//	//profile.pfpURL = $"{Request.Scheme}://{Request.Host}/{profile.pfpPath}";
-				//	profile.pfpURL = profile.pfpPath;
-				//}
 				return StatusCode(res.StatusCode, new { Message = res.Message, Data = res.result });
 			}
 			else
@@ -92,24 +59,6 @@ namespace Grad.API.Controllers
 
 		}
 
-		//[HttpGet("view-user/{id}")]
-		//public async Task<IActionResult> ViewUser(string id, CancellationToken cancellationToken)
-		//{
-		//	if (id.IsNullOrEmpty())
-		//	{
-		//		return Unauthorized(new { Message = "Invalid User" });
-		//	}
-		//	else
-		//	{
-		//		ResultDTO res = await _adminServices.ViewUser(id, cancellationToken);
-		//		if (res.StatusCode == StatusCodes.Status200OK && res.result is ProfileDTO profile)
-		//		{
-		//			profile.pfpURL = $"{Request.Scheme}://{Request.Host}/{profile.pfpPath}";
-		//			Console.WriteLine(profile.pfpURL);
-		//		}
-		//		return StatusCode(res.StatusCode, new { Message = res.Message, Data = res.result });
-		//	}
-		//}
 
 
 		[HttpPatch("End-Session/{id}")]
@@ -131,7 +80,7 @@ namespace Grad.API.Controllers
 			}
 		}
 		[HttpPatch("Toggle-Ban-User/{id}")]
-		public async Task<IActionResult> BanUser(string id, CancellationToken cancellationToken) // need to be updated to toggle block/unblock
+		public async Task<IActionResult> BanUser(string id, CancellationToken cancellationToken)
 		{
 			string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
 			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
@@ -148,24 +97,6 @@ namespace Grad.API.Controllers
 				return BadRequest(new { Message = "Invalid User" });
 			}
 		}
-
-		//[HttpPatch("Unblock-User")]
-		//public async Task<IActionResult> UnblockUser(ProfileDTO profileDTO, CancellationToken cancellationToken) //not working yet
-		//{
-		//	string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
-		//	if (!await _tokenServices.IsTokenBlacklisted(accessToken))
-		//	{
-		//		return Unauthorized();
-		//	}
-		//	if (profileDTO.Id.IsNullOrEmpty() && profileDTO.Role.IsNullOrEmpty() && profileDTO != null)
-		//	{
-		//		return Unauthorized(new { Message = "Invalid User" });
-		//	}
-		//	else
-		//	{
-		//		throw new NotImplementedException();
-		//	}
-		//}
 
 		[HttpGet("List-Subjects")]
 		[Authorize(Roles = "Admin")]
@@ -242,7 +173,7 @@ namespace Grad.API.Controllers
 				}
 			}
 			return BadRequest();
-		} //not implemented yet
+		}
 
 		[HttpDelete("Remove-Subject/")]
 		[Authorize(Roles = "Admin")]
@@ -361,19 +292,5 @@ namespace Grad.API.Controllers
 				return StatusCode(res.StatusCode, new { Message = res.Message, Data = res.result });
 			}
 		}
-
-		//[HttpGet("View-CV/{id}")]
-		//public async Task<IActionResult> ViewCV(Guid id, CancellationToken cancellationToken)
-		//{
-		//	string accessToken = User.FindFirst("accessToken")?.Value ?? string.Empty;
-		//	if (!await _tokenServices.IsTokenBlacklisted(accessToken))
-		//	{
-		//		return Unauthorized();
-		//	}
-		//	if (!ModelState.IsValid)
-		//		return Unauthorized();
-		//	ResultDTO res = await _adminServices.ViewCV(id, cancellationToken);
-		//	return StatusCode(res.StatusCode, new { Message = res.Message, Data = res.result });
-		//}
 	}
 }

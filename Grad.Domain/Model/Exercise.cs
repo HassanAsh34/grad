@@ -14,6 +14,8 @@ namespace Grad.Domain.Model
 
 		public Dictionary<string,int> AI_letters { get; set; } = new();
 
+		public int Round { get; set; } = 0;
+
 		public List<Question> questions { get; set; } = new();
 
 		public int total_score => Type == ExerciseType.AI ? AI_letters?.Values.Sum() * 10 ?? 0 : questions?.Sum(q => q.score) ?? 0;

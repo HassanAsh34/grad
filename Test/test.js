@@ -1,50 +1,111 @@
+// import http from 'k6/http';
+// import { check, sleep } from 'k6';
+
+// export const options = {
+//     vus: 300,
+//     duration: '10m',
+// };
+
+// export function setup() {
+//     const loginRes = http.post(
+//         'https://localhost:7168/Auth/sign-in',
+//         JSON.stringify({
+//             usernameorEmail: 'Student@gmail.com',
+//             password: 'Student@123'
+//         }),
+//         {
+//             headers: {
+//                 'Content-Type': 'application/json'
+//             }
+//         }
+//     );
+
+//     check(loginRes, {
+//         'login successful': (r) => r.status === 200,
+//     });
+
+//     const token = loginRes.json('accessToken');
+
+//     return { token };
+// }
+
+// export default function (data) {
+//     const res = http.get(
+//         'https://localhost:7168/Student/View-Enrolled-Subjects',
+//         {
+//             headers: {
+//                 Authorization: `Bearer ${data.token}`
+//             }
+//         }
+//     );
+
+//     check(res, {
+//         'subjects loaded': (r) => r.status === 200,
+//     });
+
+//     sleep(1);
+// }
+
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 
 export const options = {
-    vus: 300,
-    duration: '10m',
+    stages: [
+        { duration: '2m', target: 300 },
+        { duration: '6m', target: 300 },
+        { duration: '2m', target: 0 },
+    ],
 };
 
 export function setup() {
+    // Login once
     const loginRes = http.post(
         'https://localhost:7168/Auth/sign-in',
         JSON.stringify({
             usernameorEmail: 'Student@gmail.com',
             password: 'Student@123'
         }),
-        {
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        }
+        { headers: { 'Content-Type': 'application/json' } }
     );
 
-    check(loginRes, {
-        'login successful': (r) => r.status === 200,
-    });
+    check(loginRes, { 'login successful': (r) => r.status === 200 });
 
     const token = loginRes.json('accessToken');
 
-    return { token };
+    // Fetch subjects once
+    const subjectsRes = http.get(
+        'https://localhost:7168/Student/View-Enrolled-Subjects',
+        { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    check(subjectsRes, { 'subjects loaded': (r) => r.status === 200 });
+
+    const subjects = subjectsRes.json('result');
+
+    return { token, subjects };
 }
 
 export default function (data) {
-    const res = http.get(
-        'https://localhost:7168/Student/View-Enrolled-Subjects',
-        {
-            headers: {
-                Authorization: `Bearer ${data.token}`
-            }
-        }
-    );
+    if (!data.subjects || data.subjects.length === 0) return;
 
-    check(res, {
-        'subjects loaded': (r) => r.status === 200,
-    });
+    // 40% chance to view lessons each iteration
+    if (Math.random() < 0.4) {
+        const randomIndex = Math.floor(Math.random() * data.subjects.length);
+        const sid = data.subjects[randomIndex].subjectId;
+
+        const lessonsRes = http.get(
+            `https://localhost:7168/Student/View-Lessons/${sid}`,
+            { headers: { Authorization: `Bearer ${data.token}` } }
+        );
+
+        check(lessonsRes, {
+            'lessons loaded': (r) => r.status === 200,
+        });
+    }
 
     sleep(1);
 }
+
 
 // score without redis
 //  █ TOTAL RESULTS
@@ -145,4 +206,36 @@ export default function (data) {
 
 
 // running (10m03.9s), 000/300 VUs, 43171 complete and 0 interrupted iterations
+// default ✓ [======================================] 300 VUs  10m0s
+
+//layered caching
+// █ TOTAL RESULTS
+
+//     checks_total.......: 49779   82.486978/s
+//     checks_succeeded...: 100.00% 49779 out of 49779
+//     checks_failed......: 0.00%   0 out of 49779
+
+//     ✓ login successful
+//     ✓ subjects loaded
+
+//     HTTP
+//     http_req_duration..............: avg=2.62s min=124.95ms med=2.42s max=5.62s p(90)=3.78s p(95)=4.08s
+//       { expected_response:true }...: avg=2.62s min=124.95ms med=2.42s max=5.62s p(90)=3.78s p(95)=4.08s
+//     http_req_failed................: 0.00%  0 out of 49779
+//     http_reqs......................: 49779  82.486978/s
+
+//     EXECUTION
+//     iteration_duration.............: avg=3.63s min=1.42s    med=3.42s max=6.62s p(90)=4.79s p(95)=5.08s
+//     iterations.....................: 49778  82.485321/s
+//     vus............................: 220    min=220        max=300
+//     vus_max........................: 300    min=300        max=300
+
+//     NETWORK
+//     data_received..................: 21 MB  35 kB/s
+//     data_sent......................: 2.6 MB 4.3 kB/s
+
+
+
+
+// running (10m03.5s), 000/300 VUs, 49778 complete and 0 interrupted iterations
 // default ✓ [======================================] 300 VUs  10m0s

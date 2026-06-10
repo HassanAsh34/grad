@@ -237,12 +237,13 @@ namespace Grad.Application.SubjectFeatures.Services
 					hasEnrollements &&
 					enrollements!.TryGetValue(s.Id, out var enrollment))
 				{
-					progress = (enrollment.Progress / (float)s.LessonsCount) * 100f;
+					progress = (enrollment.Progress / s.LessonsCount) * 100f;
 				}
 				subjectDTOs.Add(new SubjectDTO
 				{
 					SubjectId = s.Id,
 					SubjectName = s.SubjectName,
+					lessonsCount = s.LessonsCount,
 					deaf_mute = s.deaf_mute,
 					progress = progress,
 					AI_supported = s.AI_supported

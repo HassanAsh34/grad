@@ -11,9 +11,11 @@ namespace Grad.Application.ExerciseFeatures.DTOs
 
 		public Dictionary<string, int> ? AI_letters { get; set; }
 
+		public int Round { get; set; } = 0;
+
 		public IEnumerable<QuestionDTO>? questions { get; set; }
 
-		public int total_questions  => Type == ExerciseType.AI ? AI_letters?.Count ?? 0 : questions?.Count()  ?? 0;
+		public int total_questions  => Type == ExerciseType.AI || Type == ExerciseType.AI_Word ? AI_letters?.Count ?? 0 : questions?.Count()  ?? 0;
 
 		public IEnumerable<AnswerDTO> ?answers { get; set; }
 

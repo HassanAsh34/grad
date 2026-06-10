@@ -10,6 +10,7 @@ namespace Grad.Domain.Enums
 	{
 		MCQ = 1,
 		Matching = 2,
-		AI = 3
+		AI = 3,
+		AI_Word = 4
 	}
 }

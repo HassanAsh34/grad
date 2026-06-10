@@ -1,15 +1,16 @@
+using System;
 using System.Reflection.Emit;
 using Grad.Application.Common.DTOs;
 using Grad.Application.Common.Interfaces;
 using Grad.Application.ExerciseFeatures.DTOs;
 using Grad.Application.ExerciseFeatures.Interfaces;
 using Grad.Application.LessonFeatures.Interfaces;
+using Grad.Application.SubjectFeatures.DTOs;
 using Grad.Application.SubjectFeatures.Interfaces;
 using Grad.Domain.Enums;
 using Grad.Domain.Model;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.Extensions.Logging;
-using Grad.Application.SubjectFeatures.DTOs;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Grad.Application.ExerciseFeatures.Services
 {
@@ -272,8 +273,21 @@ namespace Grad.Application.ExerciseFeatures.Services
 					{
 						//List<IFormFile> files = new List<IFormFile>();
 						//List<string> publicIds = new List<string>();
+						Vocabulary vocabulary = null;
+						if (exerciseDTO.Type == ExerciseType.AI_Word)
+						{
+							vocabulary = subjectContent.Dictionary;
+							if (exerciseDTO.Round > vocabulary.wordItems?.Count())
+							{
+								return new ResultDTO
+								{
+									Message = $"Round number in exercise {exerciseDTO.Name} exceeds the number of words in the vocabulary",
+									StatusCode = 400
+								};
+							}
+						}
 
-						Exercise exercise = await editExercise(exerciseDTO, null, directoryPath, cancellationToken);
+						Exercise exercise = await editExercise(exerciseDTO, null,vocabulary,directoryPath, cancellationToken);
 						//foreach (var questionDTO in exerciseDTO.questions)
 						//{
 						//	Question question = await editQuestion(questionDTO, null, exercise.Type, directoryPath, cancellationToken);
@@ -480,14 +494,28 @@ namespace Grad.Application.ExerciseFeatures.Services
 				foreach(ExerciseDTO exerciseDTO in editLevel.ExerciseDTOs)
 				{
 					Exercise exercise = Exercises.TryGetValue(exerciseDTO.Id, out var e) ? e : null;
+					Vocabulary vocabulary = null;
+					if(exerciseDTO.Type == ExerciseType.AI_Word)
+					{
+						SubjectContent s = await _subjectRepository.GetSubjectContentAsync(editLevel.Sid, cancellationToken);
+						vocabulary = s.Dictionary;
+						if (exerciseDTO.Round > vocabulary.wordItems?.Count())
+						{
+							return new ResultDTO
+							{
+								Message = $"Round number in exercise {exerciseDTO.Name} exceeds the number of words in the vocabulary",
+								StatusCode = 400
+							};
+						}
+					}
 					if (exercise != null)
 					{
 						level.Exercise.Remove(exercise);
-						exercise = await editExercise(exerciseDTO, exercise, directoryPath, cancellationToken);
+						exercise = await editExercise(exerciseDTO, exercise, vocabulary, directoryPath, cancellationToken);
 					}
 					else
 					{
-						exercise = await editExercise(exerciseDTO, null, directoryPath, cancellationToken);
+						exercise = await editExercise(exerciseDTO, null, vocabulary, directoryPath, cancellationToken);
 					}
 					if (exercise != null)
 						exercises.Add(exercise);
@@ -599,8 +627,7 @@ namespace Grad.Application.ExerciseFeatures.Services
 				};
 			}
 		}
-
-		private async Task<Exercise> editExercise(ExerciseDTO exerciseDTO,Exercise ?exercise, string directory, CancellationToken cancellationToken)
+		private async Task<Exercise> editExercise(ExerciseDTO exerciseDTO,Exercise ?exercise,Vocabulary vocabulary,string directory, CancellationToken cancellationToken)
 		{
 			string directoryPath = directory;
 			Exercise Nexercise = null;
@@ -640,6 +667,17 @@ namespace Grad.Application.ExerciseFeatures.Services
 					letters[letter.Key] = letter.Value;
 				}
 				Nexercise.AI_letters = letters;
+			}
+			else if(exerciseDTO.Type == ExerciseType.AI_Word)
+			{
+				var random = new Random();
+				Dictionary<string, int> Word = vocabulary.wordItems
+				.OrderBy(x => random.Next())
+				.GroupBy(x => x.Word)
+				.Select(g => g.First())
+				.Take(exerciseDTO.Round)
+				.ToDictionary(x => x.Word, x => 1);
+				Nexercise.AI_letters = Word;
 			}
 			else
 			{
