@@ -17,5 +17,7 @@ namespace Grad.Application.SubjectFeatures.Interfaces
 		public Task<ResultDTO> ViewSubjectAsync(Guid sid,bool all = true, CancellationToken cancellationToken = default);
 		public Task<ResultDTO> addwords(AddVocabDTO vocabDTO, CancellationToken cancellationToken = default);
 		public Task<bool> IsSubjectExist(string? subjectName = "", bool? deaf_mute = false, Guid? subjectId = null, CancellationToken cancellationToken = default);
+
+		public Task<ResultDTO> ViewDictionary(Guid sid, CancellationToken cancellationToken = default);
 	}
 }

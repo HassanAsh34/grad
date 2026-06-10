@@ -440,6 +440,33 @@ namespace Grad.Application.SubjectFeatures.Services
 			//return await _subjectRepository.IsSubjectExistAsync(subjectName, deaf_mute, subjectId, cancellationToken);
 		}
 
+		public async Task<ResultDTO> ViewDictionary(Guid sid,CancellationToken cancellationToken)
+		{
+			Vocabulary vocabulary = await _subjectRepository.GetVocabularyAsync(sid, cancellationToken);
+			VocabDTO vocabDTO = new VocabDTO
+			{
+				Words = vocabulary.wordItems.Select(w => new WordDTO
+				{
+					word = w.Word,
+					url = w.ImagePath
+				}).ToList()
+			};
+			if (vocabDTO == null)
+				return new ResultDTO
+				{
+					Message = $"{vocabDTO.Words.Count} words were found",
+					StatusCode = 200,
+					result = vocabDTO
+				};
+			else
+			{
+				return new ResultDTO
+				{
+					Message = "Invalid Subject Id",
+					StatusCode = 400
+				};
+			}
+		}
 
 
 		private List<SubjectItemDTO> GetSubjectsByIds(IEnumerable<Guid> ids,List<SubjectItemDTO> subjects)

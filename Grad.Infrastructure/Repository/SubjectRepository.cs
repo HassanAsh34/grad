@@ -141,6 +141,21 @@ namespace Grad.Infrastructure.Repository
 			return (int)res.ModifiedCount;
 		}
 
+		public async Task<Vocabulary> GetVocabularyAsync(Guid subjectId,CancellationToken ct =default)
+		{
+			Subject subject = await base.GetEntityAsync<Subject>(s => s.Id == subjectId, ct);
+			if (subject == null) 
+				return null;
+			SubjectContent subjectContent = await GetSubjectContentAsync(subject.Id, ct);
+			if (subjectContent == null) 
+				return null;
+			Vocabulary vocabulary = subjectContent.Dictionary ?? new Vocabulary
+			{
+				wordItems = new()
+			};
+			return vocabulary;
+		}
+
 		public async Task<bool> updateLessonCountAsync(Guid subjectId, CancellationToken ct = default)
 		{
 			Subject subject = await base.GetEntityAsync<Subject>(s=>s.Id == subjectId, ct);

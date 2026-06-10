@@ -525,6 +525,20 @@ namespace Grad.Application.TeacherFeatures.Services
 			}
 		}
 
+		public async Task<ResultDTO> ViewDictionary(TeacherSubjectDTO teacherSubjectDTO, CancellationToken cancellationToken)
+		{
+			if (!await _teacherRepository.CanAccess(teacherSubjectDTO.TeacherId, teacherSubjectDTO.SubjectId, cancellationToken))
+				return new ResultDTO
+				{
+					StatusCode = 400,
+					Message = "Subject wasnt found"
+				};
+			else
+			{
+				return await _subjectServices.ViewDictionary(teacherSubjectDTO.SubjectId, cancellationToken);
+			}
+		}
+
 		//public async Task<ResultDTO> ViewCV(CVDTO cv,CancellationToken cancellationToken)
 		//{
 		//	Teacher teacher = await _teacherRepository.GetEntityAsync<Teacher>(t => t.Id == cv.Tid, cancellationToken);

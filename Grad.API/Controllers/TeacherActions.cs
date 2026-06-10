@@ -551,6 +551,30 @@ namespace Grad.API.Controllers
 				return Unauthorized();
 		}
 
+
+		[HttpGet("subjects/{sid}/Dictionary")]
+		public async Task<IActionResult> ViewDictionary(Guid sid, CancellationToken cancellationToken)
+		{
+			string accessToken = User.FindFirst("accessToken")?.Value;
+			string Tid = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+			if (string.IsNullOrEmpty(Tid))
+				return Unauthorized();
+			if (!await _tokenServices.IsTokenBlacklisted(accessToken))
+				return Unauthorized();
+			if (Guid.TryParse(Tid, out Guid GTid))
+			{
+				TeacherSubjectDTO teacherSubjectDTO = new TeacherSubjectDTO
+				{
+					TeacherId = GTid,
+					SubjectId = sid
+				};
+				ResultDTO result = await _teacherServices.ViewDictionary(teacherSubjectDTO, cancellationToken);
+				return StatusCode(result.StatusCode, new { result.Message, result.result });
+			}
+			else
+				return Unauthorized();
+		}
+
 		//[HttpDelete()] //add reomve video
 	}
 }
