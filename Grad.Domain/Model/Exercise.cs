@@ -18,7 +18,7 @@ namespace Grad.Domain.Model
 
 		public List<Question> questions { get; set; } = new();
 
-		public int total_score => Type == ExerciseType.AI ? AI_letters?.Values.Sum() * 10 ?? 0 : questions?.Sum(q => q.score) ?? 0;
+		public int total_score => Type == ExerciseType.AI || Type == ExerciseType.AI_Word ? AI_letters?.Values.Sum() * 10 ?? 0 : questions?.Sum(q => q.score) ?? 0;
 
 	}
 }

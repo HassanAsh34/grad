@@ -24,6 +24,11 @@ namespace Grad.Application.LessonFeatures.DTOs
 
 		public PerquisiteType NextType { get; set; } = PerquisiteType.None;
 
+		public string Previous { get; set; }
+
+		public PerquisiteType PreviousType { get; set; }
+
+
 		public List<VideoDTO> Videos { get; set; } = new();
 
 		public LevelDTO? Levels { get; set; }

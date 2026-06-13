@@ -29,14 +29,14 @@ namespace grad.Application.LessonFeatures.Services
 			//_Uow = uow ?? throw new ArgumentNullException(nameof(uow));
 		}
 
-		public async Task<ResultDTO> AddLesson(AddLessonDTO lessonDTO, CancellationToken cancellationToken) // fix the rest of perquisites 
+		public async Task<ResultDTO> AddLesson(AddLessonDTO lessonDTO, CancellationToken cancellationToken)
 		{
 			LessonContent Nlesson = new LessonContent
 			{
 				Title = lessonDTO.Title,
 				Description = lessonDTO.Description,
-				Perquisite = lessonDTO.Perquisite,
-				PerquisiteType = lessonDTO.PerquisiteType,
+				Perquisite = null,
+				PerquisiteType = PerquisiteType.None,
 				Next = null,
 			};
 
@@ -50,26 +50,25 @@ namespace grad.Application.LessonFeatures.Services
 				};
 			}
 			
-			res = await _perquisiteServices.UpdatePerquisite(lessonDTO.SubjectId,Nlesson.PerquisiteType,Nlesson.Perquisite??Guid.Empty,Guid.Empty,PerquisiteType.None,Nlesson.Id,true,cancellationToken: cancellationToken);
-
-			if (res <= 0)
+			if(lessonDTO.PerquisiteType != PerquisiteType.None)
 			{
-				await _lessonRepository.DeleteLesson(lessonDTO.SubjectId, Nlesson, cancellationToken);
-				return new ResultDTO
+				res = await _perquisiteServices.UpdatePerquisite(lessonDTO.SubjectId,Nlesson.Id,PerquisiteType.Lesson,Nid:lessonDTO.Perquisite,NType:lessonDTO.PerquisiteType,Create: true,cancellationToken: cancellationToken);
+				if (res <= 0)
 				{
-					Message = $"Perquisite {Nlesson.Perquisite.ToString()} not found, lesson was not added",
-					StatusCode = 404
-				};
+					await _lessonRepository.DeleteLesson(lessonDTO.SubjectId, Nlesson, cancellationToken);
+					return new ResultDTO
+					{
+						Message = $"Perquisite {Nlesson.Perquisite.ToString()} not found, lesson was not added",
+						StatusCode = 404
+					};
+				}
 			}
-			else
+			await _subjectServices.updateCountAsync(lessonDTO.SubjectId, cancellationToken);
+			return new ResultDTO
 			{
-				await _subjectServices.updateCountAsync(lessonDTO.SubjectId, cancellationToken);
-				return new ResultDTO
-				{
-					Message = "Lesson was added successfully",
-					StatusCode = 201
-				};
-			}
+				Message = "Lesson was added successfully",
+				StatusCode = 201
+			};
 		}
 
 		public async Task<ResultDTO> UploadVideo(VideoDTO videoDTO, CancellationToken cancellationToken)
@@ -331,6 +330,7 @@ namespace grad.Application.LessonFeatures.Services
 					VideosCount = l.Videos.Count,
 					NextType = l.NextType,
 					Nlid = l.Next,
+					PreviousType = l.PerquisiteType,
 					locked = l.Perquisite != null ? true : false
 				});
 			}
@@ -410,7 +410,7 @@ namespace grad.Application.LessonFeatures.Services
 				changed = true;
 			}
 
-			int updated = await _perquisiteServices.UpdatePerquisite(lessonDTO.SubjectId, lesson.PerquisiteType, lesson.Perquisite ?? Guid.Empty, lessonDTO.Perquisite ?? Guid.Empty,lessonDTO.PerquisiteType, lesson.Id,cancellationToken: cancellationToken);
+			int updated = await _perquisiteServices.UpdatePerquisite(lessonDTO.SubjectId, lesson.Id, PerquisiteType.Lesson, lesson.Perquisite, lesson.PerquisiteType, lessonDTO.Perquisite, lessonDTO.PerquisiteType, false, cancellationToken);
 
 			switch(updated)
 			{

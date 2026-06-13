@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Eventing.Reader;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Grad.Application.Common.Interfaces;
+using Grad.Application.ExerciseFeatures.DTOs;
 using Grad.Application.ExerciseFeatures.Interfaces;
+using Grad.Application.LessonFeatures.DTOs;
 using Grad.Application.LessonFeatures.Interfaces;
 using Grad.Application.TeacherFeatures.DTOs;
 using Grad.Domain.Enums;
@@ -14,7 +17,7 @@ namespace Grad.Application.Common.Services
 {
 	public class PerquisiteServices : IPerquisiteServices
 	{
-		
+
 		private readonly IlessonRepository _lessonRepository;
 		private readonly IExerciseRepository _exerciseRepository;
 
@@ -27,106 +30,82 @@ namespace Grad.Application.Common.Services
 
 
 
-		public async Task<int> UpdatePerquisite(Guid subjectId, PerquisiteType CperquisiteType, Guid CperquisiteID, Guid NperquisiteID, PerquisiteType NperquisiteType,Guid nextID,bool Create ,CancellationToken cancellationToken)// we might copy it to a seperate services
+		public async Task<int> UpdatePerquisite(Guid subjectId, Guid L_QID, PerquisiteType L_QType, Guid ? Oid, PerquisiteType ? Otype, Guid ? Nid, PerquisiteType NType, bool Create, CancellationToken cancellationToken)
 		{
-			if (!Create)
+			int res = 0;
+			if (!Create && Otype != null)
 			{
-				if (NperquisiteID != Guid.Empty)
+				if(Nid != null && NType != PerquisiteType.None)
 				{
-					if (CperquisiteType != PerquisiteType.None)
-					{
-						if (CperquisiteID == NperquisiteID && CperquisiteType == NperquisiteType)
-							return -1; //conflict no changes where made
-						int res = await RemovePerquisite(subjectId, CperquisiteID, CperquisiteType, cancellationToken);
-						if (res > 0)
-						{
-							CperquisiteID = NperquisiteID;
-							CperquisiteType = NperquisiteType;
-						}
-						else
-						{
-							return -2; //failed to update the perquisite
-						}
-					}
-					else
-					{
-						CperquisiteID = NperquisiteID;
-						CperquisiteType = NperquisiteType;
-					}
+					if (L_QID == Nid && L_QType == NType)
+						return -3;// cant have a lesson as a perquisite to itself
+					else if (Otype != PerquisiteType.None && Oid == Nid && Otype == NType)
+						return -1;// conflict no changes where made
+
 				}
+				//else if (Oid == L_QID && Otype == L_QType)
+				//add logger here
 				else
 				{
-					if (NperquisiteType == PerquisiteType.None)
-					{
-						if (CperquisiteType != PerquisiteType.None)
-						{
-							int res = await RemovePerquisite(subjectId, CperquisiteID, CperquisiteType, cancellationToken);
-							if (res > 0)
-							{
-								CperquisiteID = NperquisiteID;
-								CperquisiteType = NperquisiteType;
-							}
-							else
-							{
-								return -2; //failed to update the perquisite
-							}
-						}
-						else
-						{
-							return -1; // no changes were made
-						}
-					}
+					res = await RemovePerquisite(subjectId, (Guid)Oid,	(PerquisiteType)Otype, cancellationToken);
+					if (res <= 0)
+						return -2; //failed to update the perquisite
 				}
 			}
-			switch (CperquisiteType)
+			switch (L_QType)
 			{
 				case PerquisiteType.Lesson:
-					LessonContent Plesson = await _lessonRepository.viewLesson(subjectId, CperquisiteID, cancellationToken);
-					if (Plesson == null)
-						return 0;
-					else
-					{
-						if (Plesson.Id == nextID)
-							return -3; //cant have a lesson as a perquisite to itself
-						else if (Plesson.Perquisite == nextID && Plesson.PerquisiteType == PerquisiteType.Lesson)
-							return -4; //cant have a lesson as a perquisite to its own perquisite
-						else
-						{
-							Plesson.Next = nextID;
-							Plesson.NextType = PerquisiteType.Lesson;
-							return await _lessonRepository.editLesson(subjectId, Plesson, cancellationToken);
-						}
-					}
-				case PerquisiteType.Quiz: // needs to be handled
-					Level pquiz = await _exerciseRepository.GetLevel(subjectId, null, CperquisiteID, cancellationToken);
-					if (pquiz != null)
-					{
-						if (pquiz.Perquisite == nextID && pquiz.PerquisiteType == PerquisiteType.Lesson)
-							return -4;
-						else
-						{
-							pquiz.Next = nextID;
-							pquiz.NextType = PerquisiteType.Quiz;
-							int res = await _exerciseRepository.editLevel(subjectId, null, pquiz, cancellationToken);
-							return res > 0 ? 1 : 0;	
-						}
-					}
-					else
-						return 0;
 
+					LessonContent lesson = await _lessonRepository.viewLesson(subjectId, L_QID, cancellationToken);
+					if (lesson == null)
+						return -2;
+					lesson.Perquisite = Nid;
+					lesson.PerquisiteType = NType;
+					res = await UpdateNext(subjectId, Nid, NType, lesson.Id, PerquisiteType.Lesson, cancellationToken);
+					if (res <= 0)
+						return res;
+					res = await _lessonRepository.editLesson(subjectId,lesson, cancellationToken);
+					if (res <= 0)
+					{
+						res = await RemovePerquisite(subjectId, (Guid)Nid, NType, cancellationToken);
+						//if (res <= 0)
+						//	//add logger here for problems
+						return -2;
+					}
+					else
+						return res;
+
+				case PerquisiteType.Quiz:
+					Level level = await _exerciseRepository.GetLevel(subjectId,null,LVLid: L_QID, CT: cancellationToken);
+					if (level == null)
+						return -2;
+					level.Perquisite = Nid;
+					level.PerquisiteType = NType;
+					res = await UpdateNext(subjectId, Nid, NType, level.ID, PerquisiteType.Quiz, cancellationToken);
+					if (res <= 0)
+						return res;
+					res = await _exerciseRepository.editLevel(subjectId,null,exercise: level,CT: cancellationToken);
+					if (res <= 0)
+					{
+						res = await RemovePerquisite(subjectId, (Guid)Nid, NType, cancellationToken);
+						//if (res <= 0)
+						//	//add logger here for problems
+						return -2;
+					}
+					else
+						return res;
 				default:
-					return 1;
+					return -2;
 			}
 		}
 
 
 
-
-		private async Task<int> RemovePerquisite(Guid subjectId,Guid perquisiteID ,PerquisiteType perquisiteType,CancellationToken cancellationToken)
+		private async Task<int> RemovePerquisite(Guid subjectId, Guid perquisiteID, PerquisiteType perquisiteType, CancellationToken cancellationToken)
 		{
 			int res = 0;
 			if (perquisiteID == Guid.Empty && perquisiteType != PerquisiteType.None)
-				return -1; 
+				return -1;
 			switch (perquisiteType)
 			{
 				case PerquisiteType.Lesson:
@@ -153,7 +132,9 @@ namespace Grad.Application.Common.Services
 			}
 		}
 
-		public async Task<int> removeDependency(Guid subjectId,LessonContent ?lesson,Level ?level,CancellationToken cancellationToken)
+
+
+		public async Task<int> removeDependency(Guid subjectId, LessonContent? lesson, Level? level, CancellationToken cancellationToken)
 		{
 			IEnumerable<int> res = new List<int>();
 			if (lesson != null)
@@ -219,7 +200,7 @@ namespace Grad.Application.Common.Services
 								lesson.PerquisiteType = PerquisiteType.None;
 								plesson.Next = null;
 								plesson.NextType = PerquisiteType.None;
-								res = Task.WhenAll(_lessonRepository.editLesson(subjectId, lesson, cancellationToken), _lessonRepository.editLesson(subjectId, plesson, cancellationToken)).Result;
+								res = await Task.WhenAll(_lessonRepository.editLesson(subjectId, lesson, cancellationToken), _lessonRepository.editLesson(subjectId, plesson, cancellationToken));
 								if (res.Any(r => r == 0))
 								{
 									return -3;// failed to update the perquisite lesson
@@ -236,7 +217,7 @@ namespace Grad.Application.Common.Services
 								lesson.PerquisiteType = PerquisiteType.None;
 								pquiz.Next = null;
 								pquiz.NextType = PerquisiteType.None;
-								res = Task.WhenAll(_lessonRepository.editLesson(subjectId, lesson, cancellationToken), _exerciseRepository.editLevel(subjectId, null, pquiz, cancellationToken)).Result;
+								res = await Task.WhenAll(_lessonRepository.editLesson(subjectId, lesson, cancellationToken), _exerciseRepository.editLevel(subjectId, null, pquiz, cancellationToken));
 								if (res.Any(r => r == 0))
 								{
 									return -3; // failed to update the next quiz
@@ -259,14 +240,14 @@ namespace Grad.Application.Common.Services
 					switch (level.NextType)
 					{
 						case PerquisiteType.Lesson:
-							LessonContent Nlesson = await _lessonRepository.viewLesson(subjectId,level.Next ?? Guid.Empty, cancellationToken);
+							LessonContent Nlesson = await _lessonRepository.viewLesson(subjectId, level.Next ?? Guid.Empty, cancellationToken);
 							if (Nlesson != null)
 							{
 								level.Next = null;
 								level.NextType = PerquisiteType.None;
 								Nlesson.Perquisite = null;
 								Nlesson.PerquisiteType = PerquisiteType.None;
-								res = Task.WhenAll(_exerciseRepository.editLevel(subjectId,null,level,cancellationToken), _lessonRepository.editLesson(subjectId, Nlesson, cancellationToken)).Result;
+								res =await Task.WhenAll(_exerciseRepository.editLevel(subjectId, null, level, cancellationToken), _lessonRepository.editLesson(subjectId, Nlesson, cancellationToken));
 								if (res.Any(r => r == 0))
 								{
 									return -3;// failed to update the next lesson
@@ -294,7 +275,7 @@ namespace Grad.Application.Common.Services
 								level.PerquisiteType = PerquisiteType.None;
 								plesson.Next = null;
 								plesson.NextType = PerquisiteType.None;
-								res = Task.WhenAll(_exerciseRepository.editLevel(subjectId, null,level, cancellationToken), _lessonRepository.editLesson(subjectId, plesson, cancellationToken)).Result;
+								res = await Task.WhenAll(_exerciseRepository.editLevel(subjectId, null, level, cancellationToken), _lessonRepository.editLesson(subjectId, plesson, cancellationToken));
 								if (res.Any(r => r == 0))
 								{
 									return -3;// failed to update the perquisite lesson
@@ -316,5 +297,42 @@ namespace Grad.Application.Common.Services
 			}
 			return res.Any(r => r == 0) ? 0 : 1;
 		}
+
+		private async Task<int> UpdateNext(Guid sid,Guid ?pl_q,PerquisiteType pl_qType,Guid Nid,PerquisiteType NType,CancellationToken cancellationToken = default)
+		{
+			if (pl_qType != PerquisiteType.None && pl_q == null)
+				return -2;
+
+			switch(pl_qType)
+			{
+				case PerquisiteType.None:
+					return 1;
+				case PerquisiteType.Lesson:
+					LessonContent lesson = await _lessonRepository.viewLesson(sid,pl_q, cancellationToken);
+					if (lesson == null)
+						return -2;
+					else
+					{
+						lesson.Next = Nid;
+						lesson.NextType = NType;
+						int res = await _lessonRepository.editLesson(sid, lesson, cancellationToken);
+						return res > 0 ? 1 : -2;
+					}
+				case PerquisiteType.Quiz:
+					Level level = await _exerciseRepository.GetLevel(sid, null,(Guid)pl_q, cancellationToken);
+					if(level == null || Nid == null)
+						return -2;
+					else
+					{
+						level.Next = Nid;
+						level.NextType = NType;
+						int res = await _exerciseRepository.editLevel(sid,null,level, cancellationToken);
+						return res > 0 ? 1 : -2;
+					}
+				default:
+					return -2;
+			}
+		}
+
 	}
 }

@@ -27,7 +27,7 @@ namespace Grad.Application.LessonFeatures.Interfaces
 
 		Task<int> editLesson(Guid sid, LessonContent lesson, CancellationToken CT = default);
 
-		Task<int> updateNext(Guid sid, Guid lid, Guid Nlid, PerquisiteType type, CancellationToken CT = default);
+		//Task<int> updateNext(Guid sid, Guid lid, Guid Nlid, PerquisiteType type, CancellationToken CT = default);
 
 	}
 }

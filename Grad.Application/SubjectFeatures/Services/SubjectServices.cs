@@ -451,7 +451,7 @@ namespace Grad.Application.SubjectFeatures.Services
 					url = w.ImagePath
 				}).ToList()
 			};
-			if (vocabDTO == null)
+			if (vocabDTO != null)
 				return new ResultDTO
 				{
 					Message = $"{vocabDTO.Words.Count} words were found",

@@ -273,7 +273,7 @@ namespace Grad.Application.StudentFeatures.Services
 						if (lesson != null)
 						{
 							Guid Nlid = lesson.Nlid ?? Guid.Empty;
-							LessonContentDTO Nlesson = Nlid != Guid.Empty ? lessons[Nlid] : null;
+							LessonContentDTO Nlesson = lessons.TryGetValue(Nlid, out var nl) ? nl : null;
 							if (Nlesson != null)
 							{
 								Nlesson.locked = false;
@@ -348,6 +348,12 @@ namespace Grad.Application.StudentFeatures.Services
 								_logger.LogInformation("Lesson {LessonId} marked as completed successfully for user {UserId}", createSubmission.LessonID, createSubmission.SubmittedBy);
 								break;
 						}
+						if(createSubmission.LessonID != null)
+						{
+							LessonContent lessonContent = await _lessonRepository.viewLesson(createSubmission.SubjectFK, (Guid)createSubmission.LessonID, cancellationToken);
+							grade.NextType = lessonContent.NextType;
+							grade.NextId = lessonContent.Next;
+						}
 					}
 				}
 				return res;
@@ -392,12 +398,6 @@ namespace Grad.Application.StudentFeatures.Services
 						Message = "Lesson not found",
 						StatusCode = 404
 					};
-				case -3:
-					return new ResultDTO
-					{
-						Message = "Lesson already marked as completed",
-						StatusCode = 400
-					};
 				default:
 					LessonContent lesson = await _lessonRepository.viewLesson(completelesson.Sid, completelesson.Lid, cancellationToken);
 					if (result == 0)
@@ -409,7 +409,7 @@ namespace Grad.Application.StudentFeatures.Services
 					{
 						await bustCachedEnrollments(completelesson.uid, cancellationToken);
 						_logger.LogInformation("Lesson {LessonId} marked as completed successfully for user {UserId}", completelesson.Lid, completelesson.uid);
-						return new ResultDTO { Message = "Lesson marked as completed successfully", StatusCode = 200, result = new { lesson.NextType, lesson.Next } };
+						return result == -3 ? new ResultDTO { Message = "Lesson already marked as completed", StatusCode = 200, result = new { lesson.NextType, lesson.Next } } : new ResultDTO { Message = "Lesson marked as completed successfully", StatusCode = 200, result = new { lesson.NextType, lesson.Next } };
 					} 
 			}
 		}

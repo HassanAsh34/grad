@@ -203,6 +203,140 @@ namespace Grad.Application.ExerciseFeatures.Services
 		//}
 
 
+		//public async Task<ResultDTO> CreateExercise(CreateLevelDTO levelDTO, CancellationToken cancellationToken) //not tested yet
+		//{
+		//	// Validate the exercise data
+		//	if (levelDTO == null)
+		//	{
+		//		return new ResultDTO
+		//		{
+		//			Message = "Exercise data cannot be null",
+		//			StatusCode = 400
+		//		};
+		//	}
+		//	else
+		//	{
+		//		if (levelDTO.ExerciseDTOs == null || !levelDTO.ExerciseDTOs.Any())
+		//		{
+		//			return new ResultDTO
+		//			{
+		//				Message = "Exercise must contain at least one question",
+		//				StatusCode = 400
+		//			};
+		//		}
+		//		// Map ExerciseDTO to Exercise domain model
+		//		else
+		//		{
+		//			SubjectContent subjectContent = await _subjectRepository.GetSubjectContentAsync(levelDTO.Sid, cancellationToken);
+		//			if (subjectContent == null)
+		//			{
+		//				return new ResultDTO
+		//				{
+		//					Message = "Subject isnt found",
+		//					StatusCode = 400
+		//				};
+		//			}
+		//			Dictionary<Guid, LessonContent> lessons = subjectContent.Lessons.ToDictionary(l => l.Id, l => l);
+		//			lessons.TryGetValue(levelDTO.Lid ?? Guid.Empty, out LessonContent lesson);
+		//			Level level = new Level
+		//			{
+		//				Name = levelDTO.Name,
+		//				PassingPercentage = levelDTO.PassingGradePercentage,
+		//				levelDifficulty = levelDTO.levelDifficulty,
+		//				//Perquisite = levelDTO.PerquisiteID,
+		//				PerquisiteType = levelDTO.Lid == null ? levelDTO.PerquisiteType : PerquisiteType.None,
+		//				Perquisite = levelDTO.Lid == null ? levelDTO.PerquisiteID : null
+		//			};
+		//			int perquisiteResult = await _perquisiteServices.UpdatePerquisite(levelDTO.Sid, level.PerquisiteType, level.Perquisite ?? Guid.Empty,Guid.Empty,PerquisiteType.None,level.ID,true,cancellationToken: cancellationToken);
+
+		//			//switch (level.PerquisiteType)
+		//			//{
+		//			//	case PerquisiteType.Lesson:
+		//			//		lessons.TryGetValue(levelDTO.PerquisiteID ?? Guid.Empty, out LessonContent Plesson);
+		//			//		if (Plesson != null)
+		//			//		{
+		//			//			Plesson.NextType = PerquisiteType.Quiz;
+		//			//			Plesson.Next = level.ID;
+		//			//			perquisiteResult = await _IlessonRepository.editLesson(subjectContent.Id, Plesson, cancellationToken);
+		//			//		}
+		//			//		break;
+		//			//	default:
+		//			//		break;
+		//			//}
+		//			string directoryPath = $"subjects/{subjectContent.Id}/";
+		//			if (lesson != null)
+		//			{
+		//				directoryPath += $"lessonContent/{lesson.Id}/";
+		//			}
+		//			directoryPath += $"exercise/{level.ID}/";
+		//			foreach (var exerciseDTO in levelDTO.ExerciseDTOs)
+		//			{
+		//				//List<IFormFile> files = new List<IFormFile>();
+		//				//List<string> publicIds = new List<string>();
+		//				Vocabulary vocabulary = null;
+		//				if (exerciseDTO.Type == ExerciseType.AI_Word)
+		//				{
+		//					vocabulary = subjectContent.Dictionary;
+		//					if (exerciseDTO.Round > vocabulary.wordItems?.Count())
+		//					{
+		//						return new ResultDTO
+		//						{
+		//							Message = $"Round number in exercise {exerciseDTO.Name} exceeds the number of words in the vocabulary",
+		//							StatusCode = 400
+		//						};
+		//					}
+		//				}
+
+		//				Exercise exercise = await editExercise(exerciseDTO, null,vocabulary,directoryPath, cancellationToken);
+		//				//foreach (var questionDTO in exerciseDTO.questions)
+		//				//{
+		//				//	Question question = await editQuestion(questionDTO, null, exercise.Type, directoryPath, cancellationToken);
+		//				//	if (question != null)
+		//				//		exercise.questions.Add(question);/// need to add a way to let them know which question failed to be added
+		//				//}
+		//				level.Exercise.Add(exercise);
+		//			}
+
+		//			long res = 0;
+		//			if (lesson != null)
+		//			{
+		//				//lessonContent.Exercise = exercise;
+		//				lesson.Level = level;
+		//				res = await _exerciseRepository.addExerciseToLesson(subjectContent.Id, lesson, cancellationToken);
+		//			}
+		//			else
+		//			{
+		//				if (level.PerquisiteType != PerquisiteType.None && perquisiteResult <= 0)
+		//				{
+		//					level.PerquisiteType = PerquisiteType.None;
+		//					level.Perquisite = null;
+		//				}
+		//				else
+		//					perquisiteResult = 1;
+		//				res = await _exerciseRepository.addQuizToSubject(subjectContent.Id, level, cancellationToken);
+		//			}
+		//			if (res == 0)
+		//			{
+
+		//				await _cloudinaryServices.DeleteAsync(directoryPath, false, true);
+		//				return new ResultDTO
+		//				{
+		//					Message = "Something went wrong",
+		//					StatusCode = 500
+		//				};
+		//			}
+		//			else
+		//			{
+		//				return new ResultDTO
+		//				{
+		//					Message = perquisiteResult == 0 ? "Exercise was added successfully" : "Exercise was added successfully, but perquisite was not saved",
+		//					StatusCode = 201
+		//				};
+		//			}
+		//		}
+		//	}
+		//}
+
 		public async Task<ResultDTO> CreateExercise(CreateLevelDTO levelDTO, CancellationToken cancellationToken) //not tested yet
 		{
 			// Validate the exercise data
@@ -244,10 +378,10 @@ namespace Grad.Application.ExerciseFeatures.Services
 						PassingPercentage = levelDTO.PassingGradePercentage,
 						levelDifficulty = levelDTO.levelDifficulty,
 						//Perquisite = levelDTO.PerquisiteID,
-						PerquisiteType = levelDTO.Lid == null ? levelDTO.PerquisiteType : PerquisiteType.None,
-						Perquisite = levelDTO.Lid == null ? levelDTO.PerquisiteID : null
+						PerquisiteType =  PerquisiteType.None,
+						Perquisite = null
 					};
-					int perquisiteResult = await _perquisiteServices.UpdatePerquisite(levelDTO.Sid, level.PerquisiteType, level.Perquisite ?? Guid.Empty,Guid.Empty,PerquisiteType.None,level.ID,true,cancellationToken: cancellationToken);
+					
 
 					//switch (level.PerquisiteType)
 					//{
@@ -277,7 +411,16 @@ namespace Grad.Application.ExerciseFeatures.Services
 						if (exerciseDTO.Type == ExerciseType.AI_Word)
 						{
 							vocabulary = subjectContent.Dictionary;
-							if (exerciseDTO.Round > vocabulary.wordItems?.Count())
+							if (vocabulary == null)
+							{
+								return new ResultDTO
+								{
+									Message = $"Vocabulary not found for subject",
+									StatusCode = 400
+								};
+							}
+
+							else if (exerciseDTO.Round > vocabulary.wordItems?.Count())
 							{
 								return new ResultDTO
 								{
@@ -287,7 +430,7 @@ namespace Grad.Application.ExerciseFeatures.Services
 							}
 						}
 
-						Exercise exercise = await editExercise(exerciseDTO, null,vocabulary,directoryPath, cancellationToken);
+						Exercise exercise = await editExercise(exerciseDTO, null, vocabulary, directoryPath, cancellationToken);
 						//foreach (var questionDTO in exerciseDTO.questions)
 						//{
 						//	Question question = await editQuestion(questionDTO, null, exercise.Type, directoryPath, cancellationToken);
@@ -306,13 +449,6 @@ namespace Grad.Application.ExerciseFeatures.Services
 					}
 					else
 					{
-						if (level.PerquisiteType != PerquisiteType.None && perquisiteResult <= 0)
-						{
-							level.PerquisiteType = PerquisiteType.None;
-							level.Perquisite = null;
-						}
-						else
-							perquisiteResult = 1;
 						res = await _exerciseRepository.addQuizToSubject(subjectContent.Id, level, cancellationToken);
 					}
 					if (res == 0)
@@ -327,9 +463,14 @@ namespace Grad.Application.ExerciseFeatures.Services
 					}
 					else
 					{
+						int perquisiteResult = 0;
+						if (levelDTO.PerquisiteType != PerquisiteType.None)
+						{
+						   perquisiteResult = await _perquisiteServices.UpdatePerquisite(levelDTO.Sid, level.ID, PerquisiteType.Quiz, Nid: levelDTO.PerquisiteID, NType: levelDTO.PerquisiteType, Create: true,cancellationToken: cancellationToken);
+						}
 						return new ResultDTO
 						{
-							Message = perquisiteResult == 0 ? "Exercise was added successfully" : "Exercise was added successfully, but perquisite was not saved",
+							Message = perquisiteResult <= 0 ? "Exercise was added successfully" : "Exercise was added successfully, but perquisite was not saved",
 							StatusCode = 201
 						};
 					}
@@ -390,6 +531,9 @@ namespace Grad.Application.ExerciseFeatures.Services
 				switch (exercise.Type)
 				{
 					case ExerciseType.AI:
+						exerciseDTO.AI_letters = exercise.AI_letters;
+						break;
+					case ExerciseType.AI_Word:
 						exerciseDTO.AI_letters = exercise.AI_letters;
 						break;
 					case ExerciseType.Matching:
@@ -526,9 +670,24 @@ namespace Grad.Application.ExerciseFeatures.Services
 					}
 				}
 			}
-			level.Exercise = exercises;
+			if(editLevel.ExerciseDTOs != null)
+				level.Exercise = exercises;
+			bool perquisiteChanged = editLevel.PerquisiteID != null && editLevel.PerquisiteID != level.Perquisite;
+			bool changed = false;
+			if (editLevel.PerquisiteType != level.PerquisiteType)
+			{ 
+				int perquisiteResult = await _perquisiteServices.UpdatePerquisite(editLevel.Sid, level.ID,PerquisiteType.Quiz,level.Perquisite,level.PerquisiteType,editLevel.PerquisiteID,editLevel.PerquisiteType,false, cancellationToken: cancellationToken);
+				if (perquisiteResult <= 0)
+				{
+					_logger.LogWarning("Failed to update perquisite for level {LevelId}", level.ID);
+				}
+				else
+				{
+					changed = true;
+				}
+			}
 			int res = await _exerciseRepository.editLevel(editLevel.Sid,editLevel.Lid,level, cancellationToken);
-			if (res == 0)
+			if (res == 0 && !changed)
 			{
 				return new ResultDTO
 				{
@@ -538,13 +697,34 @@ namespace Grad.Application.ExerciseFeatures.Services
 			}
 			else
 			{
-				return new ResultDTO
+				if (perquisiteChanged)
 				{
-					Message = "Level was updated successfully",
-					StatusCode = 200
-				};
+					if (changed)
+					{
+						return new ResultDTO
+						{
+							Message = "Level was updated successfully",
+							StatusCode = 200
+						};
+					}
+					else
+					{
+						return new ResultDTO
+						{
+							Message = "Level was updated successfully, but perquisite was not saved",
+							StatusCode = 200
+						};
+					}
+				}
+				else
+					return new ResultDTO
+					{
+						Message = "Level was updated successfully",
+						StatusCode = 200
+					};
 			}
 		}
+		
 
 		public async Task<ResultDTO> DeleteLevel(LevelDTO levelDTO, CancellationToken cancellationToken)
 		{

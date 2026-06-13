@@ -84,6 +84,11 @@ namespace Grad.Application.SubmissionFeatures.Services
 				{
 					//send email to parent or guardian if exists
 				}
+				if(createSubmission.LessonID == null)
+				{
+					grade.NextId = level.Next;
+					grade.NextType = level.NextType;
+				}
 				return new ResultDTO
 				{
 					StatusCode = 200,
@@ -162,7 +167,7 @@ namespace Grad.Application.SubmissionFeatures.Services
 			foreach (SEDTO se in SEDTOs)
 			{
 				Exercise e = exerciseDict.TryGetValue(se.Eid, out var ex) ? ex : null;
-				if (e.Type == ExerciseType.AI)
+				if (e.Type == ExerciseType.AI || e.Type == ExerciseType.AI_Word)
 				{
 					score += se.Score;
 				}

@@ -24,6 +24,10 @@ namespace Grad.Application.ExerciseFeatures.DTOs
 
 		public List<ExerciseDTO> ExerciseDTOs { get; set; }
 
+		public PerquisiteType PerquisiteType { get; set; }
+
+		public Guid? PerquisiteID { get; set; }
+
 
 		//public List<Guid> removedExercises
 

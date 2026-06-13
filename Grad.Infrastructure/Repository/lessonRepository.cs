@@ -102,15 +102,15 @@ namespace Grad.Infrastructure.Repository
 			return (int)result.ModifiedCount;
 		}
 
-		public async Task<int> updateNext(Guid sid,Guid lid,Guid Nlid,PerquisiteType type,CancellationToken CT)
-		{
-			var filter = Builders<SubjectContent>.Filter.And(Builders<SubjectContent>.Filter.Eq(s => s.Id, sid), Builders<SubjectContent>.Filter.ElemMatch(s => s.Lessons, l => l.Id == lid));
-			var update = Builders<SubjectContent>.Update.Combine(
-				Builders<SubjectContent>.Update.Set("Lessons.$.Next", Nlid),
-				Builders<SubjectContent>.Update.Set("Lessons.$.NextType", type));
-			var result = await _subjects.UpdateOneAsync(filter, update, cancellationToken: CT);
-			return (int)result.ModifiedCount;
-		}
+		//public async Task<int> updateNext(Guid sid,Guid lid,Guid Nlid,PerquisiteType type,CancellationToken CT)
+		//{
+		//	var filter = Builders<SubjectContent>.Filter.And(Builders<SubjectContent>.Filter.Eq(s => s.Id, sid), Builders<SubjectContent>.Filter.ElemMatch(s => s.Lessons, l => l.Id == lid));
+		//	var update = Builders<SubjectContent>.Update.Combine(
+		//		Builders<SubjectContent>.Update.Set("Lessons.$.Next", Nlid),
+		//		Builders<SubjectContent>.Update.Set("Lessons.$.NextType", type));
+		//	var result = await _subjects.UpdateOneAsync(filter, update, cancellationToken: CT);
+		//	return (int)result.ModifiedCount;
+		//}
 		
 	}
 }
