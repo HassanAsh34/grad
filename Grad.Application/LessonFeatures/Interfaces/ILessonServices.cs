@@ -18,7 +18,7 @@ namespace Grad.Application.LessonFeatures.Interfaces
 
 		public Task<List<LessonContentDTO>> ViewLessons(Guid sid,CancellationToken cancellation = default);
 
-		public Task<ResultDTO> viewLesson(LessonContentDTO lessonContentDTO,bool teacher = false, CancellationToken cancellationToken = default);
+		public Task<ResultDTO> viewLesson(LessonContentDTO lessonContentDTO,bool completed = false,CancellationToken cancellationToken = default);
 
 		public Task<ResultDTO> DeleteLesson(DeleteLessonDTO deleteLesson, CancellationToken cancellationToken = default);
 

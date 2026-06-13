@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Grad.Application.ExerciseFeatures.DTOs;
 using Grad.Domain.Enums;
 
@@ -32,5 +33,7 @@ namespace Grad.Application.LessonFeatures.DTOs
 		public List<VideoDTO> Videos { get; set; } = new();
 
 		public LevelDTO? Levels { get; set; }
+
+		public bool completed { get; set; } = false;
 	}
 }

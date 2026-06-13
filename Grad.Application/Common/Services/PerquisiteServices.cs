@@ -303,7 +303,8 @@ namespace Grad.Application.Common.Services
 			if (pl_qType != PerquisiteType.None && pl_q == null)
 				return -2;
 
-			switch(pl_qType)
+			int res = 0;
+			switch (pl_qType)
 			{
 				case PerquisiteType.None:
 					return 1;
@@ -313,9 +314,17 @@ namespace Grad.Application.Common.Services
 						return -2;
 					else
 					{
+						if(lesson.NextType != PerquisiteType.None && lesson.Next != null)
+						{
+							res = await UpdatePerquisite(sid,(Guid)lesson.Next, lesson.NextType, lesson.Id, PerquisiteType.Lesson, null, PerquisiteType.None, false, cancellationToken);
+							if(res <= 0)
+							{
+								return -2;
+							}
+						}
 						lesson.Next = Nid;
 						lesson.NextType = NType;
-						int res = await _lessonRepository.editLesson(sid, lesson, cancellationToken);
+						res = await _lessonRepository.editLesson(sid, lesson, cancellationToken);
 						return res > 0 ? 1 : -2;
 					}
 				case PerquisiteType.Quiz:
@@ -324,9 +333,17 @@ namespace Grad.Application.Common.Services
 						return -2;
 					else
 					{
+						if (level.NextType != PerquisiteType.None && level.Next != null)
+						{
+							res = await UpdatePerquisite(sid, (Guid)level.Next, level.NextType, level.ID, PerquisiteType.Quiz, null, PerquisiteType.None, false, cancellationToken);
+							if (res <= 0)
+							{
+								return -2;
+							}
+						}
 						level.Next = Nid;
 						level.NextType = NType;
-						int res = await _exerciseRepository.editLevel(sid,null,level, cancellationToken);
+						res = await _exerciseRepository.editLevel(sid,null,level, cancellationToken);
 						return res > 0 ? 1 : -2;
 					}
 				default:

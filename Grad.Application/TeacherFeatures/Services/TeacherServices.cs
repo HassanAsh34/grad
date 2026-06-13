@@ -201,7 +201,7 @@ namespace Grad.Application.TeacherFeatures.Services
 			//	};
 			//else
 			//return await _lessonServices.viewLesson(new LessonContentDTO { Id = lessonId,SubjectId = teacherSubject.SubjectId}, cancellationToken);
-			return await _lessonServices.viewLesson(lessonContent, true, cancellationToken);
+			return await _lessonServices.viewLesson(lessonContent,cancellationToken: cancellationToken);
 		}
 
 		public async Task<ResultDTO> UploadVideo(VideoDTO video, CancellationToken cancellationToken)

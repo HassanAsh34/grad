@@ -302,7 +302,13 @@ namespace Grad.Application.StudentFeatures.Services
 		public async Task<ResultDTO> viewLesson(LessonContentDTO lessonDTO, CancellationToken cancellationToken)
 		{
 			//return null;
-			return await _lessonServices.viewLesson(lessonDTO, cancellationToken: cancellationToken);
+			var completed = await _studentRepository.GetEntityAsync<StudentProgress>(s => s.lid == lessonDTO.Id, cancellationToken);
+			if (completed != null)
+			{
+				return await _lessonServices.viewLesson(lessonDTO,true, cancellationToken);
+			}
+			else
+				return await _lessonServices.viewLesson(lessonDTO,false,cancellationToken: cancellationToken);
 		}
 
 		public async Task<ResultDTO> ViewExerciseQuize(LevelDTO levelDTO, Guid stdID, CancellationToken cancellationToken)

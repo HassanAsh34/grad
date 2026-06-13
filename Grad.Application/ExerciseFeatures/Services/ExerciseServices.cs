@@ -905,6 +905,7 @@ namespace Grad.Application.ExerciseFeatures.Services
 			Nquestion.score = questionDTO.score != 0 ? questionDTO.score : question.score;
 			if (questionDTO.prompt_image != null)
 			{
+				//directory += 
 				Nquestion.prompt_image = await _cloudinaryServices.UploadImageAsync(questionDTO.prompt_image, directory, Nquestion.Qid.ToString(), cancellation);
 				if (string.IsNullOrEmpty(Nquestion.prompt_image))
 				{

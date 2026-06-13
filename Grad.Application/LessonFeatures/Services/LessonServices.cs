@@ -338,7 +338,7 @@ namespace grad.Application.LessonFeatures.Services
 		}
 
 
-		public async Task<ResultDTO> viewLesson(LessonContentDTO lessonContentDTO,bool teacher,CancellationToken cancellationToken)
+		public async Task<ResultDTO> viewLesson(LessonContentDTO lessonContentDTO,bool completed = false,CancellationToken cancellationToken = default)
 		{
 
 			LessonContent lesson = await _lessonRepository.viewLesson(lessonContentDTO.SubjectId, lessonContentDTO.Id, cancellationToken);
@@ -353,6 +353,13 @@ namespace grad.Application.LessonFeatures.Services
 			lessonContentDTO.Title = lesson.Title;
 			lessonContentDTO.Description = lesson.Description;
 			lessonContentDTO.VideosCount = lesson.Videos.Count;
+			lessonContentDTO.completed = completed;
+			if(completed)
+			{
+				lessonContentDTO.Nlid = lesson.Next;
+				lessonContentDTO.NextType = lesson.NextType;
+			}
+
 			if (lesson.Level != null)
 			{
 				lessonContentDTO.Levels = new LevelDTO
