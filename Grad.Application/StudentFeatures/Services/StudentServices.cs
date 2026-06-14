@@ -282,7 +282,7 @@ namespace Grad.Application.StudentFeatures.Services
 									lessons[lesson.Id] = lesson;
 									break;
 								case PerquisiteType.Lesson:
-									if (submittedLessons.Contains((Guid)lesson.Plid))
+									if (lesson.Plid.HasValue && submittedLessons.Contains(lesson.Plid.Value))
 									{
 										lesson.locked = false;
 										lessons[lesson.Id] = lesson;
@@ -290,7 +290,7 @@ namespace Grad.Application.StudentFeatures.Services
 									break;
 
 								case PerquisiteType.Quiz:
-									if (SubmittedQuiz.Contains((Guid)lesson.Plid))
+									if (lesson.Plid.HasValue && SubmittedQuiz.Contains(lesson.Plid.Value))
 									{
 										lesson.locked = false;
 										lessons[lesson.Id] = lesson;
