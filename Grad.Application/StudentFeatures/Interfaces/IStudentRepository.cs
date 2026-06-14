@@ -20,5 +20,7 @@ namespace Grad.Application.StudentFeatures.Interfaces
 		//Task<bool> IsEnrolled(Guid Sid, Guid StdId, CancellationToken CT = default);
 		Task<int> EnrollSubject(Enrollment enrollement, CancellationToken CT = default);
 		Task<DisablityType> GetDisablityTypeAsync(Guid Sid, CancellationToken CT = default);
+
+		Task<HashSet<Guid>> getPassedQuizes(Guid sid, Guid stdid, CancellationToken ct = default);
 	}
 }

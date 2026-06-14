@@ -47,6 +47,19 @@ namespace Grad.Infrastructure.Repository
 		{
 			return await _context.Set<Enrollment>().Where(e => e.STUFK == STDID && e.SUBFK == SID).Include(e => e.studentProgresses).FirstOrDefaultAsync();
 		}
+
+
+		public async Task<HashSet<Guid>> getPassedQuizes(Guid sid,	Guid stdid,CancellationToken ct)
+		{
+			return await _context.Set<Submission>()
+				.Where(s =>
+					s.SubjectFK == sid &&
+					s.Passed &&
+					s.SubmittedBy == stdid &&
+					s.LessonID == null)
+				.Select(s => s.LevelFK).Distinct()
+				.ToHashSetAsync(ct);
+		}
 		//public async Task<List>
 	}
 }

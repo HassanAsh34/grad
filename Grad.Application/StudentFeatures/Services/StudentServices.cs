@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Linq;
 using System.Security.Cryptography;
 using Grad.Application.Common.DTOs;
 using Grad.Application.Common.Interfaces;
@@ -266,18 +267,35 @@ namespace Grad.Application.StudentFeatures.Services
 				}
 				else
 				{
-					List<Guid> submittedLessons = enrollement.studentProgresses.Select(e => e.lid).ToList();
-					foreach (Guid Lid in submittedLessons)
+					HashSet<Guid> submittedLessons = enrollement.studentProgresses.Select(e => e.lid).ToHashSet();
+					HashSet<Guid> SubmittedQuiz = await _studentRepository.getPassedQuizes(enrollement.SUBFK,enrollement.STUFK, cancellationToken);
+
+					foreach (Guid lid  in lessons.Keys)
 					{
-						LessonContentDTO lesson = lessons.TryGetValue(Lid, out var l) ? l : null;
+						LessonContentDTO lesson = lessons.TryGetValue(lid, out var l) ? l : null;//current
 						if (lesson != null)
 						{
-							Guid Nlid = lesson.Nlid ?? Guid.Empty;
-							LessonContentDTO Nlesson = lessons.TryGetValue(Nlid, out var nl) ? nl : null;
-							if (Nlesson != null)
+							switch(lesson.PreviousType)
 							{
-								Nlesson.locked = false;
-								lessons[Nlid] = Nlesson;
+								case PerquisiteType.None:
+									lesson.locked = false;
+									lessons[lesson.Id] = lesson;
+									break;
+								case PerquisiteType.Lesson:
+									if (submittedLessons.Contains((Guid)lesson.Plid))
+									{
+										lesson.locked = false;
+										lessons[lesson.Id] = lesson;
+									}
+									break;
+
+								case PerquisiteType.Quiz:
+									if (SubmittedQuiz.Contains((Guid)lesson.Plid))
+									{
+										lesson.locked = false;
+										lessons[lesson.Id] = lesson;
+									}
+									break;
 							}
 						}
 					}

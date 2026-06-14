@@ -29,6 +29,8 @@ namespace Grad.Application.LessonFeatures.DTOs
 
 		public PerquisiteType PreviousType { get; set; }
 
+		public Guid ?Plid { get; set; }
+
 
 		public List<VideoDTO> Videos { get; set; } = new();
 

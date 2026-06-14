@@ -1,5 +1,7 @@
 ﻿//using MongoDB.Bson.Serialization.Attributes;
 
+using Grad.Domain.Enums;
+
 namespace Grad.Domain.Model
 {
 	public class StudentProgress
@@ -10,6 +12,8 @@ namespace Grad.Domain.Model
 		public Guid Eid_fk { get; set; }
 
 		public Guid lid { get; set; }
+
+		//public PerquisiteType type { get; set; }
 
 		public DateTime Completed_At { get; set; }
 

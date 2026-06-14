@@ -330,6 +330,7 @@ namespace grad.Application.LessonFeatures.Services
 					VideosCount = l.Videos.Count,
 					NextType = l.NextType,
 					Nlid = l.Next,
+					Plid = l.Perquisite,
 					PreviousType = l.PerquisiteType,
 					locked = l.Perquisite != null ? true : false
 				});
